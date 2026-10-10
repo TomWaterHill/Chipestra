@@ -1,0 +1,51 @@
+<chipestra>
+  <game id="darius" title="Darius" manufacturer="Taito"
+        machine="TAITO_DARIUS" variant="DARIUS_BASE"
+        archive="darius">
+    <resources>
+      <rom name="soundcpu" file="a96_57.33" size="65536" crc32="33ceb730"/>
+      <rom name="adpcm"    file="a96_56.18" size="65536" crc32="292ef55c"/>
+    </resources>
+    <tracks>
+      <track id="1"  title="Music Stop"                         command="0x00" type="control"/>
+      <track id="35" title="INSERT COIN"                        command="0x37" loops="false"/>
+      <track id="2"  title="CAPTAIN NEO(宇宙洞窟)"              command="0x06"/>
+      <track id="40" title="WARNING!"                           command="0x28"/>
+      <track id="3"  title="BOSS SCENE 1"                       command="0x07"/>
+      <track id="4"  title="BOSS CLEAR"                         command="0x08"/>
+      <track id="27" title="INORGANIC BEAT(都市地帯)"           command="0x2E"/>
+      <track id="24" title="BOSS SCENE 2"                       command="0x2F"/>
+      <track id="23" title="COSMIC AIR WAY(山岳地帯)"           command="0x2B"/>
+      <track id="28" title="BOSS SCENE 3"                       command="0x30"/>
+      <track id="26" title="MAIN THEME-CHAOS(バンアレンベルト)" command="0x2D"/>
+      <track id="29" title="BOSS SCENE 4"                       command="0x31"/>
+      <track id="25" title="THE SEA(海底基地)"                  command="0x2C"/>
+      <track id="30" title="BOSS SCENE 5"                       command="0x32"/>
+      <track id="31" title="BOSS SCENE 6"                       command="0x33"/>
+      <track id="32" title="BOSS SCENE 7"                       command="0x34"/>
+      <track id="34" title="CREDITS"                            command="0x36" loops="false"/>
+      <track id="33" title="REQUIEM"                            command="0x35" loops="false"/>
+      <track id="5"  title="GAME OVER"                          command="0x09"/>
+      <track id="38" title="INSERT COIN B"                      command="0x3A" loops="false"/>
+      <track id="6"  title="SE 01"                              command="0x0A"/>
+      <track id="7"  title="SE 02"                              command="0x0B"/>
+      <track id="8"  title="SE 03"                              command="0x0C"/>
+      <track id="9"  title="SE 04"                              command="0x0D"/>
+      <track id="10" title="SE 05"                              command="0x0E"/>
+      <track id="11" title="SE 06"                              command="0x0F"/>
+      <track id="12" title="SE 07"                              command="0x20"/>
+      <track id="13" title="SE 08"                              command="0x21"/>
+      <track id="14" title="SE 09"                              command="0x22"/>
+      <track id="15" title="SE 10"                              command="0x23"/>
+      <track id="16" title="SE 11"                              command="0x24"/>
+      <track id="17" title="SE 12"                              command="0x25"/>
+      <track id="18" title="SE 13"                              command="0x26"/>
+      <track id="19" title="SE 14"                              command="0x27"/>
+      <track id="20" title="SE 15"                              command="0x28"/>
+      <track id="21" title="SE 16"                              command="0x29"/>
+      <track id="22" title="SE 17"                              command="0x2A"/>
+      <track id="36" title="SE 18"                              command="0x38"/>
+      <track id="37" title="SE 19"                              command="0x39"/>
+    </tracks>
+  </game>
+</chipestra>

@@ -1,0 +1,55 @@
+<chipestra>
+  <game id="gradius" title="Gradius" manufacturer="Konami"
+        machine="KONAMI_GRADIUS_BUBBLESYSTEM" variant="GRADIUS_BASE"
+        archive="gradius">
+    <resources>
+      <rom name="soundcpu"    file="400-e03.5l"  size="8192"  crc32="a5a8e57d"/>
+      <rom name="wave0"       file="400-a01.fse" size="256"   crc32="5827b1e8"/>
+      <rom name="wave1"       file="400-a02.fse" size="256"   crc32="2f44f970"/>
+      <rom name="maincpu_hi"  file="400-a06.15l" size="32768"  crc32="b99d8cff"/>
+      <rom name="maincpu_lo"  file="400-a04.10l" size="32768"  crc32="d02c9552"/>
+      <rom name="maindata_hi" file="456-a07.17l" size="131072" crc32="92df792c"/>
+      <rom name="maindata_lo" file="456-a05.12l" size="131072" crc32="5cafb263"/>
+    </resources>
+    <tracks>
+      <track id="13" title="STOP"                                      command="0x00" type="control"/>
+      <track id="12" title="Coin"                                      command="0x40" loops="false"/>
+      <track id="1"  title="Beginning Of The History (AIR BATTLE BGM)" command="0x41"/>
+      <track id="2"  title="Challenger 1985 (1st BGM)"                 command="0x4B"/>
+      <track id="3"  title="Beat Back (2nd BGM)"                       command="0x42"/>
+      <track id="4"  title="Blank Mask (3rd BGM)"                      command="0x44"/>
+      <track id="5"  title="Free Flyer (4th BGM)"                      command="0x45"/>
+      <track id="6"  title="Mazed Music (5th BGM)"                     command="0x4C"/>
+      <track id="7"  title="Mechanical Globule (6th BGM)"              command="0x43"/>
+      <track id="8"  title="Final Attack (7th BGM)"                    command="0x4D"/>
+      <track id="9"  title="Aircraft Carrier (BOSS BGM)"               command="0x49"/>
+      <track id="10" title="Game Over"                                 command="0x48" loops="false"/>
+      <track id="11" title="Historic Soldier (NAMING BGM)"             command="0x4A"/>
+      <track id="14" title="[SE] 01"                                   command="0x01" loops="false"/>
+      <track id="15" title="[SE] 02"                                   command="0x02" loops="false"/>
+      <track id="16" title="[SE] 03"                                   command="0x03" loops="false"/>
+      <track id="17" title="[SE] 04"                                   command="0x04" loops="false"/>
+      <track id="18" title="[SE] 05"                                   command="0x05" loops="false"/>
+      <track id="19" title="[SE] 06"                                   command="0x06" loops="false"/>
+      <track id="20" title="[SE] 07"                                   command="0x07" loops="false"/>
+      <track id="21" title="[SE] 08"                                   command="0x08" loops="false"/>
+      <track id="22" title="[SE] 09"                                   command="0x09" loops="false"/>
+      <track id="23" title="[SE] 0c"                                   command="0x0C" loops="false"/>
+      <track id="24" title="[SE] 0d"                                   command="0x0D" loops="false"/>
+      <track id="25" title="[SE] 0e"                                   command="0x0E" loops="false"/>
+      <track id="26" title="[SE] 0f"                                   command="0x0F" loops="false"/>
+      <track id="27" title="[SE] 10"                                   command="0x10" loops="false"/>
+      <track id="28" title="[SE] 12"                                   command="0x12" loops="false"/>
+      <track id="29" title="[SE] 18"                                   command="0x18" loops="false"/>
+      <track id="30" title="[SE] 1a"                                   command="0x1A" loops="false"/>
+      <track id="31" title="[SE] 1c"                                   command="0x1C" loops="false"/>
+      <track id="32" title="[SE] 1e"                                   command="0x1E" loops="false"/>
+      <track id="33" title="[SE] 20"                                   command="0x20" loops="false"/>
+      <track id="34" title="[SE] 22"                                   command="0x22" loops="false"/>
+      <track id="35" title="[SE] 24"                                   command="0x24" loops="false"/>
+      <track id="36" title="[SE] 27"                                   command="0x27" loops="false"/>
+      <track id="37" title="[SE] 2a"                                   command="0x2A" loops="false"/>
+      <track id="38" title="[SE] 33"                                   command="0x33" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

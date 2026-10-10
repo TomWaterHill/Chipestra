@@ -1,0 +1,35 @@
+<chipestra>
+  <game id="AFTERBURNER2" title="After Burner II" machine="SEGA_XBOARD" variant="XBOARD_BASE" manufacturer="Sega"
+        archive="aburner2">
+    <resources>
+      <rom name="soundcpu" file="epr-11112.17" size="65536"  crc32="d777fc6d"/>
+      <rom name="pcm1"     file="mpr-10931.11" size="131072" crc32="9209068f"/>
+      <rom name="pcm2"     file="mpr-10930.12" size="131072" crc32="6493368b"/>
+      <rom name="pcm3"     file="epr-11102.13" size="131072" crc32="6c07c78d"/>
+    </resources>
+    <tracks>
+      <track id="BGM_00" command="0x00" title="Music Stop" type="control"/>
+      <track id="BGM_92" command="0x92" title="Maximum Power"/>
+      <track id="BGM_91" command="0x91" title="Final Take Off"/>
+      <track id="BGM_94" command="0x94" title="Red Out"/>
+      <track id="BGM_93" command="0x93" title="Super Stripe"/>
+      <track id="BGM_95" command="0x95" title="After Burner"/>
+      <track id="BGM_96" command="0x96" title="City 202"/>
+      <track id="VOICE_A3" command="0xA3" title="[Voice] &quot;Be Careful!&quot;" loops="false"/>
+      <track id="VOICE_A4" command="0xA4" title="[Voice] &quot;The Enemy!&quot;" loops="false"/>
+      <track id="VOICE_A5" command="0xA5" title="[Voice] &quot;Get Ready!&quot;" loops="false"/>
+      <track id="VOICE_A7" command="0xA7" title="[Voice] &quot;Break Left&quot;" loops="false"/>
+      <track id="VOICE_A8" command="0xA8" title="[Voice] &quot;Look out&quot;" loops="false"/>
+      <track id="VOICE_A9" command="0xA9" title="[Voice] &quot;3 o'clock&quot;" loops="false"/>
+      <track id="VOICE_AA" command="0xAA" title="[Voice] &quot;Wow!!&quot;" loops="false"/>
+      <track id="VOICE_AB" command="0xAB" title="[Voice] &quot;Break Right&quot;" loops="false"/>
+      <track id="VOICE_AC" command="0xAC" title="[Voice] &quot;9 o'clock&quot;" loops="false"/>
+      <track id="VOICE_C1" command="0xC1" title="[Voice] &quot;Fire!&quot;" loops="false"/>
+      <track id="VOICE_C3" command="0xC3" title="[Voice] &quot;Over there!&quot;" loops="false"/>
+      <track id="SFX_7E" command="0x7E" title="[SFX] Credit" loops="false"/>
+      <track id="SFX_E0" command="0xE0" title="[SFX] Sight Lock" loops="false"/>
+      <track id="SFX_E1" command="0xE1" title="[SFX] Warning" loops="false"/>
+      <track id="SFX_E7" command="0xE7" title="[SFX] Check Point" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

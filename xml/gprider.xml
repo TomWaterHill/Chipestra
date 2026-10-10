@@ -1,0 +1,31 @@
+<chipestra>
+  <game id="gprider"
+        title="GP Rider"
+        manufacturer="Sega"
+        machine="SEGA_XBOARD"
+        variant="XBOARD_BASE"
+        archive="gprider">
+    <resources>
+      <rom name="soundcpu" file="epr-13388.ic17" size="65536"  crc32="706581e4"/>
+      <rom name="pcm1"     file="epr-13391.ic11" size="131072" crc32="8c30c867"/>
+      <rom name="pcm2"     file="epr-13390.ic12" size="131072" crc32="8c93cd05"/>
+      <rom name="pcm3"     file="epr-13389.ic13" size="131072" crc32="4e4c758e"/>
+    </resources>
+    <tracks>
+      <track id="1" title="Music Stop"                      command="0x9f" type="control" />
+      <track id="2" title="アドバタイズ"                    command="0x97" loops="false"/>
+      <track id="3" title="スタートBGM"                     command="0x95" />
+      <track id="4" title="予選BGM"                         command="0x94" />
+      <track id="5" title="Time Attack (オートマチック)"    command="0x91" />
+      <track id="6" title="Be Over (マニュアル)"            command="0x93" />
+      <track id="7" title="歓喜のメロディー"                command="0x96" />
+      <track id="8" title="じじいのテーマ"                  command="0x9e" />
+      <track id="9" title="The Perfect Power (通信)"        command="0x9a" />
+      <track id="10" title="よろこびのメロディー"           command="0x9c" />
+      <track id="11" title="くやしみのメロディー"           command="0x9d" />
+      <track id="12" title="ゲームオーバー"                 command="0x90" />
+      <track id="13" title="ネームエントリー"               command="0x98" />
+      <track id="14" title="Unknown 1"                      command="0x9b" />
+    </tracks>
+  </game>
+</chipestra>

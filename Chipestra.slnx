@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Chipestra.App/Chipestra.App.csproj" />
+    <Project Path="src/Chipestra.Core/Chipestra.Core.csproj" />
+  </Folder>
+  <!--
+    Native (src/Chipestra.Native) is a CMake project, built separately
+    (see README.md, "Building from source"). It is listed here as
+    files rather than as a <Project> so it stays visible/navigable in the solution
+    without `dotnet build` attempting to run it through MSBuild's C++ toolchain,
+    which the dotnet SDK does not carry (no $(VCTargetsPath)).
+  -->
+  <Folder Name="/src/Chipestra.Native/">
+    <File Path="src/Chipestra.Native/CMakeLists.txt" />
+    <File Path="src/Chipestra.Native/include/chipestra_abi.h" />
+    <File Path="src/Chipestra.Native/src/chipestra_api.cpp" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Chipestra.Core.Tests/Chipestra.Core.Tests.csproj" />
+    <Project Path="tests/Chipestra.App.Tests/Chipestra.App.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Chipestra.Core.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chipestra.Core\Chipestra.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Native DLL is produced by the CMake build (src/Chipestra.Native) into
+         artifacts/native/. Not copied manually; picked up here if it has been built. -->
+    <None Include="..\..\artifacts\native\chipestra_native.dll"
+          Condition="Exists('..\..\artifacts\native\chipestra_native.dll')"
+          Link="chipestra_native.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+    <!-- chipestra_native.dll dynamically links libsoxr (THIRD-PARTY-NOTICES.md),
+         so soxr.dll has to sit next to it for these tests to load it; staged
+         from artifacts/native/ like chipestra_native.dll above. -->
+    <None Include="..\..\artifacts\native\soxr.dll"
+          Condition="Exists('..\..\artifacts\native\soxr.dll')"
+          Link="soxr.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

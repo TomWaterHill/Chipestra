@@ -1,0 +1,18 @@
+<chipestra>
+  <game id="gyruss" title="Gyruss" manufacturer="Konami"
+        machine="KONAMI_GYRUSS" variant="GYRUSS_BASE" archive="gyruss">
+    <resources>
+      <rom name="soundcpu_lo" file="gyrussk.1a" size="8192" crc32="f4ae1c17"/>
+      <rom name="soundcpu_hi" file="gyrussk.2a" size="8192" crc32="ba498115"/>
+      <rom name="audio2"      file="gyrussk.3a" size="4096" crc32="3f9b5dea"/>
+    </resources>
+    <tracks>
+      <track id="1" title="Start"                           command="0x25" loops="false"/>
+      <track id="3" title="Main BGM 1"                      command="0x27" loops="false"/>
+      <track id="4" title="Main BGM 2"                      command="0x28" loops="false"/>
+      <track id="2" title="Main BGM 3"                      command="0x26" loops="false"/>
+      <track id="5" title="Stage Clear"                     command="0x29" loops="false"/>
+      <track id="6" title="Perfect in Chance Stage"         command="0x2a" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

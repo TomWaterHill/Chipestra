@@ -1,0 +1,100 @@
+<chipestra>
+  <game id="ninjaw" title="The Ninja Warriors" manufacturer="Taito"
+        machine="TAITO_NINJAWARRIORS" variant="NINJAWARRIORS_BASE"
+        archive="ninjaw">
+    <resources>
+      <rom name="soundcpu" file="b31_37.11" size="131072" crc32="0ca5799d"/>
+      <rom name="adpcma1"  file="b31-09.18" size="524288" crc32="60a73382"/>
+      <rom name="adpcma2"  file="b31-10.17" size="524288" crc32="c6434aef"/>
+      <rom name="adpcma3"  file="b31-11.16" size="524288" crc32="8da531d4"/>
+      <rom name="adpcmb"   file="b31-08.19" size="524288" crc32="a0a1f87d"/>
+    </resources>
+    <tracks>
+      <track id="1"  title="Music Stop"                              command="0x00" type="control"/>
+      <track id="2"  title="～A.D.1993～"                            command="0x5A" loops="false"/>
+      <track id="3"  title="voice &quot;OPENING&quot;"               command="0xB8" loops="false"/>
+      <track id="4"  title="SE &quot;TITLE BACK&quot;"               command="0x3A" loops="false"/>
+      <track id="5"  title="voice_&quot;The NinjaWarriors&quot;"     command="0x3D" loops="false"/>
+      <track id="6"  title="CREDIT"                                  command="0x5B" loops="false"/>
+      <track id="7"  title="DADDY MULK"                              command="0x51"/>
+      <track id="8"  title="ARE YOU READY?"                          command="0x52"/>
+      <track id="9"  title="CHE!"                                    command="0x53"/>
+      <track id="84" title="CREDIT 2"                                command="0x5C" loops="false"/>
+      <track id="10" title="JAPANESE SMILE"                          command="0x54"/>
+      <track id="11" title="MOTHERLESS CHILDREN"                     command="0x55"/>
+      <track id="14" title="DADDY MULK (LAST STAGE)"                 command="0xBB"/>
+      <track id="15" title="voice ENDING"                            command="0x3C" loops="false"/>
+      <track id="16" title="PARADOX"                                 command="0xBA" loops="false"/>
+      <track id="12" title="UP STAIRS"                               command="0x59" loops="false"/>
+      <track id="85" title="GAME OVER"                               command="0x57" loops="false"/>
+      <track id="13" title="PARADOX (Not Intro)"                     command="0xBE" loops="false"/>
+      <track id="17" title="voice_&quot;歓声1&quot;"                 command="0x38" loops="false"/>
+      <track id="18" title="voice_&quot;歓声2&quot;"                 command="0x39" loops="false"/>
+      <track id="19" title="voice_&quot;whaaa!&quot;"                command="0x3E" loops="false"/>
+      <track id="20" title="voice_&quot;uaaa...&quot;"               command="0x3F" loops="false"/>
+      <track id="21" title="voice_&quot;uwaa...&quot;"               command="0x40" loops="false"/>
+      <track id="22" title="voice_&quot;AGU&quot;"                   command="0x45" loops="false"/>
+      <track id="23" title="voice_&quot;U...&quot;"                  command="0x46" loops="false"/>
+      <track id="24" title="voice_&quot;犬1&quot;"                   command="0x28" loops="false"/>
+      <track id="25" title="voice_&quot;犬2&quot;"                   command="0x29" loops="false"/>
+      <track id="26" title="voice_&quot;くノ一1&quot;"               command="0x41" loops="false"/>
+      <track id="27" title="voice_&quot;くノ一2&quot;"               command="0x42" loops="false"/>
+      <track id="28" title="voice_&quot;くノ一3&quot;"               command="0x43" loops="false"/>
+      <track id="29" title="voice_&quot;？？&quot;"                  command="0x44" loops="false"/>
+      <track id="30" title="voice_&quot;司令官&quot;"                command="0x4C" loops="false"/>
+      <track id="31" title="voice_&quot;oh!no&quot;"                 command="0x48" loops="false"/>
+      <track id="32" title="voice_&quot;oh!my god!&quot;"            command="0x49" loops="false"/>
+      <track id="33" title="voice_&quot;？&quot;"                    command="0x4D" loops="false"/>
+      <track id="34" title="voice_&quot;ATTACK!&quot;"               command="0x4F" loops="false"/>
+      <track id="35" title="voice_&quot;I kill you!&quot;"           command="0x4A" loops="false"/>
+      <track id="36" title="voice_&quot;Thank You&quot;"             command="0x86" loops="false"/>
+      <track id="37" title="voice_&quot;che!&quot;"                  command="0x89" loops="false"/>
+      <track id="38" title="voice_&quot;prease dont kill me&quot;"   command="0x50" loops="false"/>
+      <track id="39" title="voice_&quot;mission a composite!&quot;"  command="0x4B" loops="false"/>
+      <track id="40" title="voice_&quot;a&quot;"                     command="0x5D" loops="false"/>
+      <track id="41" title="voice_&quot;b&quot;"                     command="0x5E" loops="false"/>
+      <track id="42" title="voice_&quot;c&quot;"                     command="0x5F" loops="false"/>
+      <track id="43" title="voice_&quot;d&quot;"                     command="0x70" loops="false"/>
+      <track id="44" title="voice_&quot;e&quot;"                     command="0x61" loops="false"/>
+      <track id="45" title="voice_&quot;f&quot;"                     command="0x62" loops="false"/>
+      <track id="46" title="voice_&quot;g&quot;"                     command="0x63" loops="false"/>
+      <track id="47" title="voice_&quot;h&quot;"                     command="0x64" loops="false"/>
+      <track id="48" title="voice_&quot;i&quot;"                     command="0x65" loops="false"/>
+      <track id="49" title="voice_&quot;j&quot;"                     command="0x66" loops="false"/>
+      <track id="50" title="voice_&quot;k&quot;"                     command="0x67" loops="false"/>
+      <track id="51" title="voice_&quot;l&quot;"                     command="0x68" loops="false"/>
+      <track id="52" title="voice_&quot;m&quot;"                     command="0x69" loops="false"/>
+      <track id="53" title="voice_&quot;n&quot;"                     command="0x6A" loops="false"/>
+      <track id="54" title="voice_&quot;o&quot;"                     command="0x6B" loops="false"/>
+      <track id="55" title="voice_&quot;p&quot;"                     command="0x6C" loops="false"/>
+      <track id="56" title="voice_&quot;q&quot;"                     command="0x6D" loops="false"/>
+      <track id="57" title="voice_&quot;r&quot;"                     command="0x6E" loops="false"/>
+      <track id="58" title="voice_&quot;s&quot;"                     command="0x6F" loops="false"/>
+      <track id="59" title="voice_&quot;d&quot;"                     command="0x60" loops="false"/>
+      <track id="60" title="voice_&quot;u&quot;"                     command="0x71" loops="false"/>
+      <track id="61" title="voice_&quot;v&quot;"                     command="0x72" loops="false"/>
+      <track id="62" title="voice_&quot;w&quot;"                     command="0x73" loops="false"/>
+      <track id="63" title="voice_&quot;x&quot;"                     command="0x74" loops="false"/>
+      <track id="64" title="voice_&quot;y&quot;"                     command="0x75" loops="false"/>
+      <track id="65" title="voice_&quot;z&quot;"                     command="0x76" loops="false"/>
+      <track id="66" title="sample&quot;三味線&quot;"                command="0x8C" loops="false"/>
+      <track id="67" title="sample&quot;三味線&quot;"                command="0x8D" loops="false"/>
+      <track id="68" title="sample&quot;三味線&quot;"                command="0x8E" loops="false"/>
+      <track id="69" title="sample&quot;三味線&quot;"                command="0x8F" loops="false"/>
+      <track id="70" title="sample&quot;三味線&quot;"                command="0x90" loops="false"/>
+      <track id="71" title="sample&quot;三味線&quot;"                command="0x91" loops="false"/>
+      <track id="72" title="sample&quot;三味線&quot;"                command="0x92" loops="false"/>
+      <track id="73" title="sample&quot;三味線&quot;"                command="0x93" loops="false"/>
+      <track id="74" title="sample&quot;三味線&quot;"                command="0x94" loops="false"/>
+      <track id="75" title="sample&quot;三味線&quot;"                command="0x95" loops="false"/>
+      <track id="76" title="sample&quot;三味線&quot;"                command="0x96" loops="false"/>
+      <track id="77" title="sample&quot;三味線&quot;"                command="0x97" loops="false"/>
+      <track id="78" title="SE MISS"                                 command="0xBD" loops="false"/>
+      <track id="79" title="SE1"                                     command="0x0D" loops="false"/>
+      <track id="80" title="SE2"                                     command="0x13" loops="false"/>
+      <track id="81" title="SE3"                                     command="0x16" loops="false"/>
+      <track id="82" title="SE4"                                     command="0x17" loops="false"/>
+      <track id="83" title="SE5"                                     command="0x18" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

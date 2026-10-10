@@ -1,0 +1,77 @@
+<chipestra>
+  <game id="dspirit" title="Dragon Spirit" manufacturer="Namco"
+        machine="NAMCO_SYSTEM1" variant="SYSTEM1_BASE" archive="dspirit">
+    <resources>
+      <rom name="soundcpu0" file="ds1_s0.bin" size="65536" crc32="27100065"/>
+      <rom name="soundcpu1" file="ds1_s1.bin" size="65536" crc32="b398645f"/>
+      <rom name="mcu" file="cus64-64a1.mcu" size="4096" crc32="ffb5c0bd"/>
+      <rom name="voice0" file="ds1_v0.bin" size="65536" crc32="313b3508"/>
+      <rom name="voice1" file="ds_voi-1.bin" size="131072" crc32="54790d4e"/>
+      <rom name="voice2" file="ds_voi-2.bin" size="131072" crc32="05298534"/>
+      <rom name="voice3" file="ds_voi-3.bin" size="131072" crc32="13e84c7e"/>
+      <rom name="voice4" file="ds_voi-4.bin" size="131072" crc32="34fbb8cd"/>
+    </resources>
+    <tracks>
+      <track id="0"  title="Music Stop"               command="0x00" type="control"/> <!-- This game has no stop-all command: Chipestra resets the sound hardware instead, which silences FM, WSG and DAC. -->
+      <track id="1"  title="Opening"                  command="0x11"/>
+      <track id="2"  title="出発 (Sea)"                      command="0x01"/>
+      <track id="3"  title="AREA 1 [The Paleozoic Era]"       command="0x02"/>
+      <track id="4"  title="BOSS (Boss)"                    command="0x0f"/>
+      <track id="5"  title="AREA 2 [Volcano]"             command="0x04"/>
+      <track id="6"  title="BOSS A (Boss A)"                    command="0x19"/>
+      <track id="7"  title="AREA 3 [Jungle]"             command="0x05"/>
+      <track id="8"  title="BOSS B (Boss B)"                    command="0x1a"/>
+      <track id="9"  title="AREA 4 [Grave Yard]"             command="0x06"/>
+      <track id="10" title="AREA 5 [Cave Road]"             command="0x08"/>
+      <track id="11" title="AREA 6 [Glacier Land]"             command="0x09"/>
+      <track id="12" title="AREA 7 [Deep Sea]"             command="0x0a"/>
+      <track id="13" title="AREA 8 [Dark Quarters]"             command="0x0b"/>
+      <track id="14" title="AREA 9-1 [Dark Castle 1]"           command="0x0c"/>
+      <track id="15" title="AREA 9-2 [Dark Castle 2]"             command="0x0d"/>
+      <track id="16" title="AREA 9-3 [Dark Castle 3]"             command="0x0e"/>
+      <track id="17" title="AREA 9-4 [Yamata]"         command="0x10"/>
+      <track id="18" title="LASTBOSS [Death-Guardian, Zawell]"      command="0x07"/>
+      <track id="30" title="Boss Destroyed (Boss Clear)"              command="0x16" loops="false"/>
+      <track id="19" title="FINAL SCENE"              command="0x15" loops="false"/> <!-- The music starts after about 7 seconds. -->
+      <track id="20" title="ENDING"                   command="0x7f" loops="false"/> <!-- The music starts after about 3 seconds. -->
+      <track id="21" title="NAME ENTRY 1"             command="0x13"/>
+      <track id="22" title="NAME ENTRY 2"             command="0x14"/>
+      <track id="23" title="CONTINUE"                 command="0x18" loops="false"/>
+      <track id="24" title="Omake (X68000 Ver Loading music)"     command="0x42"/>
+      <track id="25" title="Speaker Test"         command="0x40"/>
+      <!-- WSG sound effects (type="wsg"): command is the game's own sound-test number (the test screen calls it
+           "PSG NUMBER"), 0x00-0x24. Numbers 0x02, 0x06, 0x10, 0x11, 0x12 and 0x13 currently produce no sound in Chipestra, so they are not listed. -->
+      <track id="WSG_00" command="0x00" type="wsg" title="[SFX] Credit" loops="false"/>
+      <track id="WSG_01" command="0x01" type="wsg" title="[SFX] WSG 01" loops="false"/>
+      <track id="WSG_03" command="0x03" type="wsg" title="[SFX] WSG 03" loops="false"/>
+      <track id="WSG_04" command="0x04" type="wsg" title="[SFX] WSG 04" loops="false"/>
+      <track id="WSG_05" command="0x05" type="wsg" title="[SFX] WSG 05" loops="false"/>
+      <track id="WSG_07" command="0x07" type="wsg" title="[SFX] WSG 07" loops="false"/>
+      <track id="WSG_08" command="0x08" type="wsg" title="[SFX] WSG 08" loops="false"/>
+      <track id="WSG_09" command="0x09" type="wsg" title="[SFX] WSG 09" loops="false"/>
+      <track id="WSG_0A" command="0x0A" type="wsg" title="[SFX] WSG 0A" loops="false"/>
+      <track id="WSG_0B" command="0x0B" type="wsg" title="[SFX] WSG 0B" loops="false"/>
+      <track id="WSG_0C" command="0x0C" type="wsg" title="[SFX] WSG 0C" loops="false"/>
+      <track id="WSG_0D" command="0x0D" type="wsg" title="[SFX] WSG 0D" loops="false"/>
+      <track id="WSG_0E" command="0x0E" type="wsg" title="[SFX] WSG 0E"/> <!-- WSG 0x0E loops, so it is not marked loops="false". -->
+      <track id="WSG_0F" command="0x0F" type="wsg" title="[SFX] WSG 0F" loops="false"/>
+      <track id="WSG_14" command="0x14" type="wsg" title="[SFX] WSG 14" loops="false"/>
+      <track id="WSG_15" command="0x15" type="wsg" title="[SFX] WSG 15" loops="false"/>
+      <track id="WSG_16" command="0x16" type="wsg" title="[SFX] WSG 16" loops="false"/>
+      <track id="WSG_17" command="0x17" type="wsg" title="[SFX] WSG 17" loops="false"/>
+      <track id="WSG_18" command="0x18" type="wsg" title="[SFX] WSG 18" loops="false"/>
+      <track id="WSG_19" command="0x19" type="wsg" title="[SFX] WSG 19" loops="false"/>
+      <track id="WSG_1A" command="0x1A" type="wsg" title="[SFX] WSG 1A" loops="false"/>
+      <track id="WSG_1B" command="0x1B" type="wsg" title="[SFX] WSG 1B" loops="false"/>
+      <track id="WSG_1C" command="0x1C" type="wsg" title="[SFX] WSG 1C" loops="false"/>
+      <track id="WSG_1D" command="0x1D" type="wsg" title="[SFX] WSG 1D" loops="false"/>
+      <track id="WSG_1E" command="0x1E" type="wsg" title="[SFX] WSG 1E" loops="false"/>
+      <track id="WSG_1F" command="0x1F" type="wsg" title="[SFX] WSG 1F" loops="false"/>
+      <track id="WSG_20" command="0x20" type="wsg" title="[SFX] WSG 20" loops="false"/>
+      <track id="WSG_21" command="0x21" type="wsg" title="[SFX] WSG 21" loops="false"/>
+      <track id="WSG_22" command="0x22" type="wsg" title="[SFX] WSG 22" loops="false"/>
+      <track id="WSG_23" command="0x23" type="wsg" title="[SFX] WSG 23" loops="false"/>
+      <track id="WSG_24" command="0x24" type="wsg" title="[SFX] WSG 24" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

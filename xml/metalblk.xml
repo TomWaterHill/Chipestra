@@ -1,0 +1,39 @@
+<chipestra>
+  <game id="metalb" title="Metal Black" manufacturer="Taito"
+        machine="TAITO_F2SYSTEM" variant="METALBLACK_BASE"
+        archive="metalb">
+    <resources>
+      <rom name="soundcpu" file="d12-13.5" size="131072"  crc32="bcca2649"/>
+      <rom name="adpcma"   file="d12-02.10" size="1048576" crc32="79263e74"/>
+      <rom name="adpcmb"   file="d12-05.16" size="524288"  crc32="7fd036c5"/>
+    </resources>
+    <tracks>
+      <track id="1"  title="Music Stop"                          command="0x00" type="control"/>
+      <track id="2"  title="Notice Display 1"                    command="0x50" loops="false"/>
+      <track id="3"  title="Notice Display 2"                    command="0x3F" loops="false"/>
+      <track id="4"  title="Red ＆ Yellow(Attract intro)"        command="0x49" loops="false"/>
+      <track id="5"  title="Red ＆ Yellow(Attract)"              command="0x0A" loops="false"/>
+      <track id="6"  title="Credit"                              command="0x46" loops="false"/>
+      <track id="7"  title="Take off(Openning)"                  command="0x0B" loops="false"/>
+      <track id="8"  title="Born to be free(Round 1)"            command="0x0C"/>
+      <track id="9"  title="visitor(Boss A)"                     command="0x0D"/>
+      <track id="10" title="Dancing Horming(Bonus A)"            command="0x0E"/>
+      <track id="11" title="Dual Moon(Round 2)"                  command="0x10"/>
+      <track id="12" title="Yueez(Boss B)"                       command="0x11"/>
+      <track id="13" title="memory(Clear)"                       command="0x12" loops="false"/>
+      <track id="14" title="AREA 26-10(Round 3)"                 command="0x13"/>
+      <track id="15" title="Dio panic!(Boss C)"                  command="0x14"/>
+      <track id="16" title="non fiction(Bonus B)"                command="0x15"/>
+      <track id="17" title="Waste days(Round 4)"                 command="0x17"/>
+      <track id="18" title="the gate of guardian(Boss D)"        command="0x18"/>
+      <track id="19" title="Doubt(Round 5)"                      command="0x19"/>
+      <track id="20" title="Phantasm(Boss E)"                    command="0x1A"/>
+      <track id="21" title="Game is over(Bad End)"               command="0x1D" loops="false"/>
+      <track id="22" title="Time(Round 6)"                       command="0x1C"/>
+      <track id="23" title="a mirage of mind(Endtitle)"          command="0x1E" loops="false"/>
+      <track id="24" title="a mirage of mind(Staff Roll)"        command="0x20" loops="false"/>
+      <track id="25" title="Into the H.I.(Name set A)"           command="0x1F" loops="false"/>
+      <track id="26" title="Into the H.I.(Name set B)"           command="0x57"/>
+    </tracks>
+  </game>
+</chipestra>

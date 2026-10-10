@@ -1,0 +1,18 @@
+<chipestra>
+  <!-- Bubble System mainboard without a game cartridge: plays the countdown speech and the
+       "Morning Music" tune that are stored in the BIOS sound ROMs. -->
+  <game id="bubsys" title="Bubble System BIOS (Warming Up)" manufacturer="Konami"
+        machine="KONAMI_BUBBLESYSTEM_GRADIUS" variant="BUBBLESYSTEM_BIOS_BASE"
+        archive="bubsys">
+    <resources>
+      <rom name="soundcpu" file="400b03.8g" size="8192" crc32="85c2afc5"/>
+      <rom name="wave0"    file="400a1.2b"  size="256"  crc32="5827b1e8"/>
+      <rom name="wave1"    file="400a2.1b"  size="256"  crc32="2f44f970"/>
+    </resources>
+    <tracks>
+      <track id="1" title="STOP"          command="0x00" type="control"/>
+      <track id="2" title="Morning Music" command="0x01"/>
+      <track id="3" title="Countdown"     command="0x40"/>
+    </tracks>
+  </game>
+</chipestra>

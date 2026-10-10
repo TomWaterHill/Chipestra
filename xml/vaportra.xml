@@ -1,0 +1,89 @@
+<chipestra>
+  <game id="vaportra" title="Vapor Trail" manufacturer="Data East"
+        machine="DATAEAST_VAPORTRAIL" variant="VAPORTRAIL_BASE" archive="vaportra">
+    <resources>
+      <rom name="soundcpu" file="fj04" size="65536"  crc32="e9aedf9b"/>
+      <rom name="oki1"     file="fj06" size="131072" crc32="6e98a235"/>
+      <rom name="oki2"     file="fj05" size="131072" crc32="39cda2b5"/>
+    </resources>
+    <tracks>
+      <track id="1"  title="STOP"                                      command="0x00" type="control"/>
+      <track id="2"  title="NIGHTMARE -LAGNAROK- (IDOL)"               command="0x04"/>
+      <track id="3"  title="TAKEOFF (START)"                           command="0x05"/>
+      <track id="4"  title="VAPOR TRAIL (BGM1)"                        command="0x06"/>
+      <track id="5"  title="IN THE DARK (ROCKET BOSS)"                 command="0x09"/>
+      <track id="6"  title="MISSION ACCOMPLISHED (CLEAR)"              command="0x0d" loops="false"/>
+      <track id="7"  title="BLOODY ROAD (BGM2-1)"                      command="0x07"/>
+      <track id="8"  title="BLOODY ROED (BGM2-2)"                      command="0x08"/>
+      <track id="9"  title="THREAT OF UNDER SEA (SUBMARINE BOSS)"      command="0x0a"/>
+      <track id="10" title="A LONG WAY AHEAD (CONTINUE)"               command="0x11" loops="false"/>
+      <track id="11" title="DEATH OF A HERO (GAME OVER)"               command="0x0f" loops="false"/>
+      <track id="12" title="FREEDOM FIGHTER (NAME)"                    command="0x0e" loops="false"/>
+      <track id="13" title="THE GLORY DREAMT OF (ENDING)"              command="0x10" loops="false"/>
+      <track id="14" title="VAPOR TRAIL (BGM1 No intro)"               command="0x0b" loops="false"/>
+      <track id="15" title="VOICE 00"                                  command="0x40" loops="false"/>
+      <track id="16" title="VOICE 01"                                  command="0x41" loops="false"/>
+      <track id="17" title="VOICE 02"                                  command="0x42" loops="false"/>
+      <track id="18" title="VOICE 03"                                  command="0x43" loops="false"/>
+      <track id="19" title="VOICE 04"                                  command="0x44" loops="false"/>
+      <track id="20" title="VOICE 05"                                  command="0x45" loops="false"/>
+      <track id="21" title="VOICE 06"                                  command="0x46" loops="false"/>
+      <track id="22" title="VOICE 07"                                  command="0x47" loops="false"/>
+      <track id="23" title="VOICE 08"                                  command="0x48" loops="false"/>
+      <track id="24" title="VOICE 09"                                  command="0x49" loops="false"/>
+      <track id="25" title="VOICE 10"                                  command="0x4a" loops="false"/>
+      <track id="26" title="VOICE 11"                                  command="0x4b" loops="false"/>
+      <track id="27" title="VOICE 12"                                  command="0x4c" loops="false"/>
+      <track id="28" title="VOICE 13"                                  command="0x4d" loops="false"/>
+      <track id="29" title="VOICE 14"                                  command="0x4e" loops="false"/>
+      <track id="30" title="VOICE 15"                                  command="0x4f" loops="false"/>
+      <track id="31" title="VOICE 16"                                  command="0x50" loops="false"/>
+      <track id="32" title="VOICE 17"                                  command="0x51" loops="false"/>
+      <track id="33" title="VOICE 18"                                  command="0x52" loops="false"/>
+      <track id="34" title="SE 00"                                     command="0x13" loops="false"/>
+      <track id="35" title="SE 01"                                     command="0x14" loops="false"/>
+      <track id="36" title="SE 02"                                     command="0x15" loops="false"/>
+      <track id="37" title="SE 03"                                     command="0x16" loops="false"/>
+      <track id="38" title="SE 04"                                     command="0x17" loops="false"/>
+      <track id="39" title="SE 05"                                     command="0x18" loops="false"/>
+      <track id="40" title="SE 06"                                     command="0x19" loops="false"/>
+      <track id="41" title="SE 07"                                     command="0x1a" loops="false"/>
+      <track id="42" title="SE 08"                                     command="0x1b" loops="false"/>
+      <track id="43" title="SE 09"                                     command="0x1c" loops="false"/>
+      <track id="44" title="SE 10"                                     command="0x1d" loops="false"/>
+      <track id="45" title="SE 11"                                     command="0x1e" loops="false"/>
+      <track id="46" title="SE 12"                                     command="0x1f" loops="false"/>
+      <track id="47" title="SE 13"                                     command="0x20" loops="false"/>
+      <track id="48" title="SE 14"                                     command="0x21" loops="false"/>
+      <track id="49" title="SE 15"                                     command="0x22" loops="false"/>
+      <track id="50" title="SE 16"                                     command="0x23" loops="false"/>
+      <track id="51" title="SE 17"                                     command="0x24" loops="false"/>
+      <track id="52" title="SE 18"                                     command="0x25" loops="false"/>
+      <track id="53" title="SE 19"                                     command="0x26" loops="false"/>
+      <track id="54" title="SE 20"                                     command="0x27" loops="false"/>
+      <track id="55" title="SE 21"                                     command="0x28" loops="false"/>
+      <track id="56" title="SE 22"                                     command="0x29" loops="false"/>
+      <track id="57" title="SE 23"                                     command="0x2a" loops="false"/>
+      <track id="58" title="SE 24"                                     command="0x2b" loops="false"/>
+      <track id="59" title="SE 25"                                     command="0x2c" loops="false"/>
+      <track id="60" title="SE 26"                                     command="0x2d" loops="false"/>
+      <track id="61" title="SE 27"                                     command="0x2f" loops="false"/>
+      <track id="62" title="SE 28"                                     command="0x30" loops="false"/>
+      <track id="63" title="SE 29"                                     command="0x31" loops="false"/>
+      <track id="64" title="SE 30"                                     command="0x32" loops="false"/>
+      <track id="65" title="SE 31"                                     command="0x33" loops="false"/>
+      <track id="66" title="SE 32"                                     command="0x34" loops="false"/>
+      <track id="67" title="SE 33"                                     command="0x35" loops="false"/>
+      <track id="68" title="SE 34"                                     command="0x36" loops="false"/>
+      <track id="69" title="SE 35"                                     command="0x37" loops="false"/>
+      <track id="70" title="SE 36"                                     command="0x38" loops="false"/>
+      <track id="71" title="SE 37"                                     command="0x39" loops="false"/>
+      <track id="72" title="SE 38"                                     command="0x3a" loops="false"/>
+      <track id="73" title="SE 39"                                     command="0x3b" loops="false"/>
+      <track id="74" title="SE 40"                                     command="0x3c" loops="false"/>
+      <track id="75" title="SE 41"                                     command="0x3d" loops="false"/>
+      <track id="76" title="SE 42"                                     command="0x3e" loops="false"/>
+      <track id="77" title="SE 43"                                     command="0x3f" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

@@ -1,0 +1,520 @@
+<!-- SPDX-License-Identifier: GPL-2.0-or-later
+     Copyright (C) 2026 Tom Water Hill -->
+<Window x:Class="Chipestra.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+        xmlns:vm="clr-namespace:Chipestra.App.ViewModels"
+        xmlns:conv="clr-namespace:Chipestra.App.Converters"
+        Title="Chipestra" Height="1000" Width="1060" MinHeight="700" MinWidth="900"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <!-- Default Height/Width are sized so the Auto rows (channel strips, INFORMATION, transport row) are not
+         compressed and the Play Time digits do not overlap neighboring text. They only apply on first run or
+         a fresh settings.json (see RestoreWindowBounds in MainWindow.xaml.cs). -->
+    <Window.Resources>
+        <conv:FractionToBottomMarginConverter x:Key="FractionToBottomMarginConverter" />
+
+        <conv:FractionToInverseSizeConverter x:Key="FractionToInverseSizeConverter" />
+
+        <conv:FractionAndSizeToInverseSizeConverter x:Key="FractionAndSizeToInverseSizeConverter" />
+        <conv:FractionAndSizeToBottomMarginConverter x:Key="FractionAndSizeToBottomMarginConverter" />
+
+        <!-- Shared section-heading style. It sets Foreground explicitly: a keyed Style without BasedOn replaces
+             the implicit app-wide TextBlock style, so the text would otherwise fall back to black. -->
+        <Style x:Key="SectionHeadingStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+        </Style>
+
+        <!-- MUTE ON = green background, OFF = default. -->
+        <Style x:Key="MuteToggleButtonStyle" TargetType="ToggleButton">
+            <!-- The default themed ToggleButton template ignores Background/Foreground for the checked state, so the
+                 template is overridden outright to render ON as green. -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="Green" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}" />
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Channel Strip: always visible, grayed out when inactive. Fixed 450px-tall card; the single flexible
+             "*" row is the meter itself, so the mask/hold-marker converters read its live ActualHeight through an
+             ElementName binding instead of a ConverterParameter. -->
+        <DataTemplate DataType="{x:Type vm:ChannelStripViewModel}">
+            <!-- Narrow strip: every child row is centered/stretched with no horizontal margin of its own, so the
+                 Border width alone sets the slack around the M/S buttons and PAN knob. -->
+            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Padding="2,2"
+                    Background="{StaticResource ChannelStripBackgroundBrush}"
+                    Width="34" Height="450">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <!-- An inactive slot (beyond the loaded Machine's real channel count) is grayed out and disabled rather
+                                 than hidden, which keeps the row width stable. -->
+                            <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                <Setter Property="Opacity" Value="0.35" />
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="{Binding PeakDb, StringFormat={}{0:F0}dB}"
+                               FontSize="9"
+                               TextAlignment="Center"
+                               Foreground="{StaticResource SecondaryTextBrush}" />
+
+                    <!-- L/R meter bars. Row 1 is the flexible row; x:Name lets the nested mask/hold-marker Borders read
+                         its live ActualHeight. -->
+                    <Grid x:Name="MeterRow" Grid.Row="1" Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left channel bar: static 3-zone background (green 78dB : yellow 6dB : red 6dB, i.e. 13:1:1) covered by
+                             a same-colored mask down to the current fill line. The outer element is a Label because a plain
+                             Grid/Border/ContentControl has no AutomationPeer, so AutomationProperties.Name would be invisible
+                             to UIAutomation. -->
+                        <Label Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Grid.Column="0"
+                               automation:AutomationProperties.Name="{Binding ChannelName, StringFormat={}{0} Left Level}">
+                            <Grid>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="13*" />
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Background="{StaticResource MeterRedBrush}" />
+                                    <Border Grid.Row="1" Background="{StaticResource MeterYellowBrush}" />
+                                    <Border Grid.Row="2" Background="{StaticResource MeterGreenBrush}" />
+                                </Grid>
+                                <Border Background="{StaticResource ChannelStripBackgroundBrush}"
+                                        VerticalAlignment="Top">
+                                    <Border.Height>
+                                        <MultiBinding Converter="{StaticResource FractionAndSizeToInverseSizeConverter}">
+                                            <Binding Path="MeterFillFractionLeft" />
+                                            <Binding Path="ActualHeight" ElementName="MeterRow" />
+                                        </MultiBinding>
+                                    </Border.Height>
+                                </Border>
+                                <Border Height="2" VerticalAlignment="Bottom">
+                                    <Border.Margin>
+                                        <MultiBinding Converter="{StaticResource FractionAndSizeToBottomMarginConverter}">
+                                            <Binding Path="HoldFillFractionLeft" />
+                                            <Binding Path="ActualHeight" ElementName="MeterRow" />
+                                        </MultiBinding>
+                                    </Border.Margin>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource MeterGreenBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HoldZoneLeft}" Value="{x:Static vm:MeterZone.Yellow}">
+                                                    <Setter Property="Background" Value="{StaticResource MeterYellowBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HoldZoneLeft}" Value="{x:Static vm:MeterZone.Red}">
+                                                    <Setter Property="Background" Value="{StaticResource MeterRedBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </Grid>
+                        </Label>
+
+                        <!-- Right channel bar - same structure as Left above. -->
+                        <Label Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Grid.Column="1" Margin="2,0,0,0"
+                               automation:AutomationProperties.Name="{Binding ChannelName, StringFormat={}{0} Right Level}">
+                            <Grid>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="13*" />
+                                    </Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Background="{StaticResource MeterRedBrush}" />
+                                    <Border Grid.Row="1" Background="{StaticResource MeterYellowBrush}" />
+                                    <Border Grid.Row="2" Background="{StaticResource MeterGreenBrush}" />
+                                </Grid>
+                                <Border Background="{StaticResource ChannelStripBackgroundBrush}"
+                                        VerticalAlignment="Top">
+                                    <Border.Height>
+                                        <MultiBinding Converter="{StaticResource FractionAndSizeToInverseSizeConverter}">
+                                            <Binding Path="MeterFillFractionRight" />
+                                            <Binding Path="ActualHeight" ElementName="MeterRow" />
+                                        </MultiBinding>
+                                    </Border.Height>
+                                </Border>
+                                <Border Height="2" VerticalAlignment="Bottom">
+                                    <Border.Margin>
+                                        <MultiBinding Converter="{StaticResource FractionAndSizeToBottomMarginConverter}">
+                                            <Binding Path="HoldFillFractionRight" />
+                                            <Binding Path="ActualHeight" ElementName="MeterRow" />
+                                        </MultiBinding>
+                                    </Border.Margin>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource MeterGreenBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HoldZoneRight}" Value="{x:Static vm:MeterZone.Yellow}">
+                                                    <Setter Property="Background" Value="{StaticResource MeterYellowBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HoldZoneRight}" Value="{x:Static vm:MeterZone.Red}">
+                                                    <Setter Property="Background" Value="{StaticResource MeterRedBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </Grid>
+                        </Label>
+                    </Grid>
+
+                    <!-- PAN knob: the mouse wheel changes Pan (Knob_MouseWheel). Explicit RotateTransform CenterX/CenterY
+                         because a thin Line's degenerate bounding box makes RenderTransformOrigin unreliable. -->
+                    <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,2,0,0">
+                        <Grid Width="22" Height="22" Background="Transparent"
+                              MouseWheel="Knob_MouseWheel"
+                              automation:AutomationProperties.Name="{Binding PanAutomationName}">
+                            <Ellipse Width="22" Height="22" Fill="{StaticResource ControlBackgroundBrush}"
+                                     Stroke="{StaticResource SecondaryTextBrush}" StrokeThickness="1" />
+                            <Line X1="11" Y1="11" X2="11" Y2="2" Stroke="{StaticResource PrimaryTextBrush}" StrokeThickness="2">
+                                <Line.RenderTransform>
+                                    <RotateTransform CenterX="11" CenterY="11" Angle="{Binding PanAngleDegrees}" />
+                                </Line.RenderTransform>
+                            </Line>
+                        </Grid>
+                        <TextBlock Text="{Binding PanLabelText}" FontSize="8" TextAlignment="Center" Foreground="{StaticResource SecondaryTextBrush}" />
+                    </StackPanel>
+
+                    <!-- MUTE / SOLO, stacked vertically because the column is too narrow for side by side. -->
+                    <StackPanel Grid.Row="3" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,8,0,0">
+                        <ToggleButton Content="M" Width="28" Margin="0,0,0,2"
+                                      Style="{StaticResource MuteToggleButtonStyle}"
+                                      IsChecked="{Binding IsMuted, Mode=TwoWay}"
+                                      automation:AutomationProperties.Name="{Binding MuteAutomationName}" />
+                        <ToggleButton Content="S" Width="28"
+                                      IsChecked="{Binding IsSoloed, Mode=TwoWay}"
+                                      automation:AutomationProperties.Name="{Binding SoloAutomationName}" />
+                    </StackPanel>
+
+                    <!-- Device/Channel name labels: two side-by-side rotated (90 degree) columns. Height is explicit because
+                         rotated TextBlocks measure too small inside a horizontally scrolling ItemsControl; it is sized so
+                         longer names (e.g. "K005289 1", "ADPCM-A 6") are not ellipsis-truncated. -->
+                    <Grid Grid.Row="4" Height="92" Margin="0,8,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <!-- Device row: chip model + instance number when more than one of that model exists; channel row:
+                             category + channel number (see ChannelDisplayNameFormatter). -->
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding DisplayDeviceName}"
+                                   ToolTip="{Binding DisplayDeviceName}"
+                                   FontSize="10"
+                                   Foreground="{StaticResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="84"
+                                   automation:AutomationProperties.Name="{Binding DisplayDeviceName}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="270" />
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding DisplayChannelName}"
+                                   ToolTip="{Binding DisplayChannelName}"
+                                   FontSize="11"
+                                   HorizontalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="84"
+                                   automation:AutomationProperties.Name="{Binding DisplayChannelName}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="270" />
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+    <!-- Three content rows (INFORMATION / Channel Meter / Playlist) plus the error banner below as persistent chrome. -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: INFORMATION heading at the far left with the status fields beside it; SETTINGS button at the far right. -->
+        <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="12,10" Margin="8,8,8,0"
+                Background="{StaticResource PanelBackgroundBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="INFORMATION" Style="{StaticResource SectionHeadingStyle}" Margin="0,0,20,0" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <WrapPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
+                            <TextBlock Text="Game: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding GameText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Music: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding MusicText}" />
+                        </StackPanel>
+                    </WrapPanel>
+                    <WrapPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,20,2">
+                            <TextBlock Text="System: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SystemText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,20,2">
+                            <TextBlock Text="Channels: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ChannelsText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,20,2">
+                            <TextBlock Text="Internal Rate: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding InternalRateText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,20,2">
+                            <TextBlock Text="Output: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding OutputFormatText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                            <TextBlock Text="Streaming: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding StreamingText}" />
+                        </StackPanel>
+                    </WrapPanel>
+                </StackPanel>
+                <Button x:Name="SettingsButton"
+                        Grid.Column="2"
+                        VerticalAlignment="Top"
+                        Content="SETTINGS"
+                        Width="90"
+                        Click="SettingsButton_Click" />
+            </Grid>
+        </Border>
+
+        <!-- Row 1: Channel Meter panel: bulk operations + master section on top, channel strips
+             (horizontal scroll beyond available width) below. -->
+        <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="8,4,8,0"
+                Background="{StaticResource PanelBackgroundBrush}">
+            <StackPanel>
+                <TextBlock Text="ch LEVEL / PAN / MUTE" Style="{StaticResource SectionHeadingStyle}" Margin="8,8,8,4" />
+                <Grid Margin="8,0,8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Button Content="ALL MUTE" Width="72" Margin="0,0,6,0" Command="{Binding ChannelMixer.AllMuteCommand}" />
+                        <Button Content="ALL UNMUTE" Width="80" Margin="0,0,6,0" Command="{Binding ChannelMixer.AllUnmuteCommand}" />
+                        <Button Content="ALL RESET" Width="76" Margin="0,0,6,0" Command="{Binding ChannelMixer.AllResetCommand}" />
+                        <Button Content="SOLO OFF" Width="70" Command="{Binding ChannelMixer.SoloOffCommand}" />
+                    </StackPanel>
+
+                    <!-- Master VOLUME/MUTE + horizontal 2-row LEVEL meter (L on top of R). -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="MASTER" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0" />
+                        <ToggleButton Content="M" Width="24" VerticalAlignment="Center"
+                                      IsChecked="{Binding ChannelMixer.MasterMuted, Mode=TwoWay}"
+                                      automation:AutomationProperties.Name="Master Mute" />
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="12,0,8,0">
+                            <TextBlock Text="VOLUME" FontWeight="SemiBold" FontSize="10" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding ChannelMixer.MasterGainPercentText}" FontWeight="Bold" HorizontalAlignment="Center"
+                                       automation:AutomationProperties.Name="Master Volume Percent" />
+                        </StackPanel>
+                        <Slider Width="100" Margin="0,0,12,0" VerticalAlignment="Center"
+                                Minimum="0" Maximum="2"
+                                Value="{Binding ChannelMixer.MasterGain, Mode=TwoWay}"
+                                automation:AutomationProperties.Name="Master Volume" />
+                        <TextBlock Text="LEVEL" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,4,0">
+                            <TextBlock Text="L" FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center" />
+                            <TextBlock Text="R" FontSize="9" Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <!-- Same static 3-zone background + mask scheme as the per-channel meters, but horizontal (quiet = left,
+                             loud = right) and without a peak-hold marker. The outer element is a Label for the same
+                             AutomationPeer reason as the per-channel meters. -->
+                        <StackPanel Orientation="Vertical" Width="120" VerticalAlignment="Center">
+                            <Label Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Height="10" Margin="0,0,0,2" automation:AutomationProperties.Name="Master Level Left">
+                                <Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="13*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Background="{StaticResource MeterGreenBrush}" />
+                                        <Border Grid.Column="1" Background="{StaticResource MeterYellowBrush}" />
+                                        <Border Grid.Column="2" Background="{StaticResource MeterRedBrush}" />
+                                    </Grid>
+                                    <Border Background="{StaticResource PanelBackgroundBrush}"
+                                            HorizontalAlignment="Right"
+                                            Width="{Binding ChannelMixer.MasterPeakLeftFillFraction, Converter={StaticResource FractionToInverseSizeConverter}, ConverterParameter=120}" />
+                                </Grid>
+                            </Label>
+                            <Label Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Height="10" automation:AutomationProperties.Name="Master Level Right">
+                                <Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="13*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Background="{StaticResource MeterGreenBrush}" />
+                                        <Border Grid.Column="1" Background="{StaticResource MeterYellowBrush}" />
+                                        <Border Grid.Column="2" Background="{StaticResource MeterRedBrush}" />
+                                    </Grid>
+                                    <Border Background="{StaticResource PanelBackgroundBrush}"
+                                            HorizontalAlignment="Right"
+                                            Width="{Binding ChannelMixer.MasterPeakRightFillFraction, Converter={StaticResource FractionToInverseSizeConverter}, ConverterParameter=120}" />
+                                </Grid>
+                            </Label>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Channel strips: horizontal scroll once there are more than fit. MaxHeight = the strip's fixed 450
+                     plus the horizontal scrollbar. -->
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" MaxHeight="472" Margin="0,4,0,4">
+                    <ItemsControl x:Name="ChannelStripsItemsControl" ItemsSource="{Binding ChannelMixer.Channels}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
+        <!-- Row 2: PLAYLIST - transport + Play Time on top, Library tree + track list split view below. -->
+        <Grid Grid.Row="2" Margin="8,4,8,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="MUSIC PLAY &amp; SELECT" Style="{StaticResource SectionHeadingStyle}" Margin="0,4,0,6" />
+
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button x:Name="PlayButton" Content="Play" Width="80" Margin="5,0" Command="{Binding PlayCommand}" />
+                    <Button x:Name="PauseButton" Content="Pause" Width="80" Margin="5,0" Command="{Binding PauseCommand}" />
+                    <Button x:Name="ResumeButton" Content="Resume" Width="80" Margin="5,0" Command="{Binding ResumeCommand}" />
+                    <Button x:Name="StopButton" Content="Stop" Width="80" Margin="5,0" Command="{Binding StopCommand}" />
+                    <TextBlock Text="Play Time: " FontWeight="SemiBold" VerticalAlignment="Center" Margin="20,0,4,0" FontSize="16" />
+                    <TextBlock Text="{Binding TimeText}" VerticalAlignment="Center" FontFamily="Consolas" FontSize="26" FontWeight="Bold" />
+                </StackPanel>
+                <!-- SEARCH + Clear, hidden for now: after searching, playing a result and clearing, the track list stops
+                     showing tracks (LibraryViewModel state is left inconsistent). Kept in the XAML until that is fixed. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="Collapsed">
+                    <TextBlock Text="SEARCH" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBox x:Name="SearchTextBox"
+                             Width="220"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding Library.SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button x:Name="ClearSearchButton"
+                            Content="Clear"
+                            Width="60"
+                            Margin="6,0,0,0"
+                            Click="ClearSearchButton_Click" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <!-- x:Name so MainWindow.xaml.cs can save/restore the column width (settings.json LibraryColumnWidth). -->
+                    <ColumnDefinition x:Name="LibraryColumn" Width="200" />
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TreeView x:Name="LibraryTreeView"
+                          Grid.Column="0"
+                          ItemsSource="{Binding Library.DisplayNodes}"
+                          SelectedItemChanged="LibraryTreeView_SelectedItemChanged">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <TextBlock Text="{Binding Header}" automation:AutomationProperties.Name="{Binding Header}" />
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+
+                <GridSplitter Grid.Column="1"
+                              Width="5"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Background="{StaticResource BorderBrush}" />
+
+                <ListView x:Name="TrackListView"
+                          Grid.Column="2"
+                          Margin="6,0,0,0"
+                          ItemsSource="{Binding Library.Tracks}"
+                          SelectedItem="{Binding Library.SelectedTrack, Mode=TwoWay}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Track" DisplayMemberBinding="{Binding DisplayName}" Width="260" />
+                        </GridView>
+                    </ListView.View>
+                    <!-- Explicit accessible Name (otherwise it falls back to TrackDefinition.ToString()); BasedOn keeps the
+                         app-wide dark ListViewItem style. -->
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                            <Setter Property="automation:AutomationProperties.Name" Value="{Binding DisplayName}" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+            </Grid>
+        </Grid>
+
+        <!-- Error banner: ROM resolution failures, Machine load failures, etc. -->
+        <TextBlock x:Name="ErrorMessageText"
+                   Grid.Row="3"
+                   Foreground="Red"
+                   Margin="10,4,10,8"
+                   TextWrapping="Wrap"
+                   Text="{Binding ErrorMessage}" />
+    </Grid>
+</Window>

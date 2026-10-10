@@ -1,0 +1,26 @@
+<chipestra>
+  <game id="thndrbld"
+        title="THUNDER BLADE"
+        manufacturer="Sega"
+        machine="SEGA_XBOARD"
+        variant="XBOARD_BASE"
+        archive="thndrbld">
+    <resources>
+      <rom name="soundcpu" file="epr-11396.ic17"/>
+      <rom name="pcm1"     file="epr-11317.ic11"/>
+      <rom name="pcm2"     file="epr-11318.ic12"/>
+      <rom name="pcm3"     file="epr-11319.ic13"/>
+    </resources>
+    <tracks>
+      <track id="1" title="Music Stop"                     command="0x00" type="control" />
+      <track id="2" title="THUNDER BLADE (1,3ST.B.G.M.)"   command="0x98" />
+      <track id="3" title="BURNING POINT (BOSS THEME)"     command="0x9e" />
+      <track id="4" title="ROUND CLEAR"                    command="0x9a" loops="false"/>
+      <track id="5" title="TYPE II (2,4ST.B.G.M.)"         command="0x9f" />
+      <track id="6" title="NAME ENTRY"                     command="0x9c" loops="false" />
+      <track id="7" title="BGM 1"                          command="0x99" />
+      <track id="8" title="BGM 2"                          command="0x9b" loops="false" />
+      <track id="9" title="BGM 3"                          command="0x9d" loops="false" />
+    </tracks>
+  </game>
+</chipestra>

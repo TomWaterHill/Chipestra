@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <RootNamespace>Chipestra.App</RootNamespace>
+    <AssemblyName>Chipestra</AssemblyName>
+    <!-- Version comes from the repo-root version.props (the single source; policy comment there):
+         Major.Minor.Patch drives AssemblyVersion/FileVersion/InformationalVersion together.
+         Display ("Ver 1.000.00") is formatted by Settings/VersionFormatter.cs. -->
+    <Version>$(ChipestraMajor).$(ChipestraMinor).$(ChipestraPatch)</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chipestra.Core\Chipestra.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Native DLL is produced by the CMake build (src/Chipestra.Native) into
+         artifacts/native/. Not copied manually; picked up here if it has been built. -->
+    <None Include="..\..\artifacts\native\chipestra_native.dll"
+          Condition="Exists('..\..\artifacts\native\chipestra_native.dll')"
+          Link="chipestra_native.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+    <!-- chipestra_native.dll dynamically links libsoxr (THIRD-PARTY-NOTICES.md),
+         so soxr.dll has to sit next to it for the App to load; staged from
+         artifacts/native/ like chipestra_native.dll above. -->
+    <None Include="..\..\artifacts\native\soxr.dll"
+          Condition="Exists('..\..\artifacts\native\soxr.dll')"
+          Link="soxr.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The game definition XML ships alongside the built exe so the app can
+         find its Library catalog via AppContext.BaseDirectory, with no
+         environment variable or command-line argument. No ROM data here -
+         only the XML definitions, same as xml/ in the repo. -->
+    <Content Include="..\..\xml\**\*.xml"
+             Link="xml\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The License window reads these at runtime (LicenseTextBuilder) from the application folder, the
+         same convention as xml above: THIRD-PARTY-NOTICES.md, licenses/*.txt and LICENSE sit next to the EXE.
+         (thirdparty/ is never shipped; thirdparty/mame is not even committed.) -->
+    <Content Include="..\..\THIRD-PARTY-NOTICES.md"
+             Link="THIRD-PARTY-NOTICES.md"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\LICENSE"
+             Link="LICENSE"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\licenses\*.txt"
+             Link="licenses\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

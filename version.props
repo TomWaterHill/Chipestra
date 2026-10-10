@@ -1,0 +1,17 @@
+<Project>
+
+  <!-- Chipestra application version: the ONE place it is written.
+       Displayed as "Ver a.bbb.cc" (a = Major, bbb = Minor zero-padded to 3 digits, cc = Patch to 2),
+       built into <Version> by the App/Core projects as Major.Minor.Patch (e.g. 1.0.0).
+       Unrelated to the C ABI number (chipestra_abi.h kApiVersion), which is never shown to the user.
+         Major: C ABI / saved-settings / XML format becomes incompatible (also raise kApiVersion).
+         Minor: a board/console or a user-visible feature is added (Patch resets to 0).
+         Patch: bug fix, or a title added to an existing board (XML); past 99, raise Minor instead.
+       tools/verify.ps1 checks this file's shape (three integers, Minor 0-999, Patch 0-99). -->
+  <PropertyGroup>
+    <ChipestraMajor>1</ChipestraMajor>
+    <ChipestraMinor>0</ChipestraMinor>
+    <ChipestraPatch>0</ChipestraPatch>
+  </PropertyGroup>
+
+</Project>

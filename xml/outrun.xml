@@ -1,0 +1,31 @@
+<chipestra>
+  <game id="outrun" title="Out Run" manufacturer="SEGA" machine="SEGA_OUTRUN" variant="OUTRUN_BASE"
+        archive="outrun">
+    <resources>
+      <rom name="soundcpu" file="epr-10187.88" size="32768" crc32="a10abaa9"/>
+      <rom name="pcm1"     file="opr-10193.66" size="32768" crc32="bcd10dde"/>
+      <rom name="pcm2"     file="opr-10192.67" size="32768" crc32="770f1270"/>
+      <rom name="pcm3"     file="opr-10191.68" size="32768" crc32="20a284ab"/>
+      <rom name="pcm4"     file="opr-10190.69" size="32768" crc32="7cab70e2"/>
+      <rom name="pcm5"     file="opr-10189.70" size="32768" crc32="01366b54"/>
+      <rom name="pcm6"     file="opr-10188.71" size="32768" crc32="bad30ad9"/>
+    </resources>
+    <tracks>
+      <track id="0" title="Music Stop"                 command="0x00" type="control"/>
+      <track id="1" title="Passing Breeze"             command="0x81"/>
+      <track id="2" title="Splash Wave"                command="0x82"/>
+      <track id="3" title="Magical Sound Shower"       command="0x85"/>
+      <track id="5" title="LAST WAVE"                  command="0xA5" loops="false"/>
+      <track id="6" title="Coin"                       command="0x84" loops="false"/>
+      <track id="7" title="Check Point"                command="0x86" loops="false"/>
+      <track id="8" title="Drift On"                   command="0x8A" loops="false"/>
+      <track id="9" title="Drift Off"                  command="0x8B" loops="false"/>
+      <track id="10" title="Crash"                     command="0x8F" loops="false"/>
+      <track id="11" title="Signal A"                  command="0x94" loops="false"/>
+      <track id="12" title="Signal B"                  command="0x95" loops="false"/>
+      <track id="13" title="[Voice] Check Point!"      command="0x9D" loops="false"/>
+      <track id="14" title="[Voice] Congratulation!"   command="0x9E" loops="false"/>
+      <track id="15" title="[Voice] Get Ready?"        command="0x9F" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>
