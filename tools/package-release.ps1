@@ -10,7 +10,7 @@
     files (THIRD-PARTY-NOTICES.md, licenses/, LICENSE) via the .csproj's own Content/None items - see
     Chipestra.App.csproj) into a clean dist/Chipestra-<a.bbb.cc>/
     folder, strips debug symbols (.pdb), adds the end-user README
-    (README.md and README.ja.md from the repository root), THIRD-PARTY-NOTICES.md, the LICENSE and licenses/ texts, and verifies no archive-extension files (a
+    (README.md from the repository root, English then Japanese), THIRD-PARTY-NOTICES.md, the LICENSE and licenses/ texts, and verifies no archive-extension files (a
     proxy for "did a ROM file leak into the build output") ended up in the
     result. Optionally zips the folder.
 
@@ -46,7 +46,7 @@ Set-Location $RepoRoot
 
 $AppBinDir = "src/Chipestra.App/bin/Release/net10.0-windows"
 $VersionProps = "version.props"
-$ReadmeSources = @("README.md", "README.ja.md")
+$ReadmeSources = @("README.md")
 
 if (-not (Test-Path $AppBinDir)) {
     throw "Release build output not found at '$AppBinDir'. Run '.\tools\verify.ps1' (or 'dotnet build Chipestra.slnx -c Release') first."
@@ -99,12 +99,12 @@ Get-ChildItem -Path $AppBinDir -Recurse -File | Where-Object { $_.Extension -ne 
     Copy-Item $_.FullName $destPath
 }
 
-# End-user READMEs: the English and Japanese READMEs from the repository root are the same files shown
-# on the repository page; the package carries both.
+# End-user README: README.md from the repository root (English, then Japanese) is the same file shown
+# on the repository page; the package carries it.
 foreach ($readme in $ReadmeSources) {
     Copy-Item $readme (Join-Path $packageDir $readme) -Force
 }
-# The READMEs link to docs/xml-format.md, so the package carries it at the same relative path.
+# The README links to docs/xml-format.md, so the package carries it at the same relative path.
 $xmlFormatDoc = "docs/xml-format.md"
 if (-not (Test-Path $xmlFormatDoc)) {
     throw "$xmlFormatDoc not found."
@@ -181,7 +181,7 @@ if ($Zip) {
         [System.IO.Compression.CompressionLevel]::Optimal,
         $true)
     Write-Host "Zipped: $zipPath" -ForegroundColor Green
-}
 
     # The Release also carries the source that corresponds to the bundled soxr.dll (LGPL).
     & (Join-Path $PSScriptRoot "package-libsoxr-source.ps1") -OutputRoot $OutputRoot -Version $version
+}
