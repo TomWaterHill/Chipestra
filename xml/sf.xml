@@ -1,0 +1,120 @@
+<chipestra>
+  <game id="sf" title="Street Fighter" manufacturer="Capcom"
+        machine="CAPCOM_68000" variant="SF_BASE" archive="sf">
+    <resources>
+      <rom name="soundcpu" file="sf-02.7k"  size="32768"  crc32="4a9ac534"/>
+      <rom name="samples0" file="sfu-00.1h" size="131072" crc32="a7cce903"/>
+      <rom name="samples1" file="sf-01.1k"  size="131072" crc32="86e0f0d5"/>
+    </resources>
+    <tracks>
+      <track id="0"  title="Music Stop"      command="0x00" type="control"/> <!-- This game has no stop-all command: Chipestra resets the sound hardware instead. -->
+      <track id="1"  title="CREDIT"          command="0x0f" loops="false"/>
+      <track id="2" title="SELECT"           command="0x34"/>
+      <track id="3" title="VS."              command="0x33" loops="false"/>
+      <track id="4" title="RETSU"            command="0x28"/>
+      <track id="5" title="GEKI"             command="0x29"/>
+      <track id="6" title="CLEAR"            command="0x37" loops="false"/>
+      <track id="7" title="JOE"              command="0x2a"/>
+      <track id="8" title="MIKE"             command="0x2b"/>
+      <track id="9" title="BONUS STAGE 1"    command="0x3a"/>
+      <track id="10" title="BIRDIE"          command="0x2c"/>
+      <track id="11" title="EAGLE"           command="0x2d"/>
+      <track id="12" title="NEW CHALLENGER"  command="0x3e" loops="false"/>
+      <track id="13" title="LEE"             command="0x2e"/>
+      <track id="14" title="GEN"             command="0x2f"/>
+      <track id="15" title="BONUS STAGE 2"   command="0x3b"/>
+      <track id="16" title="ADON"            command="0x30"/>
+      <track id="17" title="SAGAT"           command="0x31"/>
+      <track id="18" title="ENDING"          command="0x32" loops="false"/>
+      <track id="19" title="STAFF ROLL"      command="0x36" loops="false"/>
+      <track id="20" title="NAME ENTRY"      command="0x38" loops="false"/>
+      <track id="21" title="RANKING"         command="0x39" loops="false"/>
+      <track id="22" title="CONTINUE"        command="0x3c" loops="false"/>
+      <track id="23" title="[SFX] 01"        command="0x01" loops="false"/>
+      <track id="24" title="[SFX] 02"        command="0x02" loops="false"/>
+      <track id="25" title="[SFX] 03"        command="0x03" loops="false"/>
+      <track id="26" title="[SFX] 04"        command="0x04" loops="false"/>
+      <track id="27" title="[SFX] 05"        command="0x05" loops="false"/>
+      <track id="28" title="[SFX] 06"        command="0x06" loops="false"/>
+      <track id="29" title="[SFX] 07"        command="0x07" loops="false"/>
+      <track id="30" title="[SFX] 08"        command="0x08" loops="false"/>
+      <track id="31" title="[SFX] 09"        command="0x09" loops="false"/>
+      <track id="32" title="[SFX] 0A"        command="0x0a" loops="false"/>
+      <track id="33" title="[SFX] 0B"        command="0x0b" loops="false"/>
+      <track id="34" title="[SFX] 0D"        command="0x0d" loops="false"/>
+      <track id="35" title="[SFX] 10"        command="0x10" loops="false"/>
+      <track id="36" title="[SFX] 11"        command="0x11" loops="false"/>
+      <track id="37" title="[SFX] 12"        command="0x12" loops="false"/>
+      <track id="38" title="[SFX] 13"        command="0x13" loops="false"/>
+      <track id="39" title="[SFX] 14"        command="0x14" loops="false"/>
+      <track id="40" title="[SFX] 16"        command="0x16" loops="false"/>
+      <track id="41" title="[SFX] 17"        command="0x17" loops="false"/>
+      <track id="42" title="[SFX] 18"        command="0x18" loops="false"/>
+      <track id="43" title="[SFX] 19"        command="0x19" loops="false"/>
+      <track id="44" title="[SFX] 1B"        command="0x1b" loops="false"/>
+      <track id="45" title="[SFX] 1C"        command="0x1c" loops="false"/>
+      <track id="46" title="[SFX] 20"        command="0x20" loops="false"/>
+      <track id="47" title="[SFX] 21"        command="0x21" loops="false"/>
+      <track id="48" title="[SFX] 22"        command="0x22" loops="false"/>
+      <track id="49" title="[VOICE] 81"      command="0x81" loops="false"/>
+      <track id="50" title="[VOICE] 83"      command="0x83" loops="false"/>
+      <track id="51" title="[VOICE] 85"      command="0x85" loops="false"/>
+      <track id="52" title="[VOICE] 86"      command="0x86" loops="false"/>
+      <track id="53" title="[VOICE] 87"      command="0x87" loops="false"/>
+      <track id="54" title="[VOICE] 88"      command="0x88" loops="false"/>
+      <track id="55" title="[VOICE] 89"      command="0x89" loops="false"/>
+      <track id="56" title="[VOICE] 8A"      command="0x8a" loops="false"/>
+      <track id="57" title="[VOICE] 8B"      command="0x8b" loops="false"/>
+      <track id="58" title="[VOICE] 8C"      command="0x8c" loops="false"/>
+      <track id="59" title="[VOICE] 8D"      command="0x8d" loops="false"/>
+      <track id="60" title="[VOICE] 8F"      command="0x8f" loops="false"/>
+      <track id="61" title="[VOICE] 90"      command="0x90" loops="false"/>
+      <track id="62" title="[VOICE] 91"      command="0x91" loops="false"/>
+      <track id="63" title="[VOICE] 92"      command="0x92" loops="false"/>
+      <track id="64" title="[VOICE] 93"      command="0x93" loops="false"/>
+      <track id="65" title="[VOICE] 94"      command="0x94" loops="false"/>
+      <track id="66" title="[VOICE] 95"      command="0x95" loops="false"/>
+      <track id="67" title="[VOICE] 96"      command="0x96" loops="false"/>
+      <track id="68" title="[VOICE] 97"      command="0x97" loops="false"/>
+      <track id="69" title="[VOICE] 98"      command="0x98" loops="false"/>
+      <track id="70" title="[VOICE] 99"      command="0x99" loops="false"/>
+      <track id="71" title="[VOICE] 9A"      command="0x9a" loops="false"/>
+      <track id="72" title="[VOICE] 9B"      command="0x9b" loops="false"/>
+      <track id="73" title="[VOICE] 9C"      command="0x9c" loops="false"/>
+      <track id="74" title="[VOICE] 9D"      command="0x9d" loops="false"/>
+      <track id="75" title="[VOICE] 9E"      command="0x9e" loops="false"/>
+      <track id="76" title="[VOICE] 9F"      command="0x9f" loops="false"/>
+      <track id="77" title="[VOICE] A0"      command="0xa0" loops="false"/>
+      <track id="78" title="[VOICE] A1"      command="0xa1" loops="false"/>
+      <track id="79" title="[VOICE] A2"      command="0xa2" loops="false"/>
+      <track id="80" title="[VOICE] A3"      command="0xa3" loops="false"/>
+      <track id="81" title="[VOICE] A4"      command="0xa4" loops="false"/>
+      <track id="82" title="[VOICE] A5"      command="0xa5" loops="false"/>
+      <track id="83" title="[VOICE] A6"      command="0xa6" loops="false"/>
+      <track id="84" title="[VOICE] A7"      command="0xa7" loops="false"/>
+      <track id="85" title="[VOICE] A8"      command="0xa8" loops="false"/>
+      <track id="86" title="[VOICE] A9"      command="0xa9" loops="false"/>
+      <track id="87" title="[VOICE] AA"      command="0xaa" loops="false"/>
+      <track id="88" title="[VOICE] AB"      command="0xab" loops="false"/>
+      <track id="89" title="[VOICE] AC"      command="0xac" loops="false"/>
+      <track id="90" title="[VOICE] AD"      command="0xad" loops="false"/>
+      <track id="91" title="[VOICE] AE"      command="0xae" loops="false"/>
+      <track id="92" title="[VOICE] AF"      command="0xaf" loops="false"/>
+      <track id="93" title="[VOICE] B0"      command="0xb0" loops="false"/>
+      <track id="94" title="[VOICE] B1"      command="0xb1" loops="false"/>
+      <track id="95" title="[VOICE] B2"      command="0xb2" loops="false"/>
+      <track id="96" title="[VOICE] B3"      command="0xb3" loops="false"/>
+      <track id="97" title="[VOICE] B4"      command="0xb4" loops="false"/>
+      <track id="98" title="[VOICE] B5"      command="0xb5" loops="false"/>
+      <track id="99" title="[VOICE] B6"      command="0xb6" loops="false"/>
+      <track id="100" title="[VOICE] B7"      command="0xb7" loops="false"/>
+      <track id="101" title="[VOICE] B8"      command="0xb8" loops="false"/>
+      <track id="102" title="[VOICE] B9"      command="0xb9" loops="false"/>
+      <track id="103" title="[VOICE] BA"      command="0xba" loops="false"/>
+      <track id="104" title="[VOICE] BB"      command="0xbb" loops="false"/>
+      <track id="105" title="[VOICE] BC"      command="0xbc" loops="false"/>
+      <track id="106" title="[VOICE] BD"      command="0xbd" loops="false"/>
+      <track id="107" title="[VOICE] BE"      command="0xbe" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

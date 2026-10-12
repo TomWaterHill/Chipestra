@@ -60,6 +60,7 @@ message `Failed to load game: NotFound`):
 | `TAITO_F2SYSTEM` | `METALBLACK_BASE` | Taito F2 System (Metal Black) |
 | `DATAEAST_VAPORTRAIL` | `VAPORTRAIL_BASE` | Data East Caveman Ninja hardware (Vapor Trail) |
 | `NAMCO_SYSTEM1` | `SYSTEM1_BASE` | Namco System 1 (Dragon Spirit) |
+| `CAPCOM_68000` | `SF_BASE` | Capcom 68000 Based (Street Fighter) |
 
 A game whose `machine` is not in this list still appears in the game list, under the manufacturer
 "Unknown", but cannot be loaded.

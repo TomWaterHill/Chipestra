@@ -66,6 +66,8 @@
 #include "cus30_adapter_tests.h"
 #include "dac8bitr2r_adapter_tests.h"
 #include "dragon_spirit_machine_tests.h"
+#include "sf_machine_tests.h"
+#include "sf_memory_map_tests.h"
 
 #include <chrono>
 #include <cmath>
@@ -1596,6 +1598,25 @@ int main() {
     Dac8BitR2RTwoInstancesAreIndependent();
     Dac8BitR2RReconstructIsDeterministic();
 
+    SfMemoryMapMusicCpuRomRamAndDevices();
+    SfMemoryMapSamplesCpuBankWindow();
+    SfMemoryMapShortImagesAreZeroPadded();
+    SfMemoryMapWithoutDevicesReadsZero();
+    SfMachineRegisteredInDefaultCatalog();
+    SfRomLayoutAssemblesTheSampleImage();
+    SfSamplesCpuHasNoRam();
+    SfSamplesCpuBankIsSelectedByIoPort();
+    SfSamplesIrqRuns8000TimesPerSecondAsAHoldLine();
+    SfMsmWritesFromTheSamplesCpuReachBothChips();
+    SfCommandLatchAndNmiAt60Hz();
+    SfSwitchingSongsMatchesAFreshMachine();
+    SfMusicStopIsAResetAndNothingIsSent();
+    SfResetKeepsChannelMuteGainPan();
+    SfAcceptsRawButNotWsgCommands();
+    SfStereoRoutingFollowsTheYm2151OutputEnables();
+    SfViaDefinitionXmlRealRomBringUp();
+    SfRealRomSwitchAndStopMatchAFreshMachine();
+    SfResamplingFeedCompensatesYm2151AndMsm5205GroupDelay();
     DragonSpiritMachineRegisteredInDefaultCatalog();
     DragonSpiritMachineExposes18LogicalChannels();
     DragonSpiritMachineSendCommandWritesTriRam();
@@ -1679,6 +1700,9 @@ int main() {
     Msm5205VckHandlerFiresBeforeThatSamplesDecode();
     Msm5205ResetPinForcesSilenceRegardlessOfData();
     Msm5205RepeatedStrongNibbleProducesGrowingNonSilentSignal();
+    Msm5205SlaveDecodesOncePerWriteAtTheWriteTime();
+    Msm5205SlaveResetBitAndDataNibble();
+    Msm5205SlaveWriteTimingIsIndependentOfRenderChunking();
 
     DariusCommandInterfaceSlaveNmiGatedByEnableFlag();
     DariusCommandInterfaceSendDeliversByteViaTwoNibbles();

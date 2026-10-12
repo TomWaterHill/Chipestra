@@ -19,7 +19,8 @@ constexpr int kIndexShift[8] = {-1, -1, -1, -1, 2, 4, 6, 8};
 
 }  // namespace
 
-Msm5205DeviceAdapter::Msm5205DeviceAdapter(VckHandler vckHandler) : vck_handler_(std::move(vckHandler)) {
+Msm5205DeviceAdapter::Msm5205DeviceAdapter(VckHandler vckHandler, Mode mode)
+    : vck_handler_(std::move(vckHandler)), mode_(mode) {
     // Precompute the 49-step x 16-nibble difference table (MAME's
     // compute_tables()). kNibbleToBit decodes a 4-bit ADPCM nibble into a sign
     // plus three magnitude bits.
@@ -45,6 +46,9 @@ void Msm5205DeviceAdapter::Reset() {
     step_ = 0;
     partial_clocks_ = 0;
     generated_samples_ = 0;
+    slave_events_.clear();
+    rendered_clocks_ = 0;
+    last_slave_write_clock_ = 0;
 }
 
 void Msm5205DeviceAdapter::ResetPin(bool asserted) { reset_pin_ = asserted; }
@@ -58,7 +62,10 @@ void Msm5205DeviceAdapter::DecodeOneSample() {
     if (vck_handler_) {
         vck_handler_();
     }
+    DecodeOneSampleNoCallback();
+}
 
+void Msm5205DeviceAdapter::DecodeOneSampleNoCallback() {
     if (reset_pin_) {
         signal_ = 0;
         step_ = 0;
@@ -72,7 +79,34 @@ void Msm5205DeviceAdapter::DecodeOneSample() {
     }
 }
 
+bool Msm5205DeviceAdapter::SlaveWrite(std::uint64_t atClock, std::uint8_t value) {
+    if (mode_ != Mode::kSlave || atClock < rendered_clocks_ || atClock < last_slave_write_clock_) {
+        return false;
+    }
+    last_slave_write_clock_ = atClock;
+    slave_events_.push_back({atClock + kSlaveCaptureDelayClocks, static_cast<std::uint8_t>(value & 0x0F),
+                             (value & 0x80) != 0});
+    return true;
+}
+
 std::size_t Msm5205DeviceAdapter::Render(std::uint64_t inputClocks, std::vector<float>& samples) {
+    if (mode_ == Mode::kSlave) {
+        // Zero-order hold at the input clock: each clock emits the current
+        // signal; a captured write decodes at its effective clock.
+        constexpr std::int32_t kSlaveDacMask = (1 << (12 - 10)) - 1;
+        for (std::uint64_t i = 0; i < inputClocks; ++i, ++rendered_clocks_) {
+            while (!slave_events_.empty() && slave_events_.front().effective_clock <= rendered_clocks_) {
+                const SlaveEvent event = slave_events_.front();
+                slave_events_.pop_front();
+                data_ = event.data;
+                reset_pin_ = event.reset;
+                DecodeOneSampleNoCallback();
+            }
+            samples.push_back(static_cast<float>(signal_ & ~kSlaveDacMask) / 4096.0f);
+            ++generated_samples_;
+        }
+        return static_cast<std::size_t>(inputClocks);
+    }
     const std::uint64_t available = partial_clocks_ + inputClocks;
     const std::size_t sampleCount = static_cast<std::size_t>(available / kInputClocksPerSample);
     partial_clocks_ = available % kInputClocksPerSample;

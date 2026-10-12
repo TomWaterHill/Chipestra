@@ -8,7 +8,7 @@ Console boards are planned.
 Chipestra is not a music composition tool, and it is not a player for VGM or
 other pre-rendered music files.
 
-Version: Ver 1.000.00
+Version: Ver 1.001.00
 
 ## Supported Boards & Verified Titles
 
@@ -27,6 +27,7 @@ not verified, even if they run on the same hardware family.
 - Taito Darius: Darius
 - Data East Caveman Ninja Hardware: Vapor Trail
 - Namco System 1: Dragon Spirit
+- Capcom 68000 Based: Street Fighter (US version only: the ROM set "sf"; music, sound effects and voices)
 
 ## Features
 
@@ -52,8 +53,8 @@ not verified, even if they run on the same hardware family.
 
 ## Download and run
 
-1. Download Chipestra-1.000.00.zip from the Releases page of this repository.
-2. Extract it. You get a folder named Chipestra-1.000.00.
+1. Download Chipestra-1.001.00.zip from the Releases page of this repository.
+2. Extract it. You get a folder named Chipestra-1.001.00.
 3. Run Chipestra.exe in that folder.
 4. Open Settings and set ROM Root to the folder that contains your ROM files.
    Sub-folders are searched too.

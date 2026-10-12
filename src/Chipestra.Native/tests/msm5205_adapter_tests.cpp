@@ -142,3 +142,87 @@ void Msm5205RepeatedStrongNibbleProducesGrowingNonSilentSignal() {
     Check(samples.back() > samples[0],
           "growth: the final sample is clearly larger than the first - real progression, not noise-level jitter");
 }
+
+void Msm5205SlaveDecodesOncePerWriteAtTheWriteTime() {
+    std::printf("Msm5205SlaveDecodesOncePerWriteAtTheWriteTime\n");
+
+    using Mode = Msm5205DeviceAdapter::Mode;
+    Msm5205DeviceAdapter slave(nullptr, Mode::kSlave);
+    Check(slave.SlaveWrite(100, 0x07), "slave: a write at a future clock is accepted");
+
+    std::vector<float> out;
+    const std::size_t produced = slave.Render(300, out);
+    Check(produced == 300 && out.size() == 300, "slave: one output sample per input clock");
+
+    const std::uint64_t switchAt = 100 + Msm5205DeviceAdapter::kSlaveCaptureDelayClocks;
+    for (std::uint64_t i = 0; i < switchAt; ++i) {
+        Check(out[i] == 0.0f, "slave: the output holds its previous value until the write time (+capture delay)");
+    }
+    Check(out[switchAt] > 0.0f, "slave: the value switches exactly at the write time plus the capture delay");
+    for (std::size_t i = switchAt + 1; i < out.size(); ++i) {
+        Check(out[i] == out[switchAt], "slave: zero-order hold - one write decodes exactly one sample");
+    }
+
+    // The single decode matches the master-mode decode of the same nibble.
+    Msm5205DeviceAdapter master;
+    master.DataW(0x07);
+    std::vector<float> masterOut;
+    master.Render(Msm5205DeviceAdapter::kInputClocksPerSample, masterOut);
+    Check(masterOut.size() == 1 && masterOut[0] == out[switchAt], "slave: same ADPCM result as the master-mode decode");
+}
+
+void Msm5205SlaveResetBitAndDataNibble() {
+    std::printf("Msm5205SlaveResetBitAndDataNibble\n");
+
+    Msm5205DeviceAdapter chip(nullptr, Msm5205DeviceAdapter::Mode::kSlave);
+    chip.SlaveWrite(0, 0x07);
+    chip.SlaveWrite(10, 0x07);
+    chip.SlaveWrite(20, 0x17);  // bits 4-6 are ignored: only bit 7 and the low nibble matter
+    std::vector<float> out;
+    chip.Render(100, out);
+    Check(chip.SignalForTest() > 0 && chip.StepForTest() > 0, "slave reset: three writes grew the signal and the step");
+    Check(out[40] > out[17] && out[17] > 0.0f, "slave reset: each write advances the held value");
+
+    chip.SlaveWrite(120, 0x87);  // RESET pin high with a data nibble: silence
+    out.clear();
+    chip.Render(100, out);
+    Check(chip.SignalForTest() == 0 && chip.StepForTest() == 0, "slave reset: bit 7 forces signal=0 and step=0");
+    Check(out.back() == 0.0f, "slave reset: the output is silent after the reset write");
+
+    chip.SlaveWrite(250, 0x07);  // reset released by the next write
+    out.clear();
+    chip.Render(100, out);
+    Check(chip.SignalForTest() > 0, "slave reset: a following write with bit 7 clear decodes normally again");
+}
+
+void Msm5205SlaveWriteTimingIsIndependentOfRenderChunking() {
+    std::printf("Msm5205SlaveWriteTimingIsIndependentOfRenderChunking\n");
+
+    auto make = [](Msm5205DeviceAdapter& chip) {
+        chip.SlaveWrite(5, 0x05);
+        chip.SlaveWrite(70, 0x0D);
+        chip.SlaveWrite(70, 0x07);  // same clock: both decode, in order
+        chip.SlaveWrite(333, 0x03);
+    };
+    Msm5205DeviceAdapter whole(nullptr, Msm5205DeviceAdapter::Mode::kSlave);
+    make(whole);
+    std::vector<float> a;
+    whole.Render(500, a);
+
+    Msm5205DeviceAdapter chunked(nullptr, Msm5205DeviceAdapter::Mode::kSlave);
+    make(chunked);
+    std::vector<float> b;
+    for (std::uint64_t done = 0; done < 500;) {
+        const std::uint64_t n = (done % 3 == 0) ? 7 : 61;
+        chunked.Render(n < 500 - done ? n : 500 - done, b);
+        done += n < 500 - done ? n : 500 - done;
+    }
+    Check(a.size() == 500 && a == b, "slave timing: identical output regardless of how Render() is chunked");
+    Check(chunked.RenderedClocks() == 500, "slave timing: RenderedClocks() counts every rendered input clock");
+
+    Check(!chunked.SlaveWrite(499, 0x01), "slave timing: a write before the already-rendered time is rejected");
+    Check(chunked.SlaveWrite(500, 0x01), "slave timing: a write at exactly the rendered time is accepted");
+
+    Msm5205DeviceAdapter master;
+    Check(!master.SlaveWrite(0, 0x01), "slave timing: SlaveWrite() is rejected in master mode");
+}

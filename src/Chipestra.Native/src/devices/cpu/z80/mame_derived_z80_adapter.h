@@ -40,6 +40,11 @@ public:
     std::uint64_t Execute(std::uint64_t cycleBudget) override;
     void SetInputLine(Z80InputLine line, Z80InputLineState state) override;
 
+    // Asserts the maskable interrupt as a HOLD_LINE: the line stays asserted until the CPU
+    // accepts the interrupt, then clears itself. Not part of IZ80Core. A later SetInputLine(Irq, ...)
+    // call replaces this behavior with the plain level semantics.
+    void AssertIrqHoldLine();
+
     // Register snapshot for tests and diagnostics; not part of IZ80Core.
     // Ordinary Machine/Mixer code does not need raw register access.
     struct RegisterSnapshot {
@@ -102,6 +107,7 @@ private:
 
     bool nmiPending_ = false;
     bool irqAsserted_ = false;
+    bool irqHoldLine_ = false;  // irqAsserted_ clears when the interrupt is accepted
     Z80InputLineState nmiLineState_ = Z80InputLineState::Clear;
     // EI's documented one-instruction delay: interrupts are not recognized
     // again until after the instruction immediately following EI has run.

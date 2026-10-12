@@ -182,3 +182,6 @@ if ($Zip) {
         $true)
     Write-Host "Zipped: $zipPath" -ForegroundColor Green
 }
+
+    # The Release also carries the source that corresponds to the bundled soxr.dll (LGPL).
+    & (Join-Path $PSScriptRoot "package-libsoxr-source.ps1") -OutputRoot $OutputRoot -Version $version

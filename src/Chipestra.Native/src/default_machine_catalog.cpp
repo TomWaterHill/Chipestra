@@ -16,6 +16,8 @@
 #include "devices/sega/outrun/outrun_rom_layout.h"
 #include "devices/sega/xboard/xboard_machine.h"
 #include "devices/sega/xboard/xboard_rom_layout.h"
+#include "devices/capcom/sf/sf_machine.h"
+#include "devices/capcom/sf/sf_rom_layout.h"
 #include "devices/taito/darius/darius_machine.h"
 #include "devices/taito/darius/darius_rom_layout.h"
 #include "devices/taito/metalblk/metalblack_rom_layout.h"
@@ -153,6 +155,20 @@ MachineRegistry BuildDefaultRegistry() {
         return std::make_unique<DariusMachine>(std::move(roms.AudioCpuProgram), std::move(roms.AdpcmProgram));
     };
     registry.Register(std::move(darius_def));
+
+    MachineDefinition sf_def;
+    sf_def.Id = MachineId("CAPCOM_68000");
+    sf_def.DisplayName = "68000 Based";
+    sf_def.Category = MachineCategory::Arcade;
+    sf_def.Manufacturer = "Capcom";
+    sf_def.Variants.push_back(MachineVariant{VariantId("SF_BASE"), "Base"});
+    // The game XML declares "soundcpu"/"samples0"/"samples1"; an empty `resources` constructs a
+    // not-yet-playable SfMachine.
+    sf_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        SfSoundRoms roms = AssembleSfSoundRoms(resources);
+        return std::make_unique<SfMachine>(std::move(roms.AudioCpuProgram), std::move(roms.SamplesProgram));
+    };
+    registry.Register(std::move(sf_def));
 
     MachineDefinition ninjaw_def;
     ninjaw_def.Id = MachineId("TAITO_NINJAWARRIORS");

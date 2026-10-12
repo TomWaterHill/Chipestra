@@ -124,8 +124,14 @@ The sources of the following MAME drivers were read, and the ROM layout, memory 
 - Copyright holders (as listed in the original files): Bryan McPhail
 - Board referenced: Vapor Trail
 
+#### src/mame/capcom/sf.cpp
+- License: BSD-3-Clause
+- Copyright holders (as listed in the original files): Olivier Galibert
+- Board referenced: Street Fighter (Capcom 68000 Based)
+
 Parts copied directly (notes):
 
+- The sound-side memory maps, the I/O ports, the clocks, the 8000 Hz interrupt of the second Z80 and the routing gain values (YM2151 0.60, MSM5205 1.0) of the Street Fighter board are ported as-is from sf.cpp.
 - The routing gain values of the X-Board and Out Run devices are copied as-is from the values in segaxbd.cpp and segaorun.cpp.
 - The Gradius speech_w handling is ported as-is from the handling in nemesis.cpp.
 - The explanatory comments about ld1_w/ld2_w of the K005289 reuse the wording of the comments in k005289.cpp.
@@ -169,7 +175,7 @@ About libsoxr:
 - The original source is the SourceForge distribution file listed above (vcpkg downloads the same file and builds it).
 - soxr.dll is built from source that includes four minor patches applied by the vcpkg soxr port (0.1.3#9): variable initialization, suppression of a warning in pffft.c, ARM detection in pffft.c, and the installation settings of the pkg-config file.
 - The four patches and the build files (portfile.cmake and vcpkg.json) are in the vcpkg soxr port: https://github.com/microsoft/vcpkg/tree/a1cae005c39be7b18ba319fced856b68d7276271/ports/soxr (vcpkg baseline a1cae005c39be7b18ba319fced856b68d7276271)
-- The source that corresponds to the soxr.dll distributed with Chipestra (the original source, the four vcpkg patches, and the vcpkg portfile.cmake and vcpkg.json) is also provided as a separate attachment, libsoxr-source-for-Chipestra-1.000.00.zip, on the Chipestra GitHub Releases page.
+- The source that corresponds to the soxr.dll distributed with Chipestra (the original source, the four vcpkg patches, and the vcpkg portfile.cmake and vcpkg.json) is also provided as a separate attachment, libsoxr-source-for-Chipestra-<version>.zip, on the Chipestra GitHub Releases page. Each Release carries the attachment for its own version (<version> is the version of that Release, for example the one in the name of the Chipestra zip file).
 - The full text of the LGPL-2.1 is in licenses/LGPL-2.1.txt.
 - The full text of the FFTPACK license is in licenses/FFTPACK.txt.
 

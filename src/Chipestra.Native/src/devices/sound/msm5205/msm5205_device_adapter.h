@@ -12,6 +12,7 @@
 #include "device_manager.h"
 
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <vector>
 
@@ -29,9 +30,17 @@
 // handler once per sample immediately before that sample's nibble is decoded
 // (MAME's update_adpcm() order: callback first, decode second).
 //
-// Fixed configuration (S48_4B): prescaler /48, 4-bit ADPCM nibbles. The real
-// chip can change this at runtime (playmode_w()/s1_w()/s2_w()); that is not
-// exposed until a board needs it.
+// Two fixed configurations, chosen at construction:
+//  - Mode::kMasterS48 (S48_4B): prescaler /48, 4-bit ADPCM nibbles. The chip
+//    free-runs at 8 kHz (see above).
+//  - Mode::kSlave (SEX_4B): VCK is an input driven by the board. Each VCK
+//    falling edge, delivered through SlaveWrite() together with the data
+//    nibble and RESET pin level, decodes one sample 6 input clocks later
+//    (MAME's capture timer). The output is a zero-order hold sampled at the
+//    input clock (one sample per clock), so the value changes exactly at the
+//    time of the write, as in MAME's 384 kHz stream.
+// The real chip can change its prescaler at runtime (playmode_w()/s1_w()/
+// s2_w()); that is not exposed until a board needs it.
 //
 // Deterministic time model: never reads a wall clock, only advances a
 // chip-input-clock counter inside Render().
@@ -51,7 +60,14 @@ public:
     // real chip's legacy VCK callback does.
     using VckHandler = std::function<void()>;
 
-    explicit Msm5205DeviceAdapter(VckHandler vckHandler = nullptr);
+    enum class Mode { kMasterS48, kSlave };
+
+    // Output rate of Mode::kSlave: one sample per input clock.
+    static constexpr std::uint32_t kSlaveOutputSampleRateHz = 384'000;
+    // Input clocks between a VCK falling edge and the ADPCM data capture.
+    static constexpr std::uint64_t kSlaveCaptureDelayClocks = 6;
+
+    explicit Msm5205DeviceAdapter(VckHandler vckHandler = nullptr, Mode mode = Mode::kMasterS48);
 
     // Power-on-equivalent reset (MAME's device_reset()): signal and step are
     // zeroed; the data latch and the reset pin state are NOT touched, as on
@@ -65,10 +81,22 @@ public:
     // Data bus latch (data_w()). Only the low 4 bits are used (fixed 4-bit mode).
     void DataW(std::uint8_t value);
 
+    // Mode::kSlave only: a board write of `value` (bit 7 = RESET pin, low 4 bits
+    // = data nibble) followed by a VCK pulse, at chip input-clock time
+    // `atClock` (counted from construction/Reset(), same time base as the sum
+    // of Render() arguments). Write times must not decrease and must not lie
+    // before the clocks already rendered. Returns false (and ignores the write)
+    // in master mode or on a violated ordering.
+    bool SlaveWrite(std::uint64_t atClock, std::uint8_t value);
+
+    // Total input clocks rendered so far (the time base of SlaveWrite()).
+    std::uint64_t RenderedClocks() const { return rendered_clocks_; }
+
     // Advances the chip by `inputClocks` input clocks and appends one mono
     // float sample (signal range -2048..2047 scaled by 1/4096) per
     // kInputClocksPerSample clocks to `samples`. Partial samples carry to the
-    // next call. Returns the number of samples appended.
+    // next call. Returns the number of samples appended. In Mode::kSlave one
+    // sample is appended per input clock instead (see above).
     std::size_t Render(std::uint64_t inputClocks, std::vector<float>& samples);
 
     // Test-only observation points - not part of production playback.
@@ -79,8 +107,19 @@ public:
 
 private:
     void DecodeOneSample();
+    void DecodeOneSampleNoCallback();
+
+    struct SlaveEvent {
+        std::uint64_t effective_clock;  // write time + capture delay
+        std::uint8_t data;
+        bool reset;
+    };
 
     VckHandler vck_handler_;
+    Mode mode_;
+    std::deque<SlaveEvent> slave_events_;
+    std::uint64_t rendered_clocks_ = 0;
+    std::uint64_t last_slave_write_clock_ = 0;
 
     std::uint8_t data_ = 0;
     bool reset_pin_ = false;

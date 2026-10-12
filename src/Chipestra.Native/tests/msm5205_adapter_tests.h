@@ -12,3 +12,6 @@ void Msm5205RenderProducesOneSamplePerPeriodAndCarriesPartialClocks();
 void Msm5205VckHandlerFiresBeforeThatSamplesDecode();
 void Msm5205ResetPinForcesSilenceRegardlessOfData();
 void Msm5205RepeatedStrongNibbleProducesGrowingNonSilentSignal();
+void Msm5205SlaveDecodesOncePerWriteAtTheWriteTime();
+void Msm5205SlaveResetBitAndDataNibble();
+void Msm5205SlaveWriteTimingIsIndependentOfRenderChunking();

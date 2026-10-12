@@ -13,7 +13,7 @@
     <AssemblyName>Chipestra</AssemblyName>
     <!-- Version comes from the repo-root version.props (the single source; policy comment there):
          Major.Minor.Patch drives AssemblyVersion/FileVersion/InformationalVersion together.
-         Display ("Ver 1.000.00") is formatted by Settings/VersionFormatter.cs. -->
+         Display ("Ver 1.001.00") is formatted by Settings/VersionFormatter.cs. -->
     <Version>$(ChipestraMajor).$(ChipestraMinor).$(ChipestraPatch)</Version>
   </PropertyGroup>
 

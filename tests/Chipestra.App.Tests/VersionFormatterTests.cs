@@ -26,8 +26,8 @@ namespace Chipestra.App.Tests
         [Fact]
         public void CurrentDisplay_MatchesTheAppAssemblyVersion_AsVer1_000_00()
         {
-            // version.props currently holds 1.0.0; update this expectation when it is bumped.
-            Assert.Equal("Ver 1.000.00", VersionFormatter.CurrentDisplay());
+            // version.props currently holds 1.1.0; update this expectation when it is bumped.
+            Assert.Equal("Ver 1.001.00", VersionFormatter.CurrentDisplay());
         }
     }
 }

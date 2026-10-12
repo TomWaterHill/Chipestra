@@ -140,6 +140,12 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/konami/bubblesystem/bubble_system_machine.cpp
     src/devices/konami/bubblesystem/bubble_system_rom_layout.h
     src/devices/konami/bubblesystem/bubble_system_rom_layout.cpp
+    src/devices/capcom/sf/sf_memory_map.h
+    src/devices/capcom/sf/sf_memory_map.cpp
+    src/devices/capcom/sf/sf_rom_layout.h
+    src/devices/capcom/sf/sf_rom_layout.cpp
+    src/devices/capcom/sf/sf_machine.h
+    src/devices/capcom/sf/sf_machine.cpp
     src/devices/taito/darius/darius_command_interface.h
     src/devices/taito/darius/darius_command_interface.cpp
     src/devices/taito/darius/darius_sound_memory_map.h
@@ -349,6 +355,8 @@ add_executable(chipestra_native_tests
     tests/afterburner2_reference_tests.cpp
     tests/ym2203_adapter_tests.cpp
     tests/msm5205_adapter_tests.cpp
+    tests/sf_machine_tests.cpp
+    tests/sf_memory_map_tests.cpp
     tests/darius_command_interface_tests.cpp
     tests/darius_machine_tests.cpp
     tests/darius_reference_tests.cpp

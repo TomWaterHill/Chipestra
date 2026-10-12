@@ -80,6 +80,7 @@ void MameDerivedZ80Adapter::Reset() {
     halted_ = false;
     nmiPending_ = false;
     irqAsserted_ = false;
+    irqHoldLine_ = false;
     nmiLineState_ = Z80InputLineState::Clear;
     ix_ = 0xFFFF;
     iy_ = 0xFFFF;
@@ -120,7 +121,13 @@ void MameDerivedZ80Adapter::SetInputLine(Z80InputLine line, Z80InputLineState st
         nmiLineState_ = state;
     } else {
         irqAsserted_ = (state == Z80InputLineState::Assert);  // level-triggered: mirrors the pin directly
+        irqHoldLine_ = false;
     }
+}
+
+void MameDerivedZ80Adapter::AssertIrqHoldLine() {
+    irqAsserted_ = true;
+    irqHoldLine_ = true;
 }
 
 // ---------------------------------------------------------------------
@@ -545,6 +552,10 @@ void MameDerivedZ80Adapter::ServiceNmi() {
 
 void MameDerivedZ80Adapter::ServiceIrq() {
     ++irqServiceCount_;
+    if (irqHoldLine_) {
+        irqAsserted_ = false;
+        irqHoldLine_ = false;
+    }
     halted_ = false;
     iff1_ = false;
     iff2_ = false;

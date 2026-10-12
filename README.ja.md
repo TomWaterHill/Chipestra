@@ -8,7 +8,7 @@ Chipestra は、"chip" と "orchestra" を合わせた名前の、サウンド�
 Chipestra は、作曲ツールではありません。また、VGM などの、あらかじめ作られた
 音楽ファイルのプレーヤーでもありません。
 
-バージョン: Ver 1.000.00
+バージョン: Ver 1.001.00
 
 ## 対応基板と確認済みタイトル
 
@@ -27,6 +27,7 @@ Chipestra は、対応している基板上のゲームを、XML定義ファイ�
 - Taito Darius: Darius（ダライアス）
 - Data East Caveman Ninja Hardware: Vapor Trail（空牙）
 - Namco System 1: Dragon Spirit（ドラゴンスピリット）
+- Capcom 68000 Based: Street Fighter（ストリートファイター。US版のROMセット sf のみ対応。BGM、効果音、ボイスを再生できます）
 
 ## 機能
 
@@ -52,9 +53,9 @@ Chipestra は、対応している基板上のゲームを、XML定義ファイ�
 
 ## ダウンロードと起動
 
-1. このリポジトリの Releases のページから、Chipestra-1.000.00.zip を
+1. このリポジトリの Releases のページから、Chipestra-1.001.00.zip を
    ダウンロードします。
-2. 展開すると、Chipestra-1.000.00 というフォルダができます。
+2. 展開すると、Chipestra-1.001.00 というフォルダができます。
 3. そのフォルダの Chipestra.exe を起動します。
 4. Settings を開き、ROM Root に、ROM ファイルのあるフォルダを指定します。
    サブフォルダの中も探します。
