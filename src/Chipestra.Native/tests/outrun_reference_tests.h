@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tom Water Hill
 #pragma once
 
-// Out Run reference tests: xml/outrun.xml validity
+// Out Run reference tests: outrun.xml validity
 // (always runs), and a real-ROM track-switch regression test (SKIPs when
 // CHIPESTRA_ROM_ROOT/the ROMs aren't available, matching AfterBurner2ReferenceBringUp's
 // own SKIP-when-absent convention - afterburner2_reference_tests.h/.cpp).

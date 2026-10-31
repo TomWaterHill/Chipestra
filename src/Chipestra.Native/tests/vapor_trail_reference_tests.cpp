@@ -8,6 +8,7 @@
 // VaporTrailViaDefinitionXmlRealRomBringUp compares several representative commands' per-channel
 // output and requires at least one channel's content to differ between them.
 
+#include "../tests/definition_xml_locator.h"
 #include "vapor_trail_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -45,16 +46,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindVaporTrailDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "vaportra.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) return candidate;
-        if (!dir.has_parent_path() || dir.parent_path() == dir) break;
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("vaportra.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -107,7 +99,7 @@ void VaporTrailDefinitionXmlIsValid() {
     std::printf("VaporTrailDefinitionXmlIsValid\n");
 
     const auto path = FindVaporTrailDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/vaportra.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: vaportra.xml is present (run from the repo root)");
     if (!path.has_value()) return;
 
     const auto text = ReadFileText(*path);
@@ -164,7 +156,7 @@ void VaporTrailViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindVaporTrailDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/vaportra.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: vaportra.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");

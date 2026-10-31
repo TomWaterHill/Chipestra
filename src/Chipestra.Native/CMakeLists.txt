@@ -73,6 +73,44 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/cpu/m6809/im6809_core.h
     src/devices/cpu/m6809/mame_derived_m6809_adapter.h
     src/devices/cpu/m6809/mame_derived_m6809_adapter.cpp
+    src/devices/cpu/m6502/im6502_core.h
+    src/devices/cpu/m6502/mame_derived_rp2a03_adapter.h
+    src/devices/cpu/m6502/mame_derived_rp2a03_adapter.cpp
+    src/devices/cpu/m6502/mame_derived_rp2a03_op_decls.inc
+    src/devices/cpu/m6502/mame_derived_rp2a03_ops.inc
+    src/devices/sound/nes_apu/nes_apu_device_adapter.h
+    src/devices/sound/nes_apu/nes_apu_device_adapter.cpp
+    src/devices/sound/rp2c33/rp2c33_sound_device_adapter.h
+    src/devices/sound/rp2c33/rp2c33_sound_device_adapter.cpp
+    src/devices/sound/vrc6/vrc6_sound_device_adapter.h
+    src/devices/sound/vrc6/vrc6_sound_device_adapter.cpp
+    src/devices/sound/namco_163/namco_163_sound_device_adapter.h
+    src/devices/sound/namco_163/namco_163_sound_device_adapter.cpp
+    src/devices/sound/sunsoft_5b/sunsoft_5b_sound_device_adapter.h
+    src/devices/sound/sunsoft_5b/sunsoft_5b_sound_device_adapter.cpp
+    src/devices/sound/vrc7/vrc7_sound_device_adapter.h
+    src/devices/sound/vrc7/vrc7_sound_device_adapter.cpp
+    src/devices/nintendo/nes/nes_driver_code.h
+    src/devices/nintendo/nes/nes_driver_config.h
+    src/devices/nintendo/nes/nes_driver_config.cpp
+    src/devices/nintendo/nes/nes_cartridge.h
+    src/devices/nintendo/nes/nes_cartridge.cpp
+    src/devices/nintendo/nes/nes_mmc3.h
+    src/devices/nintendo/nes/nes_mmc3.cpp
+    src/devices/nintendo/nes/nes_vrc6.h
+    src/devices/nintendo/nes/nes_vrc6.cpp
+    src/devices/nintendo/nes/nes_vrc7.h
+    src/devices/nintendo/nes/nes_fme7.h
+    src/devices/nintendo/nes/nes_fme7.cpp
+    src/devices/nintendo/nes/nes_namco163.h
+    src/devices/nintendo/nes/nes_namco163.cpp
+    src/devices/nintendo/nes/nes_vrc7.cpp
+    src/devices/nintendo/nes/nes_machine.h
+    src/devices/nintendo/nes/nes_machine.cpp
+    src/devices/nintendo/fds/fds_disk.h
+    src/devices/nintendo/fds/fds_disk.cpp
+    src/devices/nintendo/fds/fds_machine.h
+    src/devices/nintendo/fds/fds_machine.cpp
     src/devices/cpu/hd63701/ihd63701_core.h
     src/devices/cpu/hd63701/mame_derived_hd63701_adapter.h
     src/devices/cpu/hd63701/mame_derived_hd63701_adapter.cpp
@@ -221,7 +259,7 @@ list(APPEND CHIPESTRA_THIRDPARTY_SOURCES ${CHIPESTRA_PUGIXML_SOURCES})
 # THIRD-PARTY-NOTICES.md.
 #
 # ymfm_opm.cpp is the only compiled translation unit; ymfm_fm.ipp is #included
-# by it. Other ymfm chip families (opl/pcm) are not vendored.
+# by it.
 set(CHIPESTRA_YMFM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_fm.h
@@ -246,6 +284,17 @@ set(CHIPESTRA_YMFM_OPN_SOURCES
 )
 list(APPEND CHIPESTRA_THIRDPARTY_SOURCES ${CHIPESTRA_YMFM_OPN_SOURCES})
 
+# Vendored ymfm OPL/OPLL (thirdparty/ymfm, see THIRD-PARTY-NOTICES.md): only the ds1001 (VRC7) class is used.
+# ymfm_opl.cpp is one upstream translation unit for the whole OPL family and is vendored unmodified; it refers to the
+# ADPCM-B engine (ymfm_adpcm, vendored above) and the PCM engine (ymfm_pcm).
+set(CHIPESTRA_YMFM_OPL_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_opl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_opl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_pcm.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_pcm.cpp
+)
+list(APPEND CHIPESTRA_THIRDPARTY_SOURCES ${CHIPESTRA_YMFM_OPL_SOURCES})
+
 if (MSVC)
     # Vendored code: don't hold it to our own /W4 warning level.
     set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/miniz/miniz_tinfl.c
@@ -253,6 +302,8 @@ if (MSVC)
         ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_opm.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_opn.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_ssg.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_opl.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/ymfm/ymfm_pcm.cpp
         PROPERTIES COMPILE_OPTIONS "/W1")
 endif()
 
@@ -331,6 +382,20 @@ add_executable(chipestra_native_tests
     tests/i8039_adapter_tests.cpp
     tests/h6280_adapter_tests.cpp
     tests/m6809_adapter_tests.cpp
+    tests/rp2a03_adapter_tests.cpp
+    tests/nes_apu_adapter_tests.cpp
+    tests/rp2c33_adapter_tests.cpp
+    tests/vrc6_adapter_tests.cpp
+    tests/namco_163_adapter_tests.cpp
+    tests/sunsoft_5b_adapter_tests.cpp
+    tests/vrc7_adapter_tests.cpp
+    tests/fds_machine_tests.cpp
+    tests/nes_machine_tests.cpp
+    tests/nes_mmc3_tests.cpp
+    tests/nes_vrc6_tests.cpp
+    tests/nes_namco163_tests.cpp
+    tests/nes_vrc7_tests.cpp
+    tests/nes_fme7_tests.cpp
     tests/hd63701_adapter_tests.cpp
     tests/gyruss_machine_tests.cpp
     tests/bubble_system_bios_tests.cpp

@@ -4,7 +4,7 @@
 //
 // ROM handling: this file never hard-codes a ROM Root path, and only prints
 // derived metadata (peak levels, command sweep counts), never ROM-derived
-// sample data. The crc32/size/filename constants in xml/darius.xml are MAME's
+// sample data. The crc32/size/filename constants in darius.xml are MAME's
 // public ROM-catalog metadata (ROM_START(darius)), not ROM byte content.
 //
 // A non-zero/time-varying meter peak is necessary but NOT sufficient for "the
@@ -12,6 +12,7 @@
 // DC-bias false positive (e.g. AY8910 volume 0) by requiring the buffer's
 // samples to actually differ across the block, not just be nonzero.
 
+#include "../tests/definition_xml_locator.h"
 #include "darius_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -52,20 +53,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindDariusDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "darius.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-        if (!dir.has_parent_path() || dir.parent_path() == dir) {
-            break;
-        }
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("darius.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -139,7 +127,7 @@ void DariusDefinitionXmlIsValid() {
     std::printf("DariusDefinitionXmlIsValid\n");
 
     const auto path = FindDariusDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/darius.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: darius.xml is present (run from the repo root)");
     if (!path.has_value()) return;
 
     const auto text = ReadFileText(*path);
@@ -193,7 +181,7 @@ void DariusViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindDariusDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/darius.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: darius.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");
@@ -339,7 +327,7 @@ void DariusAudiocpuPollingDiagnostic() {
     }
     const auto path = FindDariusDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/darius.xml not found\n");
+        std::printf("  SKIP: darius.xml not found\n");
         return;
     }
     const auto text = ReadFileText(*path);
@@ -462,7 +450,7 @@ std::unique_ptr<IMachine> ResolveAndConstructDarius(const char* callerLabel) {
     }
     const auto path = FindDariusDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/darius.xml not found (run from the repo root)\n");
+        std::printf("  SKIP: darius.xml not found (run from the repo root)\n");
         return nullptr;
     }
     const auto text = ReadFileText(*path);

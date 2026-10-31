@@ -56,6 +56,20 @@
 #include "i8039_adapter_tests.h"
 #include "h6280_adapter_tests.h"
 #include "m6809_adapter_tests.h"
+#include "rp2a03_adapter_tests.h"
+#include "nes_apu_adapter_tests.h"
+#include "rp2c33_adapter_tests.h"
+#include "vrc6_adapter_tests.h"
+#include "namco_163_adapter_tests.h"
+#include "nes_fme7_tests.h"
+#include "sunsoft_5b_adapter_tests.h"
+#include "vrc7_adapter_tests.h"
+#include "fds_machine_tests.h"
+#include "nes_machine_tests.h"
+#include "nes_mmc3_tests.h"
+#include "nes_vrc6_tests.h"
+#include "nes_namco163_tests.h"
+#include "nes_vrc7_tests.h"
 #include "hd63701_adapter_tests.h"
 #include "okim6295_adapter_tests.h"
 #include "gyruss_machine_tests.h"
@@ -723,8 +737,8 @@ void SendCommandAbi() {
           "send_command before a Machine is loaded (Created) == CHIPESTRA_E_INVALID_STATE");
 
     Check(chipestra_load_machine(handle, "TEST_MACHINE", "STANDARD", nullptr, 0) == CHIPESTRA_OK, "setup: chipestra_load_machine() == CHIPESTRA_OK");
-    Check(chipestra_send_command(handle, 4, 0, 0) == CHIPESTRA_E_INVALID_ARGUMENT,
-          "send_command(kind=4, out of MusicCommandKind range) == CHIPESTRA_E_INVALID_ARGUMENT");
+    Check(chipestra_send_command(handle, 5, 0, 0) == CHIPESTRA_E_INVALID_ARGUMENT,
+          "send_command(kind=5, out of MusicCommandKind range) == CHIPESTRA_E_INVALID_ARGUMENT");
     Check(chipestra_send_command(handle, 255, 0, 0) == CHIPESTRA_E_INVALID_ARGUMENT,
           "send_command(kind=255) == CHIPESTRA_E_INVALID_ARGUMENT");
     Check(chipestra_send_command(handle, 3, 0, 0) == CHIPESTRA_E_UNSUPPORTED_COMMAND,
@@ -1515,6 +1529,142 @@ int main() {
     M6809CwaiPushesStateAndWaits();
     M6809CyclesConsumedThisCallAdvancesInsideExecute();
     M6809DeterministicAcrossRuns();
+    Rp2a03ResetState();
+    Rp2a03ResetBusSequence();
+    Rp2a03LoadStoreFlagsAndCycles();
+    Rp2a03OfficialOpcodeCycleCounts();
+    Rp2a03UndocumentedOpcodeCycleCounts();
+    Rp2a03PageCrossPenaltyAndDummyReads();
+    Rp2a03AdcSbcExhaustiveBinary();
+    Rp2a03DecimalFlagIsIgnored();
+    Rp2a03LogicCompareBitExhaustive();
+    Rp2a03ShiftRotateIncDec();
+    Rp2a03AddressingWraparound();
+    Rp2a03BranchesTakenAndPageCross();
+    Rp2a03StackAndSubroutines();
+    Rp2a03BrkAndRti();
+    Rp2a03IrqTakenMaskedAndLevelTriggered();
+    Rp2a03NmiEdgeAndPriority();
+    Rp2a03NmiIgnoredBeforeFirstCycle();
+    Rp2a03NmiDuringBrkTakesNmiVector();
+    Rp2a03SetOverflowPin();
+    Rp2a03UndocumentedReadModifyWriteOpcodes();
+    Rp2a03UndocumentedLoadStoreAndImmediateOpcodes();
+    Rp2a03UndocumentedHighByteStoreOpcodes();
+    Rp2a03KilJamsTheCpu();
+    Rp2a03CyclesConsumedThisCallAdvancesInsideExecute();
+    Rp2a03OpcodeObserverSeesEveryInstruction();
+    Rp2a03DeterministicAcrossRuns();
+    NesApuResetState();
+    NesApuPulseFrequencyAndDutyCycles();
+    NesApuPulseEnvelopeDecayAndLoop();
+    NesApuPulseLengthCounterAndHalt();
+    NesApuPulseSweep();
+    NesApuTriangleWaveformAndLinearCounter();
+    NesApuNoiseSequences();
+    NesApuStatusRegisterAndChannelEnable();
+    NesApuFrameCounterAndIrq();
+    NesApuDmcReadsBytesAndRaisesIrq();
+    NesApuDmcShiftsBitsLeastSignificantBitFirst();
+    NesApuMixerMatchesTheNonLinearTables();
+    NesApuPartialSamplesCarryOver();
+    NesApuDeterministicAcrossRuns();
+    Rp2c33ResetState();
+    Rp2c33SoundIoEnableGatesTheRegisters();
+    Rp2c33WavetableWriteNeedsTheWriteEnable();
+    Rp2c33WavePlaybackAndFrequency();
+    Rp2c33WaveHaltFreezesTheAddress();
+    Rp2c33VolumeEnvelope();
+    Rp2c33EnvelopeSpeedRegisterAndHalt();
+    Rp2c33ModulatorTableAndPosition();
+    Rp2c33ModulatorBendsThePitch();
+    Rp2c33MasterVolumeAndGainClamp();
+    Rp2c33ReadbackRegisters();
+    Rp2c33RenderIsChunkIndependentAndDeterministic();
+    Vrc6ResetState();
+    Vrc6PulsePeriodAndDuty();
+    Vrc6PulseConstantVolumeMode();
+    Vrc6SawtoothAccumulation();
+    Vrc6FrequencyControl();
+    Vrc6EnableResetsThePhase();
+    Vrc6BusAddressesReachTheRegisters();
+    Vrc6MuteZeroesOnlyTheOutput();
+    Vrc6RenderIsChunkIndependentAndDeterministic();
+    Namco163RamAddressAndAutoIncrement();
+    Namco163TimeDivisionFollowsTheChannelCount();
+    Namco163ReadsTheWaveformAndKeepsThePhase();
+    Namco163VolumeScalesTheSample();
+    Namco163ChannelStreamsAddUpToTheChipOutput();
+    Namco163MuteSilencesOnlyThatChannel();
+    Namco163DisabledChipIsSilentAndStopped();
+    Namco163SampleCountFollowsTheOriginalsTiming();
+    Namco163RenderIsChunkIndependentAndDeterministic();
+    Namco163ReplayMatchesTheRecordedStreams();
+    Sunsoft5bRegistersAndAddressLatch();
+    Sunsoft5bToneAndNoiseTiming();
+    Sunsoft5bEnvelopeSteps();
+    Sunsoft5bMixTable();
+    Sunsoft5bChannelsAddUpAndMuteTakesAChannelOut();
+    Sunsoft5bSampleCountChunksAndDeterminism();
+    Sunsoft5bReplayMatchesTheRecordedStreams();
+    Vrc7InstrumentTableIsRequired();
+    Vrc7RenderCountsSamplesAndCarriesTheRemainder();
+    Vrc7UserInstrumentSoundsOnlyOnItsChannel();
+    Vrc7BuiltInInstrumentReadsTheTable();
+    Vrc7ChannelsAddUpToTheChipOutput();
+    Vrc7MuteZeroesOnlyThatChannel();
+    Vrc7ChannelsSevenToNineAndRhythmAreIgnored();
+    Vrc7RenderIsChunkIndependentAndDeterministic();
+    Vrc7ReplayMatchesTheRecordedStream();
+    FdsDiskReadsFilesWithAndWithoutHeader();
+    FdsDiskRejectsBrokenImages();
+    FdsMachineInputsAreCheckedByNameAndCrc();
+    FdsMachineLoadsFilesAndHandlesRequests();
+    FdsMachineSetsOverlayInOrderAndSwitchingResets();
+    FdsMachineHeaderDoesNotChangeTheSound();
+    FdsMachineCountsBiosAndDiskAccesses();
+    FdsMachineSoundChannelsAndMute();
+    FdsMachineViaDefinitionXmlRealDisk();
+    NesMachineRegisteredInDefaultCatalog();
+    NesMachineExposesFiveLogicalChannels();
+    NesMachineStartupClearsRamAndRunsInitRoutinesInOrder();
+    NesMachineFrameRoutinesRunOncePerFrameInOrder();
+    NesMachineSendCommandWritesTheDriverVariables();
+    NesMachineAcceptsOnlyTheKindsItCanPlay();
+    NesMachineSoundRoutinesTouchPpuAndInputStandIns();
+    NesMachineSwitchIsIdenticalToAFreshStart();
+    NesMachineMuteRecomputesTheMixer();
+    NesMachineIsDeterministicAcrossInstances();
+    NesMachineRejectsBadCartridgesAndDriverSettings();
+    NesDriverConfigParsesAndRejects();
+    NesMachineViaDefinitionXmlRealRomPlaysAllSongs();
+    Mmc3PrgMapsBanksLikeTheOriginal();
+    NesMmc3CartridgeAndDriverSettings();
+    NesMachineMmc3BankingWramAndDmcReads();
+    Smb3ViaDefinitionXmlRealRomMatchesTheRealGame();
+    Vrc6PrgMapsBanksLikeTheOriginal();
+    Vrc6PrgMapper26SwapsTheAddressLines();
+    NesVrc6CartridgeAndDriverSettings();
+    NesMachineVrc6BankingRequestCallAndSound();
+    AkumajouViaDefinitionXmlRealRomMatchesTheRealGame();
+    AkumajouVoicesDecodeLikeTheRomAndMatchTheNsf();
+    AkumajouDmcReadsDependOnTheBankOnlyForTheVoices();
+    Vrc7PrgMapsBanksAndDecodesTheWiring();
+    NesVrc7CartridgeAndDriverSettings();
+    GameDefinitionRomArchiveResolvesFromTwoArchives();
+    NesVrc7MachineInputsAreChecked();
+    NesMachineVrc7BankingWramFrameCounterAndSound();
+    LagrangeViaDefinitionXmlRealRomMatchesTheRealGame();
+    Namco163PrgMapsBanksAndDecodesTheSoundRegisters();
+    NesNamco163CartridgeAndDriverSettings();
+    NesNamco163MachineInputsAreChecked();
+    NesMachineNamco163BankingSoundPortAndChannels();
+    Fme7PrgMapsBanksAndRoutesTheSoundRegisters();
+    NesFme7CartridgeAndDriverSettings();
+    NesMachineFme7BankingSoundAndChannels();
+    NesMachineControlTracksMakeNoRequestAndZeroIsARequest();
+    GimmickViaDefinitionXmlRealRomMatchesTheRealGame();
+    RollingThunderViaDefinitionXmlRealRomMatchesTheRealGame();
 
     Hd63701ResetState();
     Hd63701ImmediateLoadFlagsAndCycles();

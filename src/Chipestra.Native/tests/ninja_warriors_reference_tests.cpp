@@ -4,12 +4,13 @@
 //
 // ROM handling: this file never hard-codes a ROM Root path, and only prints
 // derived metadata (peak levels, command sweep counts), never ROM-derived
-// sample data. The crc32/size/filename constants in xml/ninjaw.xml are MAME's
+// sample data. The crc32/size/filename constants in ninjaw.xml are MAME's
 // public ROM-catalog metadata (ROM_START(ninjaw)), not ROM byte content.
 //
 // IsTimeVarying() guards against a DC-bias-style false positive by requiring the buffer's
 // samples to actually vary across the block, not just be nonzero.
 
+#include "../tests/definition_xml_locator.h"
 #include "ninja_warriors_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -50,20 +51,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindNinjaWarriorsDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "ninjaw.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-        if (!dir.has_parent_path() || dir.parent_path() == dir) {
-            break;
-        }
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("ninjaw.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -127,7 +115,7 @@ void NinjaWarriorsDefinitionXmlIsValid() {
     std::printf("NinjaWarriorsDefinitionXmlIsValid\n");
 
     const auto path = FindNinjaWarriorsDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/ninjaw.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: ninjaw.xml is present (run from the repo root)");
     if (!path.has_value()) return;
 
     const auto text = ReadFileText(*path);
@@ -184,7 +172,7 @@ void NinjaWarriorsViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindNinjaWarriorsDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/ninjaw.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: ninjaw.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");
@@ -396,7 +384,7 @@ void NinjaWarriorsAudiocpuPollingDiagnostic() {
     }
     const auto path = FindNinjaWarriorsDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/ninjaw.xml not found\n");
+        std::printf("  SKIP: ninjaw.xml not found\n");
         return;
     }
     const auto text = ReadFileText(*path);
@@ -508,7 +496,7 @@ void NinjaWarriorsYm2610RegisterTraceDiagnostic() {
     }
     const auto path = FindNinjaWarriorsDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/ninjaw.xml not found\n");
+        std::printf("  SKIP: ninjaw.xml not found\n");
         return;
     }
     const auto text = ReadFileText(*path);
@@ -649,7 +637,7 @@ void NinjaWarriorsKeyOnSweepDiagnostic() {
     }
     const auto path = FindNinjaWarriorsDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/ninjaw.xml not found\n");
+        std::printf("  SKIP: ninjaw.xml not found\n");
         return;
     }
     const auto text = ReadFileText(*path);

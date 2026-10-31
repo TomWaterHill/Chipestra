@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 Tom Water Hill
+#include "../tests/definition_xml_locator.h"
 #include "dragon_spirit_machine_tests.h"
 
 #include "default_machine_catalog.h"
@@ -98,16 +99,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindDspiritDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "dspirit.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) return candidate;
-        if (!dir.has_parent_path() || dir.parent_path() == dir) break;
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("dspirit.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -121,7 +113,7 @@ std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
 }  // namespace
 
 void DragonSpiritMachineRegisteredInDefaultCatalog() {
-    // NAMCO_SYSTEM1/"System 1" is the board; "Dragon Spirit" is the game title in xml/dspirit.xml,
+    // NAMCO_SYSTEM1/"System 1" is the board; "Dragon Spirit" is the game title in dspirit.xml,
     // not the MachineId.
     const MachineDefinition* def = DefaultMachineRegistry().Find(MachineId("NAMCO_SYSTEM1"));
     Check(def != nullptr, "catalog: NAMCO_SYSTEM1 is registered in the default MachineRegistry");
@@ -415,7 +407,7 @@ void DragonSpiritAssembleSoundRomsPlacesVoiceChipsAtCorrectOffsets() {
 }
 
 // Regression guard: command 0x15 (FINAL SCENE)'s DAC1 voice content, built from
-// xml/dspirit.xml's own declared resources (not a shortcut path).
+// dspirit.xml's own declared resources (not a shortcut path).
 //
 // The MCU's idle-loop code (bank 1)
 // does `CMPA #$A6` against TRIRAM offset 0 before it will leave that loop for the rest of its
@@ -438,7 +430,7 @@ void DragonSpiritViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindDspiritDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/dspirit.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: dspirit.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");
@@ -766,7 +758,7 @@ MusicCommand WsgCommand(std::uint8_t number) {
     return cmd;
 }
 
-// The sound-test numbers xml/dspirit.xml lists as type="wsg": 0x00..0x24 except the six known to be silent.
+// The sound-test numbers dspirit.xml lists as type="wsg": 0x00..0x24 except the six known to be silent.
 std::vector<std::uint8_t> ListedWsgNumbers() {
     std::vector<std::uint8_t> out;
     for (std::uint8_t n = 0; n <= DragonSpiritMachine::kMaxWsgNumber; ++n) {
@@ -834,7 +826,7 @@ void DragonSpiritWsgAfterACommandResetsFirst() {
     Check(machine.ResetCountForTest() == n + 2, "a BGM command after a Wsg request resets the machine first");
 }
 
-// Real ROM (CHIPESTRA_ROM_ROOT only): every WSG number xml/dspirit.xml lists must sound; a WSG request
+// Real ROM (CHIPESTRA_ROM_ROOT only): every WSG number dspirit.xml lists must sound; a WSG request
 // replaces a playing BGM; a BGM after a WSG request leaves nothing of it.
 void DragonSpiritWsgRealRomPlaysEveryListedNumber() {
     std::printf("DragonSpiritWsgRealRomPlaysEveryListedNumber\n");

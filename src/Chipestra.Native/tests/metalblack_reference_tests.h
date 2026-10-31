@@ -4,7 +4,7 @@
 
 // Real Metal Black ROM bring-up native tests.
 //
-// MetalBlackDefinitionXmlIsValid() always runs (no ROM needed): it checks that xml/metalblk.xml
+// MetalBlackDefinitionXmlIsValid() always runs (no ROM needed): it checks that metalblk.xml
 // parses and matches AssembleMetalBlackSoundRoms's expectations.
 //
 // MetalBlackViaDefinitionXmlRealRomBringUp() SKIPs (not fails) when

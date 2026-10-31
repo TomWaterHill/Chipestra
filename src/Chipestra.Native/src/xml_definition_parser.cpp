@@ -22,10 +22,12 @@
 // above), but it is why "exclude parse_doctype" is a correct defense here
 // and not just an easily-bypassed flag.
 
+#include <algorithm>
 #include "xml_definition_parser.h"
 
 #include "pugixml/pugixml.hpp"
 
+#include <cctype>
 #include <cstdlib>
 
 namespace {
@@ -40,6 +42,28 @@ bool RequiredAttribute(const pugi::xml_node& node, const char* attrName, const c
     }
     out = attr.value();
     return true;
+}
+
+// The set ids and request addresses a <driver> element declares, in order, for resolving <track set/request>.
+struct SelectorTables {
+    std::vector<std::string> setIds;
+    std::vector<unsigned long> requests;
+};
+
+SelectorTables ReadSelectorTables(const pugi::xml_node& gameNode) {
+    SelectorTables tables;
+    const pugi::xml_node driver = gameNode.child("driver");
+    for (const pugi::xml_node set : driver.children("set")) tables.setIds.emplace_back(set.attribute("id").as_string(""));
+    std::string_view list(driver.attribute("requests").as_string(""));
+    auto isSeparator = [](char c) { return std::isspace(static_cast<unsigned char>(c)) != 0 || c == ','; };
+    std::size_t i = 0;
+    while (i < list.size()) {
+        while (i < list.size() && isSeparator(list[i])) ++i;
+        const std::size_t start = i;
+        while (i < list.size() && !isSeparator(list[i])) ++i;
+        if (i > start) tables.requests.push_back(std::strtoul(std::string(list.substr(start, i - start)).c_str(), nullptr, 0));
+    }
+    return tables;
 }
 
 }  // namespace
@@ -104,6 +128,8 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
         if (pugi::xml_attribute shaAttr = romNode.attribute("sha1")) {
             rom.Sha1 = shaAttr.value();
         }
+        // archive is optional: the resource's own archive, otherwise the game's.
+        rom.Archive = romNode.attribute("archive").as_string("");
 
         def.Resources.push_back(std::move(rom));
     }
@@ -113,7 +139,7 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
         if (!RequiredAttribute(trackNode, "id", "<track>", track.Id, result)) return result;
         if (!RequiredAttribute(trackNode, "command", "<track>", track.Command, result)) return result;
         if (!RequiredAttribute(trackNode, "title", "<track>", track.Title, result)) return result;
-        // type/loops are optional (see TrackDefinition for defaults). type is "control", "wsg" or
+        // type/loops are optional (see TrackDefinition for defaults). type is "control", "wsg", "sfx" or
         // absent; any other value (wrong case, a typo, "psg") is an error, not silently a normal track.
         if (pugi::xml_attribute typeAttr = trackNode.attribute("type")) {
             const std::string_view type(typeAttr.value());
@@ -121,14 +147,50 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
                 track.IsControlCommand = true;
             } else if (type == "wsg") {
                 track.IsWsg = true;
+            } else if (type == "sfx") {
+                track.IsEffect = true;
             } else {
                 result.Status = XmlParseStatus::InvalidAttributeValue;
                 result.Detail = "<track id=\"" + track.Id + "\">: unknown type \"" + std::string(type) +
-                                "\" (expected \"control\" or \"wsg\", or no type attribute)";
+                                "\" (expected \"control\", \"wsg\" or \"sfx\", or no type attribute)";
                 return result;
             }
         }
         track.Loops = std::string_view(trackNode.attribute("loops").as_string("true")) != "false";
+        // set / request (optional): see TrackDefinition::Auxiliary.
+        const pugi::xml_attribute setAttr = trackNode.attribute("set");
+        const pugi::xml_attribute requestAttr = trackNode.attribute("request");
+        if (setAttr || requestAttr) {
+            const SelectorTables tables = ReadSelectorTables(gameNode);
+            unsigned setNumber = 0, requestNumber = 0;
+            if (setAttr) {
+                const auto found = std::find(tables.setIds.begin(), tables.setIds.end(), std::string(setAttr.value()));
+                if (found == tables.setIds.end()) {
+                    result.Status = XmlParseStatus::InvalidAttributeValue;
+                    result.Detail = "<track id=\"" + track.Id + "\">: set \"" + setAttr.value() + "\" is not declared by a <driver><set> element";
+                    return result;
+                }
+                setNumber = static_cast<unsigned>(found - tables.setIds.begin()) + 1;
+            }
+            if (requestAttr) {
+                const unsigned long address = std::strtoul(requestAttr.value(), nullptr, 0);
+                const auto found = std::find(tables.requests.begin(), tables.requests.end(), address);
+                if (found == tables.requests.end()) {
+                    result.Status = XmlParseStatus::InvalidAttributeValue;
+                    result.Detail = "<track id=\"" + track.Id + "\">: request \"" + requestAttr.value() + "\" is not in <driver requests=\"...\">";
+                    return result;
+                }
+                requestNumber = static_cast<unsigned>(found - tables.requests.begin()) + 1;
+            }
+            if (setNumber > 15 || requestNumber > 7) {
+                result.Status = XmlParseStatus::InvalidAttributeValue;
+                result.Detail = "<track id=\"" + track.Id + "\">: at most 15 sets and 7 request addresses can be selected";
+                return result;
+            }
+            track.Auxiliary = static_cast<std::uint8_t>(setNumber | (requestNumber << 4));
+        }
+        // Bit 7 marks a control track (see TrackDefinition::Auxiliary).
+        if (track.IsControlCommand) track.Auxiliary |= 0x80;
         def.Tracks.push_back(std::move(track));
     }
 

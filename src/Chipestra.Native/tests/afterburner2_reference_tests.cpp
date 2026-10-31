@@ -6,6 +6,7 @@
 // command value, and only ever prints comparison metadata (levels, ratios,
 // counts) - never ROM-derived sample data.
 
+#include "../tests/definition_xml_locator.h"
 #include "afterburner2_reference_tests.h"
 
 #include "devices/sega/xboard/xboard_machine.h"
@@ -48,23 +49,10 @@ const char* GetEnvVar(const char* name) {
 #endif
 }
 
-// Locate xml/afterburn2.xml: relative to cwd (how tools/
+// Locate afterburn2.xml: relative to cwd (how tools/
 // verify.ps1 runs the suite), else walk up a few parents.
 std::optional<std::filesystem::path> FindDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "afterburn2.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-        if (!dir.has_parent_path() || dir.parent_path() == dir) {
-            break;
-        }
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("afterburn2.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -227,7 +215,7 @@ void AfterBurner2DefinitionXmlIsValid() {
     std::printf("AfterBurner2DefinitionXmlIsValid\n");
 
     const auto path = FindDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/afterburn2.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: afterburn2.xml is present (run from the repo root)");
     if (!path.has_value()) {
         return;
     }
@@ -288,7 +276,7 @@ void AfterBurner2ReferenceBringUp() {
 
     const auto defPath = FindDefinitionFile();
     if (!defPath.has_value()) {
-        std::printf("  SKIP: CHIPESTRA_ROM_ROOT is set but xml/afterburn2.xml was not found from the "
+        std::printf("  SKIP: CHIPESTRA_ROM_ROOT is set but afterburn2.xml was not found from the "
                     "cwd - run the suite from the repo root (tools/verify.ps1 does)\n");
         return;
     }
@@ -478,7 +466,7 @@ void ChannelMeterAbiDuringRealPlaybackReportsNonZeroPeak() {
     }
     const auto defPath = FindDefinitionFile();
     if (!defPath.has_value()) {
-        std::printf("  SKIP: xml/afterburn2.xml not found from the cwd\n");
+        std::printf("  SKIP: afterburn2.xml not found from the cwd\n");
         return;
     }
     const auto defText = ReadFileText(*defPath);

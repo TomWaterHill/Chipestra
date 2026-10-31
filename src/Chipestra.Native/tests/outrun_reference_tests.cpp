@@ -6,6 +6,7 @@
 // register/RAM state (addresses, values as game state, not code) - never
 // ROM-derived sample data.
 
+#include "../tests/definition_xml_locator.h"
 #include "outrun_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -42,23 +43,10 @@ const char* GetEnvVar(const char* name) {
 #endif
 }
 
-// Locate xml/outrun.xml: relative to cwd (how tools/
+// Locate outrun.xml: relative to cwd (how tools/
 // verify.ps1 runs the suite), else walk up a few parents.
 std::optional<std::filesystem::path> FindOutRunDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "outrun.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-        if (!dir.has_parent_path() || dir.parent_path() == dir) {
-            break;
-        }
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("outrun.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -77,7 +65,7 @@ void OutRunDefinitionXmlIsValid() {
     std::printf("OutRunDefinitionXmlIsValid\n");
 
     const auto path = FindOutRunDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/outrun.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: outrun.xml is present (run from the repo root)");
     if (!path.has_value()) {
         return;
     }
@@ -140,7 +128,7 @@ void OutRunTrackSwitchReferenceBringUp() {
     const auto defPath = FindOutRunDefinitionFile();
     if (!defPath.has_value()) {
         std::printf(
-            "  SKIP: CHIPESTRA_ROM_ROOT is set but xml/outrun.xml was not found from the cwd - run the "
+            "  SKIP: CHIPESTRA_ROM_ROOT is set but outrun.xml was not found from the cwd - run the "
             "suite from the repo root (tools/verify.ps1 does)\n");
         return;
     }

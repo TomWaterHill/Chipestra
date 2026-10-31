@@ -12,21 +12,9 @@ namespace Chipestra.Core.Tests
     // GameDefinitionXmlTests. No ROM data is read.
     public class GameDefinitionXmlAfterburner2Tests
     {
-        // Walk up from the test binary's directory looking for xml/afterburn2.xml;
-        // dotnet test does not reliably run with cwd == repo root.
-        private static string? FindAfterburner2Xml()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            for (int i = 0; i < 8 && dir != null; i++, dir = dir.Parent)
-            {
-                string candidate = Path.Combine(dir.FullName, "xml", "afterburn2.xml");
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-            return null;
-        }
+        // Looks for afterburn2.xml below the repository's xml folder, walking up from the test binary's
+        // directory; dotnet test does not reliably run with cwd == repo root.
+        private static string? FindAfterburner2Xml() => RepositoryXml.Find("afterburn2.xml");
 
         [Fact]
         public void Load_Afterburn2Xml_ParsesSixBgmTracks()

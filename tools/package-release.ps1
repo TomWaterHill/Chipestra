@@ -99,6 +99,20 @@ Get-ChildItem -Path $AppBinDir -Recurse -File | Where-Object { $_.Extension -ne 
     Copy-Item $_.FullName $destPath
 }
 
+# Every game definition in the package must be a file of the repository's xml folder at the same relative path.
+# (The build output can hold a stale copy of a file that was moved or deleted since; it must not be shipped.)
+$repoXmlRoot = (Resolve-Path "xml").Path
+$packageXmlRoot = Join-Path $packageDir "xml"
+if (Test-Path $packageXmlRoot) {
+    $packageXmlRootFull = (Resolve-Path $packageXmlRoot).Path
+    Get-ChildItem -Path $packageXmlRootFull -Recurse -File -Filter *.xml | ForEach-Object {
+        $relativeXml = $_.FullName.Substring($packageXmlRootFull.Length + 1)
+        if (-not (Test-Path (Join-Path $repoXmlRoot $relativeXml))) {
+            throw "The package holds xml\$relativeXml, which is not in the repository's xml folder at that path (a stale file in the build output? Rebuild the application)."
+        }
+    }
+}
+
 # End-user README: README.md from the repository root (English, then Japanese) is the same file shown
 # on the repository page; the package carries it.
 foreach ($readme in $ReadmeSources) {

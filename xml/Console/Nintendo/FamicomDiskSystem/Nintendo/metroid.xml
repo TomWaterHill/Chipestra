@@ -1,0 +1,68 @@
+<chipestra>
+  <game id="metroid_fds" title="Metroid" manufacturer="Nintendo"
+        machine="NINTENDO_FDS" variant="FDS_BASE" archive="Metroid">
+    <resources>
+      <rom name="disk" file="Metroid.fds"/>
+    </resources>
+    <!-- The sound driver is MET.HEX; the area files replace its last 336 bytes (MM*) and add the area program (STG*);
+         MMEEE is the ending's song data. The base files are always loaded, a track's set is loaded on top of them.
+         Requests are the driver's request bytes; a track writes its command value (a bit) to one of them.
+         Only combinations the game itself uses are listed. $0686 selects between two sounds of request $0682 bit 1. -->
+    <driver ram_clear="0x0000-0x07FF" ram_set="0x0680=0x01" frame="0xDFF3" warmup_frames="20"
+            base="MET.HEX" requests="0x0680 0x0681 0x0682 0x0684 0x0685">
+      <file name="MET.HEX" crc32="474edcec"/>
+      <file name="MMROCK" crc32="7287c42a"/>
+      <file name="MMFIRE" crc32="7a6b6638"/>
+      <file name="MMKITI" crc32="261a5e47"/>
+      <file name="MMKBOS" crc32="4791324a"/>
+      <file name="MMEEE" crc32="67bd0dfc"/>
+      <file name="STG1PGM" crc32="fb9bf89b"/>
+      <file name="STG4PGM" crc32="a70cfdc6"/>
+      <file name="STG5PGM" crc32="d41948fc"/>
+      <file name="STG6PGM" crc32="06ef2510"/>
+      <set id="rock_stg1" files="MMROCK STG1PGM"/>
+      <set id="fire_stg4" files="MMFIRE STG4PGM"/>
+      <set id="kiti_stg5" files="MMKITI STG5PGM"/>
+      <set id="kbos_stg6" files="MMKBOS STG6PGM"/>
+      <set id="ending" files="MMEEE"/>
+      <set id="var686" ram_set="0x0686=0x01"/>
+    </driver>
+    <tracks>
+      <track id="STOP" title="Music Stop" command="0x00" type="control"/>
+      <!-- songs, in the order of the game -->
+      <track id="BASE_684_10" title="Title" command="0x10" request="0x0684"/>
+      <track id="BASE_684_80" title="Start" command="0x80" request="0x0684" loops="false"/>
+      <track id="ROCK_STG1_685_01" title="Brinstar" command="0x01" request="0x0685" set="rock_stg1"/>
+      <track id="FIRE_STG4_685_08" title="Norfair" command="0x08" request="0x0685" set="fire_stg4"/>
+      <track id="BASE_685_40" title="Tourian" command="0x40" request="0x0685"/>
+      <track id="BASE_685_20" title="Item Room" command="0x20" request="0x0685"/>
+      <track id="BASE_684_40" title="Item Get" command="0x40" request="0x0684" loops="false"/>
+      <track id="KBOS_STG6_685_10" title="Kraid" command="0x10" request="0x0685" set="kbos_stg6"/>
+      <track id="KBOS_STG6_685_80" title="Ridley" command="0x80" request="0x0685" set="kbos_stg6"/>
+      <track id="KITI_STG5_685_02" title="The Lord of Zebes" command="0x02" request="0x0685" set="kiti_stg5" loops="false"/>
+      <track id="KITI_STG5_685_04" title="Escape" command="0x04" request="0x0685" set="kiti_stg5"/>
+      <track id="END_684_20" title="Ending" command="0x20" request="0x0684" set="ending"/>
+      <track id="BASE_682_80" title="Dead" command="0x80" request="0x0682" loops="false"/>
+      <!-- sound effects -->
+      <track id="BASE_680_08" title="[SFX] 01" command="0x08" request="0x0680" loops="false"/>
+      <track id="BASE_680_10" title="[SFX] 02" command="0x10" request="0x0680" loops="false"/>
+      <track id="BASE_680_20" title="[SFX] 03" command="0x20" request="0x0680" loops="false"/>
+      <track id="BASE_681_01" title="[SFX] 04" command="0x01" request="0x0681" loops="false"/>
+      <track id="BASE_681_02" title="[SFX] 05" command="0x02" request="0x0681" loops="false"/>
+      <track id="BASE_681_04" title="[SFX] 06" command="0x04" request="0x0681" loops="false"/>
+      <track id="BASE_681_08" title="[SFX] 07" command="0x08" request="0x0681" loops="false"/>
+      <track id="BASE_681_10" title="[SFX] 08" command="0x10" request="0x0681" loops="false"/>
+      <track id="BASE_681_20" title="[SFX] 09" command="0x20" request="0x0681" loops="false"/>
+      <track id="BASE_681_40" title="[SFX] 10" command="0x40" request="0x0681" loops="false"/>
+      <track id="BASE_681_80" title="[SFX] 11" command="0x80" request="0x0681" loops="false"/>
+      <track id="BASE_682_01" title="[SFX] 12" command="0x01" request="0x0682" loops="false"/>
+      <track id="BASE_682_02" title="[SFX] 13" command="0x02" request="0x0682" loops="false"/>
+      <track id="BASE_682_04" title="[SFX] 14" command="0x04" request="0x0682" loops="false"/>
+      <track id="BASE_682_20" title="[SFX] 15" command="0x20" request="0x0682" loops="false"/>
+      <track id="BASE_682_40" title="[SFX] 16" command="0x40" request="0x0682" loops="false"/>
+      <track id="KBOS_STG6_682_10" title="[SFX] 17" command="0x10" request="0x0682" set="kbos_stg6" loops="false"/>
+      <track id="KITI_STG5_684_02" title="[SFX] 18" command="0x02" request="0x0684" set="kiti_stg5" loops="false"/>
+      <track id="BASE_682_02_V1" title="[SFX] 19" command="0x02" request="0x0682" set="var686"/>
+    </tracks>
+  </game>
+</chipestra>

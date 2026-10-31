@@ -6,12 +6,12 @@
 // metadata (peak levels, command sweep counts) - never ROM-derived sample
 // data. The crc32/size/filename constants below are MAME's own public
 // ROM-catalog metadata, not ROM byte content, matching the convention
-// outrun.xml/afterburn2.xml's <rom> attributes already use.
+// outrun.afterburn2.xml's <rom> attributes already use.
 //
 // GradiusAy8910AndK005289RealRomBringUp() builds its RequiredResource list
 // directly instead of going through GameDefinition/XML
 // (ResourceResolver::Resolve() takes that list regardless of where it came
-// from). xml/gradius.xml is validated separately by
+// from). gradius.xml is validated separately by
 // GradiusDefinitionXmlIsValid(), matching OutRunDefinitionXmlIsValid's
 // pattern (outrun_reference_tests.cpp).
 //
@@ -20,6 +20,7 @@
 // (gradiusb.zip, ~96s of its own warm-up, bubble-memory specific boot
 // sequence). This project targets the Mask ROM set.
 
+#include "../tests/definition_xml_locator.h"
 #include "gradius_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -131,24 +132,11 @@ double PeakAbs(const LogicalChannelSink& sink, ChannelId id) {
     return peak;
 }
 
-// Locate xml/gradius.xml: relative to cwd (how tools/
+// Locate gradius.xml: relative to cwd (how tools/
 // verify.ps1 runs the suite), else walk up a few parents (matches
 // outrun_reference_tests.cpp's own FindOutRunDefinitionFile()).
 std::optional<std::filesystem::path> FindGradiusDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "gradius.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-        if (!dir.has_parent_path() || dir.parent_path() == dir) {
-            break;
-        }
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("gradius.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -253,7 +241,7 @@ void GradiusAy8910AndK005289RealRomBringUp() {
     int ay8910Hits = 0;
     int k005289Hits = 0;
     int vlm5030Hits = 0;
-    // "Beginning Of The History (AIR BATTLE BGM)" (xml/gradius.xml track
+    // "Beginning Of The History (AIR BATTLE BGM)" (gradius.xml track
     // id=1), captured during the sweep below rather than sent a second time.
     constexpr std::uint8_t kBeginningOfTheHistoryCommand = 0x41;
     CommandProbe beginningOfTheHistoryProbe;
@@ -316,7 +304,7 @@ void GradiusAy8910AndK005289RealRomBringUp() {
 
     Check(anyK005289Audio, "K005289: at least one command produces audible output on the real ROM");
     // VLM5030 (speech) is NOT Check()-enforced, unlike AY8910/K005289 above:
-    // no specific voice/speech command is documented in xml/gradius.xml, and
+    // no specific voice/speech command is documented in gradius.xml, and
     // real voice samples may be triggered by main-CPU game-state logic
     // rather than a raw command byte.
     std::printf(anyVlm5030Audio
@@ -332,7 +320,7 @@ void GradiusDefinitionXmlIsValid() {
     std::printf("GradiusDefinitionXmlIsValid\n");
 
     const auto path = FindGradiusDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/gradius.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: gradius.xml is present (run from the repo root)");
     if (!path.has_value()) {
         return;
     }
@@ -398,7 +386,7 @@ void GradiusDefinitionXmlIsValid() {
     }
 }
 
-// Regression guard for xml/gradius.xml's own declared <resources> list:
+// Regression guard for gradius.xml's own declared <resources> list:
 // GradiusAy8910AndK005289RealRomBringUp above builds its RequiredResource
 // list by hand, bypassing the game XML. This test is the only one in this
 // file that resolves resources FROM the parsed XML's own def.Resources and
@@ -415,7 +403,7 @@ void GradiusViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindGradiusDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/gradius.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: gradius.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");

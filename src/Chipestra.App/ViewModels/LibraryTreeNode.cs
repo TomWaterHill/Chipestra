@@ -7,7 +7,7 @@ namespace Chipestra.App.ViewModels
 {
     /// <summary>
     /// One node in the Library's hierarchical tree (Category-&gt;Manufacturer-&gt;System-&gt;Game).
-    /// Category/Manufacturer/System nodes are pure grouping (<see cref="Game"/> is null); a Game
+    /// Category/Manufacturer/System (and, for consoles, publisher) nodes are pure grouping (<see cref="Game"/> is null); a Game
     /// node is always a leaf (<see cref="Children"/> stays empty).
     /// </summary>
     public sealed class LibraryTreeNode

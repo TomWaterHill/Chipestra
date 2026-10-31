@@ -52,7 +52,23 @@ namespace Chipestra.Core
         /// </summary>
         public bool IsWsg { get; init; } = false;
 
+        /// <summary>
+        /// True if this track is a sound-effect request of the game's own sound driver - a
+        /// <c>&lt;track type="sfx"&gt;</c> XML attribute (optional, defaults to false). <see cref="Command"/> is then the
+        /// effect number and <see cref="Player"/> sends it as <see cref="MusicCommandKind.Effect"/> instead of Raw.
+        /// </summary>
+        public bool IsEffect { get; init; } = false;
+
+        /// <summary>
+        /// The selector byte of a track that names a file set and a request address - the
+        /// <c>&lt;track set="..." request="..."&gt;</c> XML attributes, resolved by Native to
+        /// <c>(request number &lt;&lt; 4) | set number</c> (0 when absent). <see cref="Player"/> sends it as the
+        /// command's auxiliary byte; only a Machine whose game declares sets and requests interprets it.
+        /// </summary>
+        public byte Auxiliary { get; init; } = 0;
+
         /// <summary>The kind of command <see cref="Player"/> sends for this track.</summary>
-        public MusicCommandKind CommandKind => IsWsg ? MusicCommandKind.Wsg : MusicCommandKind.Raw;
+        public MusicCommandKind CommandKind =>
+            IsWsg ? MusicCommandKind.Wsg : IsEffect ? MusicCommandKind.Effect : MusicCommandKind.Raw;
     }
 }

@@ -1,0 +1,127 @@
+<chipestra>
+  <game id="gimmick_japan" title="Gimmick!" manufacturer="Sunsoft"
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Gimmick! (Japan)">
+    <resources>
+      <rom name="cart" file="Gimmick! (Japan).nes" size="393232" crc32="eeb6b362"/>
+    </resources>
+    <!-- Sunsoft FME-7 / 5B cartridge (mapper 69, with the 5B's three extra tone channels). The game's sound driver is
+         called as the game's own NMI does: the update routine ($8009) once a frame and, to start a sound, the
+         request routine ($8006) with the sound number in A; $8000 is its start-up routine. The routines run with the
+         bank 0x07 at $8000 (the bank command 9) and the bank 0x00 at $A000 (command A); the driver sets the bank at
+         $C000 (command B), where the DMC reads, by itself. Numbers 0x00-0x6E are the driver's requests; 0x6F and
+         above are not sounds, and 0x3F is the same song as 0x3C. 0x3D, 0x3E and 0x43 end by themselves. -->
+    <driver ram_clear="0x0000-0x07FF" init="0x8000" frame="0x8009" request_call="0x8006"
+            prg_banks_call="0x07 0x00" prg_banks_idle="0x07 0x00" prg_crc32="aad7bdc1" chr_crc32="9868acbe"/>
+    <tracks>
+      <track id="STOP" title="Music Stop" command="0x00" type="control"/>
+      <track id="BGM_3D" title="Good Morning / おはよう" command="0x3D" loops="false"/>
+      <track id="BGM_2C" title="No Limits / ノーリミット" command="0x2C"/>
+      <track id="BGM_06" title="Happy Birthday / お誕生日おめでとうございます！" command="0x06"/>
+      <track id="BGM_07" title="Just Friends / ジャスト フレンド" command="0x07"/>
+      <track id="BGM_08" title="Aporia / アポリア" command="0x08"/>
+      <track id="BGM_03" title="Good Weather / 快晴" command="0x03"/>
+      <track id="BGM_02" title="Slow Illusion / スローイリュージョン" command="0x02"/>
+      <track id="BGM_0B" title="Paradox / パラドックス" command="0x0B"/>
+      <track id="BGM_04" title="Paradigm / パラダイム" command="0x04"/>
+      <track id="BGM_00" title="Lion Heart / ライオンハート" command="0x00"/>
+      <track id="BGM_09" title="Identity Believer / アイデンティティサポーター" command="0x09"/>
+      <track id="BGM_0C" title="Innocent / イノセント" command="0x0C"/>
+      <track id="BGM_05" title="Cadbury / キャドバリー" command="0x05"/>
+      <track id="BGM_43" title="Siesta / シエスタ" command="0x43" loops="false"/>
+      <track id="BGM_3C" title="Sophia / ソフィア" command="0x3C"/>
+      <track id="BGM_2B" title="Black Magic / 黒魔術" command="0x2B"/>
+      <track id="BGM_1A" title="Long Tomorrow / ロング明日" command="0x1A"/>
+      <track id="BGM_3E" title="Good Night / おやすみなさい" command="0x3E" loops="false"/>
+      <track id="BGM_01" title="Strange Memories of Death / 死の奇妙な思い出" command="0x01"/>
+      <track id="BGM_0A" title="No Used / ゲーム未使用" command="0x0A"/>
+      <track id="SFX_0D" title="[SFX] 01" command="0x0D" type="sfx" loops="false"/>
+      <track id="SFX_0E" title="[SFX] 02" command="0x0E" type="sfx" loops="false"/>
+      <track id="SFX_0F" title="[SFX] 03" command="0x0F" type="sfx" loops="false"/>
+      <track id="SFX_10" title="[SFX] 04" command="0x10" type="sfx" loops="false"/>
+      <track id="SFX_11" title="[SFX] 05" command="0x11" type="sfx" loops="false"/>
+      <track id="SFX_12" title="[SFX] 06" command="0x12" type="sfx" loops="false"/>
+      <track id="SFX_13" title="[SFX] 07" command="0x13" type="sfx" loops="false"/>
+      <track id="SFX_14" title="[SFX] 08" command="0x14" type="sfx" loops="false"/>
+      <track id="SFX_15" title="[SFX] 09" command="0x15" type="sfx" loops="false"/>
+      <track id="SFX_16" title="[SFX] 10" command="0x16" type="sfx" loops="false"/>
+      <track id="SFX_17" title="[SFX] 11" command="0x17" type="sfx" loops="false"/>
+      <track id="SFX_18" title="[SFX] 12" command="0x18" type="sfx" loops="false"/>
+      <track id="SFX_19" title="[SFX] 13" command="0x19" type="sfx" loops="false"/>
+      <track id="SFX_1B" title="[SFX] 14" command="0x1B" type="sfx" loops="false"/>
+      <track id="SFX_1C" title="[SFX] 15" command="0x1C" type="sfx" loops="false"/>
+      <track id="SFX_1D" title="[SFX] 16" command="0x1D" type="sfx" loops="false"/>
+      <track id="SFX_1E" title="[SFX] 17" command="0x1E" type="sfx" loops="false"/>
+      <track id="SFX_20" title="[SFX] 18" command="0x20" type="sfx" loops="false"/>
+      <track id="SFX_21" title="[SFX] 19" command="0x21" type="sfx" loops="false"/>
+      <track id="SFX_22" title="[SFX] 20" command="0x22" type="sfx" loops="false"/>
+      <track id="SFX_23" title="[SFX] 21" command="0x23" type="sfx" loops="false"/>
+      <track id="SFX_24" title="[SFX] 22" command="0x24" type="sfx" loops="false"/>
+      <track id="SFX_25" title="[SFX] 23" command="0x25" type="sfx" loops="false"/>
+      <track id="SFX_26" title="[SFX] 24" command="0x26" type="sfx" loops="false"/>
+      <track id="SFX_27" title="[SFX] 25" command="0x27" type="sfx" loops="false"/>
+      <track id="SFX_28" title="[SFX] 26" command="0x28" type="sfx" loops="false"/>
+      <track id="SFX_29" title="[SFX] 27" command="0x29" type="sfx" loops="false"/>
+      <track id="SFX_2A" title="[SFX] 28" command="0x2A" type="sfx" loops="false"/>
+      <track id="SFX_2D" title="[SFX] 29" command="0x2D" type="sfx" loops="false"/>
+      <track id="SFX_2E" title="[SFX] 30" command="0x2E" type="sfx" loops="false"/>
+      <track id="SFX_2F" title="[SFX] 31" command="0x2F" type="sfx" loops="false"/>
+      <track id="SFX_30" title="[SFX] 32" command="0x30" type="sfx" loops="false"/>
+      <track id="SFX_31" title="[SFX] 33" command="0x31" type="sfx" loops="false"/>
+      <track id="SFX_32" title="[SFX] 34" command="0x32" type="sfx" loops="false"/>
+      <track id="SFX_33" title="[SFX] 35" command="0x33" type="sfx" loops="false"/>
+      <track id="SFX_34" title="[SFX] 36" command="0x34" type="sfx" loops="false"/>
+      <track id="SFX_35" title="[SFX] 37" command="0x35" type="sfx" loops="false"/>
+      <track id="SFX_36" title="[SFX] 38" command="0x36" type="sfx" loops="false"/>
+      <track id="SFX_37" title="[SFX] 39" command="0x37" type="sfx" loops="false"/>
+      <track id="SFX_38" title="[SFX] 40" command="0x38" type="sfx" loops="false"/>
+      <track id="SFX_39" title="[SFX] 41" command="0x39" type="sfx" loops="false"/>
+      <track id="SFX_3A" title="[SFX] 42" command="0x3A" type="sfx" loops="false"/>
+      <track id="SFX_3B" title="[SFX] 43" command="0x3B" type="sfx" loops="false"/>
+      <track id="SFX_40" title="[SFX] 44" command="0x40" type="sfx" loops="false"/>
+      <track id="SFX_41" title="[SFX] 45" command="0x41" type="sfx" loops="false"/>
+      <track id="SFX_42" title="[SFX] 46" command="0x42" type="sfx" loops="false"/>
+      <track id="SFX_44" title="[SFX] 47" command="0x44" type="sfx" loops="false"/>
+      <track id="SFX_45" title="[SFX] 48" command="0x45" type="sfx" loops="false"/>
+      <track id="SFX_46" title="[SFX] 49" command="0x46" type="sfx" loops="false"/>
+      <track id="SFX_47" title="[SFX] 50" command="0x47" type="sfx" loops="false"/>
+      <track id="SFX_48" title="[SFX] 51" command="0x48" type="sfx" loops="false"/>
+      <track id="SFX_49" title="[SFX] 52" command="0x49" type="sfx" loops="false"/>
+      <track id="SFX_4A" title="[SFX] 53" command="0x4A" type="sfx" loops="false"/>
+      <track id="SFX_4B" title="[SFX] 54" command="0x4B" type="sfx" loops="false"/>
+      <track id="SFX_4C" title="[SFX] 55" command="0x4C" type="sfx" loops="false"/>
+      <track id="SFX_4D" title="[SFX] 56" command="0x4D" type="sfx" loops="false"/>
+      <track id="SFX_4E" title="[SFX] 57" command="0x4E" type="sfx" loops="false"/>
+      <track id="SFX_50" title="[SFX] 58" command="0x50" type="sfx" loops="false"/>
+      <track id="SFX_51" title="[SFX] 59" command="0x51" type="sfx" loops="false"/>
+      <track id="SFX_52" title="[SFX] 60" command="0x52" type="sfx" loops="false"/>
+      <track id="SFX_53" title="[SFX] 61" command="0x53" type="sfx" loops="false"/>
+      <track id="SFX_54" title="[SFX] 62" command="0x54" type="sfx" loops="false"/>
+      <track id="SFX_55" title="[SFX] 63" command="0x55" type="sfx" loops="false"/>
+      <track id="SFX_56" title="[SFX] 64" command="0x56" type="sfx" loops="false"/>
+      <track id="SFX_57" title="[SFX] 65" command="0x57" type="sfx" loops="false"/>
+      <track id="SFX_58" title="[SFX] 66" command="0x58" type="sfx" loops="false"/>
+      <track id="SFX_59" title="[SFX] 67" command="0x59" type="sfx" loops="false"/>
+      <track id="SFX_5A" title="[SFX] 68" command="0x5A" type="sfx" loops="false"/>
+      <track id="SFX_5B" title="[SFX] 69" command="0x5B" type="sfx" loops="false"/>
+      <track id="SFX_5C" title="[SFX] 70" command="0x5C" type="sfx" loops="false"/>
+      <track id="SFX_5D" title="[SFX] 71" command="0x5D" type="sfx" loops="false"/>
+      <track id="SFX_5E" title="[SFX] 72" command="0x5E" type="sfx" loops="false"/>
+      <track id="SFX_5F" title="[SFX] 73" command="0x5F" type="sfx" loops="false"/>
+      <track id="SFX_60" title="[SFX] 74" command="0x60" type="sfx" loops="false"/>
+      <track id="SFX_61" title="[SFX] 75" command="0x61" type="sfx" loops="false"/>
+      <track id="SFX_62" title="[SFX] 76" command="0x62" type="sfx" loops="false"/>
+      <track id="SFX_63" title="[SFX] 77" command="0x63" type="sfx" loops="false"/>
+      <track id="SFX_64" title="[SFX] 78" command="0x64" type="sfx" loops="false"/>
+      <track id="SFX_65" title="[SFX] 79" command="0x65" type="sfx" loops="false"/>
+      <track id="SFX_66" title="[SFX] 80" command="0x66" type="sfx" loops="false"/>
+      <track id="SFX_67" title="[SFX] 81" command="0x67" type="sfx" loops="false"/>
+      <track id="SFX_68" title="[SFX] 82" command="0x68" type="sfx" loops="false"/>
+      <track id="SFX_69" title="[SFX] 83" command="0x69" type="sfx" loops="false"/>
+      <track id="SFX_6A" title="[SFX] 84" command="0x6A" type="sfx" loops="false"/>
+      <track id="SFX_6B" title="[SFX] 85" command="0x6B" type="sfx" loops="false"/>
+      <track id="SFX_6C" title="[SFX] 86" command="0x6C" type="sfx" loops="false"/>
+      <track id="SFX_6D" title="[SFX] 87" command="0x6D" type="sfx" loops="false"/>
+      <track id="SFX_6E" title="[SFX] 88" command="0x6E" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

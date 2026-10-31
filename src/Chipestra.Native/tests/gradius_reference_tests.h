@@ -9,7 +9,7 @@
 
 void GradiusAy8910AndK005289RealRomBringUp();
 
-// xml/gradius.xml validation (matches OutRunDefinitionXmlIsValid's pattern).
+// gradius.xml validation (matches OutRunDefinitionXmlIsValid's pattern).
 // GradiusAy8910AndK005289RealRomBringUp above builds its own resource list
 // by hand rather than going through the XML.
 void GradiusDefinitionXmlIsValid();

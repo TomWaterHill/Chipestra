@@ -5,7 +5,7 @@
 // After Burner II real-ROM bring-up native tests.
 //
 // AfterBurner2DefinitionXmlIsValid always runs: it validates the committed
-// xml/afterburn2.xml against the parser and the catalog.
+// afterburn2.xml against the parser and the catalog.
 //
 // AfterBurner2ReferenceBringUp is gated on the CHIPESTRA_ROM_ROOT environment
 // variable: with no ROM Root set it prints SKIP and passes, so the

@@ -11,6 +11,9 @@
 #include "devices/konami/gyruss/gyruss_machine.h"
 #include "devices/konami/gyruss/gyruss_rom_layout.h"
 #include "devices/namco/dragonspirit/dragon_spirit_machine.h"
+#include "devices/nintendo/fds/fds_machine.h"
+#include "devices/nintendo/nes/nes_cartridge.h"
+#include "devices/nintendo/nes/nes_machine.h"
 #include "devices/namco/dragonspirit/dragon_spirit_rom_layout.h"
 #include "devices/sega/outrun/outrun_machine.h"
 #include "devices/sega/outrun/outrun_rom_layout.h"
@@ -206,7 +209,7 @@ MachineRegistry BuildDefaultRegistry() {
 
     MachineDefinition vaportrail_def;
     vaportrail_def.Id = MachineId("DATAEAST_VAPORTRAIL");
-    vaportrail_def.DisplayName = "Vapor Trail";
+    vaportrail_def.DisplayName = "Caveman Ninja Hardware";
     vaportrail_def.Category = MachineCategory::Arcade;
     vaportrail_def.Manufacturer = "Data East";
     vaportrail_def.Variants.push_back(MachineVariant{VariantId("VAPORTRAIL_BASE"), "Base"});
@@ -236,6 +239,36 @@ MachineRegistry BuildDefaultRegistry() {
                                                       std::move(roms.VoiceRom));
     };
     registry.Register(std::move(dragonspirit_def));
+
+    MachineDefinition nes_def;
+    // One variant for the cartridges whose program ROM the CPU sees fixed (NROM and CNROM): the iNES header
+    // of the supplied file decides the layout, so no separate variant is needed for the two mappers.
+    nes_def.Id = MachineId("NINTENDO_NES");
+    nes_def.DisplayName = "NES";
+    nes_def.Category = MachineCategory::Console;
+    nes_def.Manufacturer = "Nintendo";
+    nes_def.Variants.push_back(MachineVariant{VariantId("NES_BASE"), "Base"});
+    // Without resources: a registered-but-not-playable Machine (zero-filled ROM, no routines).
+    nes_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        NesMachineInputs inputs = AssembleNesMachineInputs(resources);
+        return std::make_unique<NesMachine>(std::move(inputs.cartridge), std::move(inputs.driver), std::move(inputs.vrc7Instruments));
+    };
+    registry.Register(std::move(nes_def));
+
+    MachineDefinition fds_def;
+    // A Famicom with the Disk System RAM adapter. One variant: the sound driver's files are copied from the disk
+    // image, so no BIOS is needed (see FdsMachine).
+    fds_def.Id = MachineId("NINTENDO_FDS");
+    fds_def.DisplayName = "Famicom Disk System";
+    fds_def.Category = MachineCategory::Console;
+    fds_def.Manufacturer = "Nintendo";
+    fds_def.Variants.push_back(MachineVariant{VariantId("FDS_BASE"), "Base"});
+    // Without resources: a registered-but-not-playable Machine (no files, no routines).
+    fds_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        FdsMachineInputs inputs = AssembleFdsMachineInputs(resources);
+        return std::make_unique<FdsMachine>(std::move(inputs.disk), std::move(inputs.driver));
+    };
+    registry.Register(std::move(fds_def));
 
     return registry;
 }

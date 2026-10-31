@@ -6,7 +6,7 @@
 //
 // ROM handling: this file never hard-codes a ROM Root path, and only prints derived metadata (peak
 // levels, timing), never ROM-derived sample data. The crc32/size/filename constants in
-// xml/vaportra.xml are MAME's public ROM-catalog metadata (ROM_START(vaportra)), not ROM byte
+// vaportra.xml are MAME's public ROM-catalog metadata (ROM_START(vaportra)), not ROM byte
 // content.
 
 void VaporTrailDefinitionXmlIsValid();

@@ -6,7 +6,7 @@ std::vector<RequiredResource> GameDefinition::BuildRequiredResources() const {
     std::vector<RequiredResource> resources;
     resources.reserve(Resources.size());
 
-    // Archive is a per-Game XML attribute, not per-<rom>, so every resource shares the same scope.
+    // A resource's own archive wins; otherwise it is looked for in the game's archive.
     const std::optional<std::string> archive = Archive.empty() ? std::nullopt : std::make_optional(Archive);
 
     for (const auto& rom : Resources) {
@@ -17,7 +17,7 @@ std::vector<RequiredResource> GameDefinition::BuildRequiredResources() const {
         req.Crc32 = rom.Crc32;
         req.Sha1 = rom.Sha1;
         req.Required = true;
-        req.Archive = archive;
+        req.Archive = rom.Archive.empty() ? archive : std::make_optional(rom.Archive);
         resources.push_back(std::move(req));
     }
 

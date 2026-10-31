@@ -3,6 +3,7 @@
 // SfMachine native tests. The synthetic ROM programs below are hand-assembled Z80 code (no real ROM
 // data). The real-ROM tests run only when CHIPESTRA_ROM_ROOT is set.
 
+#include "../tests/definition_xml_locator.h"
 #include "sf_machine_tests.h"
 
 #include "default_machine_catalog.h"
@@ -160,16 +161,7 @@ RunStats RenderTicks(IMachine& machine, LogicalChannelSink& sink, std::uint64_t 
 }
 
 std::optional<std::filesystem::path> FindSfDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "sf.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) return candidate;
-        if (!dir.has_parent_path() || dir.parent_path() == dir) break;
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("sf.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -440,7 +432,7 @@ void SfViaDefinitionXmlRealRomBringUp() {
     GameDefinition definition;
     ResourceResolutionResult result;
     const bool parsed = ResolveRealRom(std::filesystem::path(romRootEnv), definition, result);
-    Check(parsed, "xml bring-up: xml/sf.xml is present and parses (run from the repo root)");
+    Check(parsed, "xml bring-up: sf.xml is present and parses (run from the repo root)");
     if (!parsed) return;
     Check(result.Ok, "xml bring-up: every resource sf.xml declares resolves under CHIPESTRA_ROM_ROOT (archive=\"sf\")");
     if (!result.Ok) {

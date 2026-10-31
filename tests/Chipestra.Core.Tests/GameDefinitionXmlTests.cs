@@ -57,6 +57,21 @@ namespace Chipestra.Core.Tests
         }
 
         [Fact]
+        public void Parse_RomWithItsOwnArchive_KeepsItAndLeavesOthersToTheGame()
+        {
+            const string xml =
+                "<chipestra><game id=\"G\" title=\"G\" machine=\"M\" variant=\"V\" archive=\"Game Set\">" +
+                "<resources><rom name=\"cart\" file=\"cart.bin\"/>" +
+                "<rom name=\"instruments\" file=\"inst.bin\" archive=\"ds1001\"/></resources>" +
+                "<tracks><track id=\"T\" command=\"1\" title=\"T\"/></tracks></game></chipestra>";
+            GameDefinition def = GameDefinitionXml.Parse(xml);
+
+            Assert.Equal("Game Set", def.Archive);
+            Assert.Null(def.RequiredResources[0].Archive);
+            Assert.Equal("ds1001", def.RequiredResources[1].Archive);
+        }
+
+        [Fact]
         public void Parse_ValidXml_ReadsTracksAndAcceptsHexOrDecimalCommand()
         {
             GameDefinition def = GameDefinitionXml.Parse(ValidXml);
@@ -200,6 +215,54 @@ namespace Chipestra.Core.Tests
             string dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(dir);
             return dir;
+        }
+
+        [Fact]
+        public void LoadDirectory_ReadsSubfoldersAndNamesFilesByRelativePath()
+        {
+            string dir = NewTempDir();
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(dir, "Arcade", "Sega"));
+                File.WriteAllText(Path.Combine(dir, "Arcade", "Sega", "good.xml"), ValidXml);
+                File.WriteAllText(Path.Combine(dir, "Arcade", "Sega", "broken.xml"), "<not xml");
+
+                var result = GameDefinitionCatalog.LoadDirectory(dir);
+
+                Assert.True(result.Catalog.ContainsKey("TESTGAME"));
+                GameDefinitionLoadFailure failure = Assert.Single(result.Failures);
+                Assert.Equal("Arcade/Sega/broken.xml", failure.FileName);
+            }
+            finally
+            {
+                Directory.Delete(dir, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void LoadDirectory_SameGameIdInTwoFolders_KeepsTheFirstPathAndNamesBothInTheError()
+        {
+            string dir = NewTempDir();
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(dir, "A"));
+                Directory.CreateDirectory(Path.Combine(dir, "B"));
+                File.WriteAllText(Path.Combine(dir, "B", "game.xml"), ValidXml);
+                File.WriteAllText(Path.Combine(dir, "A", "game.xml"), ValidXml);
+
+                var result = GameDefinitionCatalog.LoadDirectory(dir);
+
+                Assert.True(result.Catalog.ContainsKey("TESTGAME"));
+                GameDefinitionLoadFailure failure = Assert.Single(result.Failures);
+                Assert.Equal("B/game.xml", failure.FileName);
+                Assert.Contains("A/game.xml", failure.Reason);
+                Assert.Contains("B/game.xml", failure.Reason);
+                Assert.Contains("already defined", failure.Reason);
+            }
+            finally
+            {
+                Directory.Delete(dir, recursive: true);
+            }
         }
 
         [Fact]
@@ -403,6 +466,111 @@ namespace Chipestra.Core.Tests
                 }
             }
             Assert.Equal(31, wsgTracks);
+        }
+
+        [Fact]
+        public void Parse_TrackTypeSfx_SetsIsEffectAndTheEffectCommandKind()
+        {
+            TrackDefinition sfx = GameDefinitionXml.Parse(XmlWithTrackType("type=\"sfx\"")).Tracks[0];
+            Assert.True(sfx.IsEffect);
+            Assert.False(sfx.IsWsg);
+            Assert.False(sfx.IsControlCommand);
+            Assert.Equal(MusicCommandKind.Effect, sfx.CommandKind);
+            Assert.Equal((byte)0x05, sfx.Command);
+
+            TrackDefinition plain = GameDefinitionXml.Parse(XmlWithTrackType("")).Tracks[0];
+            Assert.False(plain.IsEffect);
+        }
+
+        [Fact]
+        public void Parse_DriverElement_IsKeptAsTextForTheMachine()
+        {
+            const string xml =
+                "<chipestra><game id=\"G\" title=\"G\" machine=\"NINTENDO_NES\" variant=\"NES_BASE\">" +
+                "<resources><rom name=\"cart\" file=\"a.nes\"/></resources>" +
+                "<driver init=\"0xB666\" frame=\"0xB690\" bgm=\"0x95\"/>" +
+                "<tracks><track id=\"T\" command=\"1\" title=\"t\"/></tracks></game></chipestra>";
+
+            GameDefinition game = GameDefinitionXml.Parse(xml);
+
+            Assert.NotNull(game.DriverXml);
+            Assert.StartsWith("<driver", game.DriverXml);
+            Assert.Contains("init=\"0xB666\"", game.DriverXml);
+            Assert.Contains("bgm=\"0x95\"", game.DriverXml);
+
+            Assert.Null(GameDefinitionXml.Parse(XmlWithTrackType("")).DriverXml);
+        }
+
+        private static string XmlWithSets(string trackAttributes) =>
+            "<chipestra><game id=\"G\" title=\"G\" machine=\"NINTENDO_FDS\" variant=\"FDS_BASE\">" +
+            "<resources><rom name=\"disk\" file=\"a.fds\"/></resources>" +
+            "<driver requests=\"0x0680 0x0685\" base=\"A\"><file name=\"A\"/><file name=\"B\"/><file name=\"C\"/>" +
+            "<set id=\"first\" files=\"B\"/><set id=\"second\" files=\"C\"/></driver>" +
+            "<tracks><track id=\"T\" command=\"0x04\" title=\"t\" " + trackAttributes + "/></tracks></game></chipestra>";
+
+        [Fact]
+        public void Parse_TrackSetAndRequest_AreResolvedToTheAuxiliaryByte()
+        {
+            // (request number << 4) | set number: numbers count from 1, 0 = none.
+            Assert.Equal((byte)0x21, GameDefinitionXml.Parse(XmlWithSets("set=\"first\" request=\"0x0685\"")).Tracks[0].Auxiliary);
+            Assert.Equal((byte)0x12, GameDefinitionXml.Parse(XmlWithSets("set=\"second\" request=\"0x0680\"")).Tracks[0].Auxiliary);
+            Assert.Equal((byte)0x20, GameDefinitionXml.Parse(XmlWithSets("request=\"0x0685\"")).Tracks[0].Auxiliary);
+            Assert.Equal((byte)0x01, GameDefinitionXml.Parse(XmlWithSets("set=\"first\"")).Tracks[0].Auxiliary);
+            Assert.Equal((byte)0x00, GameDefinitionXml.Parse(XmlWithSets("")).Tracks[0].Auxiliary);
+            Assert.Equal(MusicCommandKind.Raw, GameDefinitionXml.Parse(XmlWithSets("set=\"first\" request=\"0x0685\"")).Tracks[0].CommandKind);
+        }
+
+        [Fact]
+        public void Parse_TrackWithAnUndeclaredSetOrRequest_IsRejected()
+        {
+            Assert.Throws<FormatException>(() => GameDefinitionXml.Parse(XmlWithSets("set=\"third\" request=\"0x0685\"")));
+            Assert.Throws<FormatException>(() => GameDefinitionXml.Parse(XmlWithSets("set=\"first\" request=\"0x0684\"")));
+        }
+
+        [Fact]
+        public void RepositoryXml_MetroidFdsDeclaresItsFilesSetsAndRequests()
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "xml")))
+            {
+                dir = dir.Parent;
+            }
+            Assert.NotNull(dir);
+
+            var result = GameDefinitionCatalog.LoadDirectory(Path.Combine(dir!.FullName, "xml"));
+            Assert.Empty(result.Failures);
+
+            GameDefinition game = result.Catalog["metroid_fds"];
+            Assert.Equal("NINTENDO_FDS", game.MachineId);
+            Assert.Equal("Nintendo", game.Manufacturer);
+            Assert.Equal("Metroid", game.Archive);
+            Assert.Single(game.Tracks, t => t.IsControlCommand && t.Auxiliary == 0x80);
+            Assert.All(game.Tracks.Where(t => !t.IsControlCommand), t => Assert.NotEqual(0, t.Auxiliary >> 4));
+            Assert.Contains("<set id=\"rock_stg1\"", game.DriverXml);
+        }
+
+        [Fact]
+        public void RepositoryXml_StarSoldierHasTenSongsTwelveEffectsAndItsDriverSettings()
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "xml")))
+            {
+                dir = dir.Parent;
+            }
+            Assert.NotNull(dir);
+
+            var result = GameDefinitionCatalog.LoadDirectory(Path.Combine(dir!.FullName, "xml"));
+            Assert.Empty(result.Failures);
+
+            GameDefinition game = result.Catalog["starsoldier"];
+            Assert.Equal("NINTENDO_NES", game.MachineId);
+            Assert.Equal("Hudson", game.Manufacturer);
+            Assert.Equal(9, game.Tracks.Count(t => !t.IsEffect && !t.IsControlCommand));
+            Assert.Single(game.Tracks, t => t.IsControlCommand);
+            Assert.Equal(12, game.Tracks.Count(t => t.IsEffect));
+            Assert.All(game.Tracks.Where(t => t.IsEffect), t => Assert.False(t.Loops));
+            Assert.NotNull(game.DriverXml);
+            Assert.Contains("sfx=\"0x8C\"", game.DriverXml);
         }
     }
 }

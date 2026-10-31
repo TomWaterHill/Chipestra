@@ -10,7 +10,8 @@ namespace Chipestra.App.ViewModels
 {
     /// <summary>
     /// Library screen state: builds the hierarchical Category-&gt;Manufacturer-&gt;System-&gt;Game
-    /// tree from a game definition catalog once at construction, and switches
+    /// tree from a game definition catalog once at construction (console systems have one more level,
+    /// the publisher, between the system and its games), and switches
     /// <see cref="DisplayNodes"/> between that tree and a flat, <see cref="LibrarySearchFilter"/>-filtered
     /// list of matching games while <see cref="SearchText"/> has text.
     /// </summary>
@@ -102,6 +103,9 @@ namespace Chipestra.App.ViewModels
             // already Title-sorted below).
             var categories = new SortedDictionary<string, Dictionary<string, Dictionary<string, LibraryTreeNode>>>(StringComparer.Ordinal);
             var gameNodes = new List<(string, LibraryTreeNode)>();
+            // Console systems get one more level between the system and its games: the publisher
+            // (<game manufacturer="...">, "Unknown" when the XML names none).
+            var publishersBySystem = new Dictionary<LibraryTreeNode, SortedDictionary<string, LibraryTreeNode>>();
 
             foreach (GameDefinition game in catalog.Values.OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase))
             {
@@ -129,7 +133,25 @@ namespace Chipestra.App.ViewModels
                 }
 
                 var gameNode = new LibraryTreeNode { Header = game.Title, Game = game };
-                systemNode.Children.Add(gameNode);
+                if (string.Equals(category, "CONSOLE", StringComparison.OrdinalIgnoreCase))
+                {
+                    string publisher = string.IsNullOrWhiteSpace(game.Manufacturer) ? "Unknown" : game.Manufacturer.Trim();
+                    if (!publishersBySystem.TryGetValue(systemNode, out SortedDictionary<string, LibraryTreeNode>? publishers))
+                    {
+                        publishers = new SortedDictionary<string, LibraryTreeNode>(StringComparer.OrdinalIgnoreCase);
+                        publishersBySystem[systemNode] = publishers;
+                    }
+                    if (!publishers.TryGetValue(publisher, out LibraryTreeNode? publisherNode))
+                    {
+                        publisherNode = new LibraryTreeNode { Header = publisher };
+                        publishers[publisher] = publisherNode;
+                    }
+                    publisherNode.Children.Add(gameNode);
+                }
+                else
+                {
+                    systemNode.Children.Add(gameNode);
+                }
                 gameNodes.Add((game.Title, gameNode));
             }
 
@@ -143,6 +165,13 @@ namespace Chipestra.App.ViewModels
                     var manufacturerNode = new LibraryTreeNode { Header = manufacturerName };
                     foreach ((string _, LibraryTreeNode systemNode) in systems.OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase))
                     {
+                        if (publishersBySystem.TryGetValue(systemNode, out SortedDictionary<string, LibraryTreeNode>? publishers))
+                        {
+                            foreach (LibraryTreeNode publisherNode in publishers.Values)
+                            {
+                                systemNode.Children.Add(publisherNode);
+                            }
+                        }
                         manufacturerNode.Children.Add(systemNode);
                     }
                     categoryNode.Children.Add(manufacturerNode);

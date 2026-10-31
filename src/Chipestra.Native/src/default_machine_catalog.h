@@ -9,7 +9,7 @@
 //
 // The catalog lists Machine *types* (board/console implementations, each
 // with its C++ factory). A new board is added by registering its
-// MachineDefinition in default_machine_catalog.cpp. Game XML files (xml/*.xml)
+// MachineDefinition in default_machine_catalog.cpp. Game XML files (below the xml folder)
 // do not define Machines: each one only names a registered machine/variant
 // and declares that game's ROM resources and tracks.
 //

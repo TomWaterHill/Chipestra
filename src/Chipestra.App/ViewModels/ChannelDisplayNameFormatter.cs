@@ -28,6 +28,7 @@ namespace Chipestra.App.ViewModels
         private static readonly Regex DariusYm2203Pattern = new(@"^YM(\d+)\s+(FM|PSG)(\d+)$", RegexOptions.Compiled);
         private static readonly Regex PlainFmSsgPattern = new(@"^(FM|SSG)(\d+)$", RegexOptions.Compiled);
         private static readonly Regex Ym2610Pattern = new(@"^(ADPCM-A|ADPCM-B|FM|SSG)\s*(\d*)$", RegexOptions.Compiled);
+        private static readonly Regex Rp2a03PulsePattern = new(@"^Pulse\s*(\d+)$", RegexOptions.Compiled);
         private static readonly Regex OkiInstancePattern = new(@"#(\d+)", RegexOptions.Compiled);
 
         /// <summary>One parsed entry: the real chip model, its instance token within
@@ -117,6 +118,11 @@ namespace Chipestra.App.ViewModels
                     return new Parsed("K005289", null, "SCC", TrailingDigitOrOne(channelName));
                 case "MSM5205":
                     return new Parsed("MSM5205", null, "ADPCM", 1);
+                case "RP2A03":
+                    m = Rp2a03PulsePattern.Match(channelName);
+                    return m.Success
+                        ? new Parsed("RP2A03", null, "Pulse", int.Parse(m.Groups[1].Value))
+                        : new Parsed("RP2A03", null, channelName, 1);
                 case "i8039":
                     return new Parsed("i8039", null, "DAC", 1);
                 case "SegaPCM":

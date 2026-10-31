@@ -193,7 +193,7 @@ namespace Chipestra.Core
             {
                 loadResult = _session.LoadMachineWithResources(
                     game.MachineId, game.VariantId, game.RequiredResources, romRoot, out RomResolutionResult resolution,
-                    game.Archive);
+                    game.Archive, game.DriverXml);
                 RomResolution = resolution;
             }
             else
@@ -325,7 +325,7 @@ namespace Chipestra.Core
                 _state = PlaybackState.Ready;
             }
 
-            ChipestraResult sendResult = _session.SendCommand(track.CommandKind, track.Command);
+            ChipestraResult sendResult = _session.SendCommand(track.CommandKind, track.Command, track.Auxiliary);
             if (sendResult != ChipestraResult.Ok)
             {
                 return sendResult;
@@ -527,7 +527,7 @@ namespace Chipestra.Core
             {
                 // Best-effort: a resend failure does not turn an otherwise-successful Stop
                 // into a reported failure; Status.State already reflects Ready.
-                _session.SendCommand(_track.CommandKind, _track.Command);
+                _session.SendCommand(_track.CommandKind, _track.Command, _track.Auxiliary);
             }
 
             return ChipestraResult.Ok;

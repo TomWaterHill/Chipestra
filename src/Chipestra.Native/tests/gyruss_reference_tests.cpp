@@ -4,7 +4,7 @@
 //
 // This file never hard-codes a ROM Root path, and only ever prints derived
 // metadata (peak levels, register values) - never ROM-derived sample data.
-// The crc32/size/filename constants in xml/gyruss.xml are MAME's own public
+// The crc32/size/filename constants in gyruss.xml are MAME's own public
 // ROM-catalog metadata (ROM_START(gyruss)), not ROM byte content.
 //
 // A single command's nonzero/time-varying peak can be a universal
@@ -13,6 +13,7 @@
 // and requires them to diverge - direct, command-specific evidence that the
 // driver dispatches different content per command.
 
+#include "../tests/definition_xml_locator.h"
 #include "gyruss_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -51,16 +52,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindGyrussDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "gyruss.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) return candidate;
-        if (!dir.has_parent_path() || dir.parent_path() == dir) break;
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("gyruss.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -140,7 +132,7 @@ void GyrussDefinitionXmlIsValid() {
     std::printf("GyrussDefinitionXmlIsValid\n");
 
     const auto path = FindGyrussDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/gyruss.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: gyruss.xml is present (run from the repo root)");
     if (!path.has_value()) return;
 
     const auto text = ReadFileText(*path);
@@ -191,7 +183,7 @@ void GyrussViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindGyrussDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/gyruss.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: gyruss.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");
@@ -350,7 +342,7 @@ void GyrussChannelMeterAbiDuringRealPlaybackReportsPerChannelPeak() {
     }
     const auto defPath = FindGyrussDefinitionFile();
     if (!defPath.has_value()) {
-        std::printf("  SKIP: xml/gyruss.xml not found from the cwd\n");
+        std::printf("  SKIP: gyruss.xml not found from the cwd\n");
         return;
     }
     const auto defText = ReadFileText(*defPath);
@@ -426,7 +418,7 @@ void GyrussChannelMeterAbiDuringRealPlaybackReportsPerChannelPeak() {
     Check(chipestra_select_null_output(handle) == CHIPESTRA_OK, "abi path: chipestra_select_null_output() == CHIPESTRA_OK");
     Check(chipestra_start_audio_output(handle) == CHIPESTRA_OK, "abi path: chipestra_start_audio_output() == CHIPESTRA_OK");
 
-    // "Main BGM 1" == command 0x27 (xml/gyruss.xml), the same
+    // "Main BGM 1" == command 0x27 (gyruss.xml), the same
     // track GyrussViaDefinitionXmlRealRomBringUp measured as nonzero and
     // time-varying via the native shortcut above. No explicit warm-up
     // render calls here beyond what chipestra_load_machine's own

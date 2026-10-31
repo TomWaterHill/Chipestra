@@ -18,6 +18,11 @@ struct RomResourceDefinition {
     std::optional<std::uint64_t> SizeBytes;
     std::optional<std::uint32_t> Crc32;
     std::optional<std::string> Sha1;
+
+    // <rom archive="..."> (optional) - the archive this resource is looked for in (a ZIP name without its
+    // extension, or a folder name). Empty means the game's own archive (GameDefinition::Archive). It lets a
+    // game take a resource from another archive, e.g. a sound chip ROM.
+    std::string Archive;
 };
 
 // TrackDefinition (<track>) - one playable track within a Game. `Command` is an opaque
@@ -47,6 +52,19 @@ struct TrackDefinition {
     // game's own test-screen number, and Player sends it as MusicCommandKind::Wsg instead of Raw.
     // Native never interprets it.
     bool IsWsg = false;
+
+    // <track type="sfx"> (optional, default false) - a request for a sound effect of the game's own sound
+    // driver: Command is the effect number, and Player sends it as MusicCommandKind::Effect instead of
+    // Raw. Native never interprets it.
+    bool IsEffect = false;
+
+    // <track set="..." request="..."> (optional) - which combination of the game's data files to load and which
+    // request address the command value is written to, for a game whose <driver> element declares them (a
+    // Famicom Disk System game). Resolved at parse time to one byte, (request number << 4) | set number (| 0x80 for a control track): the set
+    // number counts the <driver><set> elements from 1 (0 = the base files alone), the request number counts the
+    // addresses of <driver requests="..."> from 1 (0 = none; at most 7). Bit 7 is set for a control track
+    // (<track type="control">). Native carries it as MusicCommand::Auxiliary and never interprets it.
+    std::uint8_t Auxiliary = 0;
 };
 
 // GameDefinition (<game>) - one Game's full definition: identity, which Machine/Variant it
@@ -57,8 +75,9 @@ struct GameDefinition {
     std::string Machine;   // MachineId::Value() this Game targets
     std::string Variant;   // VariantId::Value() this Game targets
 
-    // <game manufacturer="..."> - informational only. Library grouping uses
-    // MachineDefinition::Manufacturer, since it's a property of the hardware.
+    // <game manufacturer="..."> - informational for an arcade game (Library grouping uses
+    // MachineDefinition::Manufacturer, a property of the hardware); for a console game the Library
+    // shows it as the publisher level. Native only carries it.
     std::string Manufacturer;
 
     // <game archive="..."> - an optional archive-name hint (the ROM zip filename without its

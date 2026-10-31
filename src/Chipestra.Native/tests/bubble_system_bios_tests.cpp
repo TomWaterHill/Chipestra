@@ -18,6 +18,7 @@
 // only prints derived metadata (page/PC counts, peak/sum levels), never
 // ROM-derived sample data.
 
+#include "../tests/definition_xml_locator.h"
 #include "bubble_system_bios_tests.h"
 
 #include "default_machine_catalog.h"
@@ -114,16 +115,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindDefinitionFile(const char* fileName) {
-    const std::filesystem::path relative = std::filesystem::path("xml") / fileName;
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) return candidate;
-        if (!dir.has_parent_path() || dir.parent_path() == dir) break;
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml(fileName);
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -265,10 +257,10 @@ void BubbleSystemBiosModeStaleCommandDoesNotLeakIntoNextColdRestart() {
 void BubbleSystemPublishesOnlyTheBiosOnlyEntry() {
     std::printf("BubbleSystemPublishesOnlyTheBiosOnlyEntry\n");
     // The cartridge-carrying configuration (BUBBLESYSTEM_GRADIUS_BASE) stays in C++ but is not
-    // published as a game entry (there is no xml/bs_gradius.xml): the Library's
+    // published as a game entry (there is no bs_gradius.xml): the Library's
     // "Bubble System" system must list only the BIOS-only entry.
     const auto probe = FindDefinitionFile("bubsys.xml");
-    Check(probe.has_value(), "definitions: xml/bubsys.xml is present");
+    Check(probe.has_value(), "definitions: bubsys.xml is present");
     if (!probe.has_value()) return;
     const std::filesystem::path dir = probe->parent_path();
     Check(!std::filesystem::exists(dir / "bs_gradius.xml"), "definitions: no bs_gradius.xml file is published");
@@ -300,7 +292,7 @@ void BubbleSystemPublishesOnlyTheBiosOnlyEntry() {
 void BubbleSystemBiosDefinitionXmlIsValid() {
     std::printf("BubbleSystemBiosDefinitionXmlIsValid\n");
     const auto path = FindDefinitionFile("bubsys.xml");
-    Check(path.has_value(), "definition xml: xml/bubsys.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: bubsys.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "definition xml: file is readable");

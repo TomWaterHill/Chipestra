@@ -164,6 +164,8 @@ CHIPESTRA_API ChipestraResult chipestra_get_machine_channel_count(ChipestraHandl
 //       passed through as-is)
 //   3 = Wsg (value is a WSG sound-effect number; only Machines that accept this
 //       kind handle it)
+//   4 = Effect (value is the game's own sound-effect number; only Machines that
+//       accept this kind handle it)
 // `auxiliary` is only meaningful for some Kind/board combinations; pass 0
 // when unused.
 //
@@ -585,10 +587,10 @@ typedef struct ChipestraRequiredResourceInfo {
     uint8_t has_crc32;
     char sha1[64];            // "" if the XML omitted it
     uint8_t required;         // currently always nonzero
-    // Optional archive scope. "" means unscoped. chipestra_game_definition_get_resource
-    // always leaves this "" (archive is a per-<game> attribute; read it from
-    // ChipestraGameInfo::archive); callers building a chipestra_resolve_resources
-    // request populate it themselves.
+    // Optional archive scope. "" means unscoped. chipestra_game_definition_get_resource fills it with the
+    // resource's own <rom archive="..."> ("" if the resource takes the game's archive, which is
+    // ChipestraGameInfo::archive); callers building a chipestra_resolve_resources request populate it
+    // themselves (the resource's own archive, otherwise the game's).
     char archive[64];
 } ChipestraRequiredResourceInfo;
 
@@ -617,6 +619,12 @@ typedef struct ChipestraTrackInfo {
     // (the game's own test-screen number in `command`), sent as MusicCommandKind::Wsg.
     // The Machine decides what it means.
     uint8_t is_wsg;
+    // Appended: <track type="sfx"> (0 when absent): a request for a sound effect (the game's own effect
+    // number in `command`), sent as MusicCommandKind::Effect. The Machine decides what it means.
+    uint8_t is_effect;
+    // Appended: <track set="..." request="..."> resolved to one byte ((request number << 4) | set number, 0 when
+    // absent); Managed Core passes it to chipestra_send_command as `auxiliary`. Native never interprets it.
+    uint8_t auxiliary;
 } ChipestraTrackInfo;
 
 // Writes `handle`'s `index`-th declared track (0-based, matching
@@ -857,6 +865,9 @@ enum class MusicCommandKind {
     Raw,          // Value (and optionally Auxiliary) are passed through as-is
     Wsg,          // Value is a WSG sound-effect number (the game's own test-screen number); only a Machine
                   // whose AcceptsCommand() says yes gets it - the generic runtime never interprets it
+    Effect,       // Value is a sound-effect number of the game's own sound driver (appended after Wsg: the
+                  // numeric values of the earlier kinds are part of the C ABI); only a Machine whose
+                  // AcceptsCommand() says yes gets it - the generic runtime never interprets it
 };
 
 // MusicCommand - one command delivered to a Machine via IMachine::SendCommand().
@@ -910,8 +921,10 @@ public:
 
     // Whether SendCommand() can act on this command (checked by chipestra_send_command before it calls
     // SendCommand, which then returns CHIPESTRA_E_UNSUPPORTED_COMMAND for a no). The default accepts every
-    // kind except Wsg.
-    virtual bool AcceptsCommand(const MusicCommand& command) const { return command.Kind != MusicCommandKind::Wsg; }
+    // kind except Wsg and Effect.
+    virtual bool AcceptsCommand(const MusicCommand& command) const {
+        return command.Kind != MusicCommandKind::Wsg && command.Kind != MusicCommandKind::Effect;
+    }
 
     // Called by chipestra_clear_logical_channel_pan_override() right after it
     // clears LogicalChannel::PanOverridden for `channelId`, so a Machine whose

@@ -428,7 +428,7 @@ bool DragonSpiritMachine::AcceptsCommand(const MusicCommand& command) const {
     if (command.Kind == MusicCommandKind::Wsg) {
         return command.Value <= kMaxWsgNumber;
     }
-    return true;
+    return command.Kind != MusicCommandKind::Effect;
 }
 
 void DragonSpiritMachine::OnPanOverrideCleared(std::uint32_t) {

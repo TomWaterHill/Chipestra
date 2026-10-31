@@ -284,4 +284,6 @@ void SfMachine::SendCommand(const MusicCommand& command) {
     command_sent_since_reset_ = true;
 }
 
-bool SfMachine::AcceptsCommand(const MusicCommand& command) const { return command.Kind != MusicCommandKind::Wsg; }
+bool SfMachine::AcceptsCommand(const MusicCommand& command) const {
+    return command.Kind != MusicCommandKind::Wsg && command.Kind != MusicCommandKind::Effect;
+}

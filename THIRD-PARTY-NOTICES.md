@@ -39,6 +39,30 @@ All of the following come from MAME (https://github.com/mamedev/mame), tag mame0
 - Original implementation (path in mame0289): src/devices/cpu/h6280/h6280.cpp, h6280.h
 - Note: the H6280 source states that it is based, with permission, on Juergen Buchmueller's 6502 emulator.
 
+#### 6502 (Ricoh RP2A03 CPU core)
+- Copyright holders (as listed in the original files): Olivier Galibert
+- Original implementation (path in mame0289): src/devices/cpu/m6502/m6502.cpp, m6502.h, rp2a03.cpp, rp2a03.h, m6502make.py, om6502.lst, orp2a03.lst, drp2a03.lst
+
+#### MMC3 (the program-ROM banking of the Nintendo TxROM boards)
+- Copyright holders (as listed in the original files): Fabio Priuli
+- Original implementation (path in mame0289): src/devices/bus/nes/mmc3.cpp, mmc3.h
+
+#### VRC6 mapper (the program-ROM banking of the Konami VRC6 cartridge board)
+- Copyright holders (as listed in the original files): Fabio Priuli
+- Original implementation (path in mame0289): src/devices/bus/nes/konami.cpp, konami.h
+
+#### VRC7 mapper (the program-ROM banking and the sound registers of the Konami VRC7 cartridge board)
+- Copyright holders (as listed in the original files): Fabio Priuli
+- Original implementation (path in mame0289): src/devices/bus/nes/konami.cpp, konami.h
+
+#### Namco 163 mapper (the program-ROM banking and the sound registers of the Namco 163 cartridge board)
+- Copyright holders (as listed in the original files): Fabio Priuli
+- Original implementation (path in mame0289): src/devices/bus/nes/namcot.cpp, namcot.h
+
+#### FME-7 mapper (the program-ROM banking and the sound register routing of the Sunsoft FME-7 and 5B cartridge boards)
+- Copyright holders (as listed in the original files): Fabio Priuli
+- Original implementation (path in mame0289): src/devices/bus/nes/sunsoft.cpp, sunsoft.h
+
 #### i8039 (mcs48)
 - Copyright holders (as listed in the original files): Dan Boris, Mirko Buffoni, Aaron Giles, Couriersud (the text of the files contains "Copyright Mirko Buffoni" and "Based on the original work Copyright Dan Boris")
 - Original implementation (path in mame0289): src/devices/cpu/mcs48/mcs48.cpp, mcs48.h
@@ -71,9 +95,33 @@ All of the following come from MAME (https://github.com/mamedev/mame), tag mame0
 - Copyright holders (as listed in the original files): Nicola Salmoria, Aaron Giles
 - Original implementation (path in mame0289): src/devices/sound/namco.cpp
 
+#### RP2C33 (Ricoh sound generator of the Famicom Disk System RAM adapter)
+- Copyright holders (as listed in the original files): cam900, Brad Smith, Brezza (the files say the code is based on code by Brad Smith and Brezza and on information from the NESdev wiki)
+- Original implementation (path in mame0289): src/devices/sound/rp2c33_snd.cpp, rp2c33_snd.h
+
+#### VRC6 (Konami VRC VI sound channels of the cartridge)
+- Copyright holders (as listed in the original files): R. Belmont
+- Original implementation (path in mame0289): src/devices/sound/vrc6.cpp, vrc6.h
+
+#### Namco 163 (wavetable sound channels of the Namco cartridge chip)
+- Copyright holders (as listed in the original files): cam900
+- Original implementation (path in mame0289): src/devices/sound/namco_163.cpp, namco_163.h
+
+#### Sunsoft 5B (the sound chip of the Sunsoft 5B cartridge board)
+- Copyright holders (as listed in the original files): Couriersud
+- Original implementation (path in mame0289): src/devices/sound/ay8910.cpp, ay8910.h
+
 #### PC060HA / TC0140SYT
 - Copyright holders (as listed in the original files): Philip Bennett
 - Original implementation (path in mame0289): src/mame/shared/taitosnd.cpp, taitosnd.h
+
+### Sound chips derived from MAME under GPL-2.0-or-later
+
+The following comes from MAME (https://github.com/mamedev/mame), tag mame0289, like the items above, but its files are licensed under GPL-2.0-or-later (the license: line at the top of each file reads GPL-2.0+), not BSD-3-Clause. It was ported and adapted for Chipestra, which is itself licensed under GPL-2.0-or-later. The full text of the GPL-2.0 is in LICENSE.
+
+#### NES APU (the sound generator of the Ricoh RP2A03)
+- Copyright holders (as listed in the original files): Matthew Conte (the text of the files says it is based on the Nofrendo/Nosefart core written by Matthew Conte and redesigned for MAME by "Who Wants to Know?", and that it is released under the GNU Public License)
+- Original implementation (path in mame0289): src/devices/sound/nes_apu.cpp, nes_apu.h, nes_defs.h
 
 ### MAME drivers (referenced)
 
@@ -142,7 +190,8 @@ Parts copied directly (notes):
 - Copyright notice: Copyright (c) 2021, Aaron Giles
 - License: BSD-3-Clause
 - Source: https://github.com/aaronsgiles/ymfm (3rdparty/ymfm bundled with MAME mame0289)
-- How Chipestra uses it: the source, identical to the one bundled with MAME mame0289, is compiled into Chipestra (used for YM2151, YM2203 and YM2610)
+- How Chipestra uses it: the source, identical to the one bundled with MAME mame0289, is compiled into Chipestra (used for YM2151, YM2203, YM2610 and, through the DS1001 class of ymfm_opl, the Konami VRC7). The files ymfm_opl.h, ymfm_opl.cpp, ymfm_pcm.h and ymfm_pcm.cpp are the same unmodified files; only the DS1001 class is used
+- VRC7 instrument table: the 15 built-in instruments of the VRC7 are in a 144-byte table that the user supplies as a ROM (ds1001_instruments.bin, the MAME device ROM "ds1001", CRC-32 9d699efc). Chipestra does not include it, and does not use the table that ymfm contains
 
 #### libsoxr (SoX Resampler Library)
 - Copyright notice: SoX Resampler Library Copyright (c) 2007-18 robs@users.sourceforge.net

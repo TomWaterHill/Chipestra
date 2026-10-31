@@ -351,6 +351,10 @@ ResourceResolutionResult ResourceResolver::Resolve(const std::vector<RequiredRes
         failure.LogicalName = req.LogicalName;
         failure.Result = single.Result;
         failure.Detail = single.Detail;
+        if (single.Result == CHIPESTRA_E_NOT_FOUND && req.Archive.has_value()) {
+            // Name the archive: a resource of another zip (a chip ROM, say) is found by its archive name.
+            failure.Detail += " - the archive '" + *req.Archive + "' (" + *req.Archive + ".zip, or a folder of that name) is required";
+        }
         result.Failures.push_back(std::move(failure));
         if (req.Required) {
             result.Ok = false;

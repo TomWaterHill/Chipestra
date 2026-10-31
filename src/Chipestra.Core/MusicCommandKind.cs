@@ -29,5 +29,12 @@ namespace Chipestra.Core
         /// <see cref="ChipestraResult.UnsupportedCommand"/>.
         /// </summary>
         Wsg = 3,
+
+        /// <summary>
+        /// Value is a sound-effect number of the game's own sound driver (from a
+        /// <c>&lt;track type="sfx"&gt;</c>). Only a Machine that accepts it plays it; others answer
+        /// <see cref="ChipestraResult.UnsupportedCommand"/>.
+        /// </summary>
+        Effect = 4,
     }
 }

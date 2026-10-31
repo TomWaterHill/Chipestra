@@ -1,0 +1,36 @@
+<chipestra>
+  <game id="starsoldier" title="Star Soldier" manufacturer="Hudson"
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Star Soldier (Japan)">
+    <resources>
+      <rom name="cart" file="Star Soldier (Japan).nes" size="65552" crc32="7abe32dd"/>
+    </resources>
+    <!-- How Chipestra runs the game's own sound routines (no picture chip, no main loop). -->
+    <driver ram_clear="0x0000-0x07FF" init="0xB666 0xB809" frame="0xB690 0xB82A"
+            bgm="0x95" sfx="0x8C" prg_crc32="e6c4ec06" chr_crc32="67651e57"/>
+    <tracks>
+      <track id="0" title="Music Stop"                         command="0x00" type="control"/>
+      <track id="1" title="タイトル BGM"                       command="1" loops="false"/>
+      <track id="5" title="メイン BGM - イントロ -"            command="5" loops="false"/>
+      <track id="6" title="メイン BGM"                         command="6"/>
+      <track id="2" title="ラザロ"                             command="2"/>
+      <track id="9" title="フルパワーアップ BGM - イントロ -"  command="9" loops="false"/>
+      <track id="8" title="フルパワーアップ BGM"               command="8"/>
+      <track id="7" title="スターブレイン"                     command="7"/>
+      <track id="20" title="スターブレイン エスケープ"         command="10" type="sfx" loops="false"/>
+      <track id="3" title="ステージクリア"                     command="3" loops="false"/>
+      <track id="4" title="ミッションコンプリート"             command="4" loops="false"/>
+      <!-- <track id="10" title="BGM 10" command="10"/> -->
+      <track id="11" title="[SFX] 01"                          command="1" type="sfx" loops="false"/>
+      <track id="12" title="[SFX] 02"                          command="2" type="sfx" loops="false"/>
+      <track id="13" title="[SFX] 03"                          command="3" type="sfx" loops="false"/>
+      <track id="14" title="[SFX] 04"                          command="4" type="sfx" loops="false"/>
+      <track id="15" title="[SFX] 05"                          command="5" type="sfx" loops="false"/>
+      <track id="16" title="[SFX] 06"                          command="6" type="sfx" loops="false"/>
+      <track id="17" title="[SFX] 07"                          command="7" type="sfx" loops="false"/>
+      <track id="18" title="[SFX] 08"                          command="8" type="sfx" loops="false"/>
+      <track id="19" title="[SFX] 09"                          command="9" type="sfx" loops="false"/>
+      <track id="21" title="[SFX] 11"                          command="11" type="sfx" loops="false"/>
+      <track id="22" title="[SFX] 12"                          command="12" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

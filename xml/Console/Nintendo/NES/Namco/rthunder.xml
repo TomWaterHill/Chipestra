@@ -1,0 +1,60 @@
+<chipestra>
+  <game id="rolling_thunder_japan" title="Rolling Thunder" manufacturer="Namco"
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Rolling Thunder (Japan)">
+    <resources>
+      <rom name="cart" file="Rolling Thunder (Japan).nes" size="393232" crc32="4837b489"/>
+    </resources>
+    <!-- Namco 163 cartridge (mapper 19, with the chip's 4 extra sound channels in use). The game's sound driver is
+         one routine ($8000), called once a frame with the banks 0x3C and 0x3D mapped at $8000 and $A000 (the third
+         bank is not read by the driver); $B307 is its start-up routine. A sound is requested by writing its
+         number to the request variable $00B6; the game's own start-up requests 0xFF (the driver's initial state),
+         which is already in place. n163_volume="4" is MAME's submapper for this board (the 2A03 is mixed at 0.90
+         and the chip at 0.5 x 1.17). 0x80 and 0x9A are the beginnings of songs that go on into a looping song by
+         themselves; 0xFE and 0xFF are not sounds. -->
+    <driver ram_clear="0x0000-0x07FF" ram_set="0x00B6=0xFF" init="0xB307" frame="0x8000" bgm="0x00B6" sfx="0x00B6"
+            prg_banks_call="0x3C 0x3D 0x3E" prg_banks_idle="0x3C 0x3D 0x3E" n163_channels="4" n163_volume="4"
+            prg_crc32="3deac303"/>
+    <tracks>
+      <track id="STOP" title="Music Stop" command="0x00" type="control"/>
+      <track id="BGM_9A" title="Round Start - Main Theme" command="0x9A"/>
+      <track id="BGM_84" title="Round Demo" command="0x84" loops="false"/>
+      <track id="BGM_80" title="Round Start - 洞窟BGM" command="0x80"/>
+      <track id="BGM_85" title="MABOO BGM" command="0x85"/>
+      <track id="BGM_86" title="Congratulations" command="0x86" loops="false"/>
+      <track id="BGM_81" title="Game Over" command="0x81" loops="false"/>
+      <track id="BGM_82" title="Main Theme" command="0x82"/>
+      <track id="BGM_83" title="洞窟BGM" command="0x83"/>
+      <track id="SFX_92" title="[SFX] Pause" command="0x92" type="sfx" loops="false"/>
+      <track id="SFX_9B" title="[SFX] Unpause" command="0x9B" type="sfx" loops="false"/>
+      <!-- Only the following commands exist. -->
+      <track id="BGM_8A" title="[SFX] 00" command="0x8A"/>
+      <track id="SFX_87" title="[SFX] 01" command="0x87" type="sfx" loops="false"/>
+      <track id="SFX_88" title="[SFX] 02" command="0x88" type="sfx" loops="false"/>
+      <track id="SFX_89" title="[SFX] 03" command="0x89" type="sfx" loops="false"/>
+      <track id="SFX_8B" title="[SFX] 04" command="0x8B" type="sfx" loops="false"/>
+      <track id="SFX_8C" title="[SFX] 05" command="0x8C" type="sfx" loops="false"/>
+      <track id="SFX_8D" title="[SFX] 06" command="0x8D" type="sfx" loops="false"/>
+      <track id="SFX_8E" title="[SFX] 07" command="0x8E" type="sfx" loops="false"/>
+      <track id="SFX_8F" title="[SFX] 08" command="0x8F" type="sfx" loops="false"/>
+      <track id="SFX_90" title="[SFX] 09" command="0x90" type="sfx" loops="false"/>
+      <track id="SFX_91" title="[SFX] 10" command="0x91" type="sfx" loops="false"/>
+      <track id="SFX_93" title="[SFX] 11" command="0x93" type="sfx" loops="false"/>
+      <track id="SFX_94" title="[SFX] 12" command="0x94" type="sfx" loops="false"/>
+      <track id="SFX_95" title="[SFX] 13" command="0x95" type="sfx" loops="false"/>
+      <track id="SFX_96" title="[SFX] 14" command="0x96" type="sfx" loops="false"/>
+      <track id="SFX_97" title="[SFX] 15" command="0x97" type="sfx" loops="false"/>
+      <track id="SFX_98" title="[SFX] 16" command="0x98" type="sfx" loops="false"/>
+      <track id="SFX_99" title="[SFX] 17" command="0x99" type="sfx" loops="false"/>
+      <track id="SFX_9C" title="[SFX] 18" command="0x9C" type="sfx" loops="false"/>
+      <track id="SFX_9D" title="[SFX] 19" command="0x9D" type="sfx" loops="false"/>
+      <track id="SFX_9E" title="[SFX] 20" command="0x9E" type="sfx" loops="false"/>
+      <track id="SFX_9F" title="[SFX] 21" command="0x9F" type="sfx" loops="false"/>
+      <track id="SFX_A0" title="[SFX] 22" command="0xA0" type="sfx" loops="false"/>
+      <track id="SFX_A1" title="[SFX] 23" command="0xA1" type="sfx" loops="false"/>
+      <track id="SFX_A2" title="[SFX] 24" command="0xA2" type="sfx" loops="false"/>
+      <track id="SFX_A3" title="[SFX] 25" command="0xA3" type="sfx" loops="false"/>
+      <track id="SFX_A4" title="[SFX] 26" command="0xA4" type="sfx" loops="false"/>
+      <track id="SFX_A5" title="[SFX] 27" command="0xA5" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

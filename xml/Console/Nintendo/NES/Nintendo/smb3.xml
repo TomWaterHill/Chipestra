@@ -1,0 +1,81 @@
+<chipestra>
+  <game id="smb3_japan" title="Super Mario Bros. 3" manufacturer="Nintendo"
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Super Mario Bros. 3 (Japan)">
+    <resources>
+      <rom name="cart" file="Super Mario Bros. 3 (Japan).nes" size="393232" crc32="c2cad43d"/>
+    </resources>
+    <!-- The game's sound engine is one routine ($A000 in PRG bank 28), called once per frame with R6 = 0x1D and
+         R7 = 0x1C mapped; between the calls the game has its own banks mapped, which the DMC reads samples
+         through (the world maps' drum samples are in bank 10). Requests are the engine's request variables:
+         $04F5 songs (low nibble: world maps and others, high nibble: level music), $04F4 jingles, $04F1 $04F2
+         $04F3 $04F6 sound effects (one bit per effect). Values the engine does not play are left out. -->
+    <driver ram_clear="0x0000-0x07FF" frame="0xA000" prg_banks_call="0x1D 0x1C" prg_banks_idle="0x0A 0x1A"
+            requests="0x04F1 0x04F2 0x04F3 0x04F4 0x04F5 0x04F6" prg_crc32="bbac200c" chr_crc32="a0ae2b4b"/>
+    <tracks>
+      <track id="STOP" title="Music Stop" command="0x00" request="0x04F5" type="control"/>
+      <track id="BGM_F5_10" title="Overworld Theme 1" command="0x10" request="0x04F5"/>
+      <track id="BGM_F5_90" title="Overworld Theme 2" command="0x90" request="0x04F5"/>
+      <track id="BGM_F5_20" title="Underground Theme" command="0x20" request="0x04F5"/>
+      <track id="BGM_F5_30" title="Underwater Theme" command="0x30" request="0x04F5"/>
+      <track id="BGM_F5_09" title="Sky Theme" command="0x09" request="0x04F5"/>
+      <track id="BGM_F5_0D" title="Cursed Kings" command="0x0D" request="0x04F5"/>
+      <track id="BGM_F5_40" title="Castle Theme" command="0x40" request="0x04F5"/>
+      <track id="BGM_F5_01" title="World Map 1: Grass Land Theme" command="0x01" request="0x04F5"/>
+      <track id="BGM_F5_02" title="World Map 2: Desert Land Theme" command="0x02" request="0x04F5"/>
+      <track id="BGM_F5_03" title="World Map 3: Water Land Theme" command="0x03" request="0x04F5"/>
+      <track id="BGM_F5_04" title="World Map 4: Giant Land Theme" command="0x04" request="0x04F5"/>
+      <track id="BGM_F5_05" title="World Map 5: Sky Land Theme" command="0x05" request="0x04F5"/>
+      <track id="BGM_F5_06" title="World Map 6: Ice Land Theme" command="0x06" request="0x04F5"/>
+      <track id="BGM_F5_07" title="World Map 7: Pipe Maze Theme" command="0x07" request="0x04F5"/>
+      <track id="BGM_F5_08" title="World Map 8: Dark Land Theme" command="0x08" request="0x04F5"/>
+      <track id="BGM_F5_80" title="Toad Items" command="0x80" request="0x04F5"/>
+      <track id="BGM_F5_0A" title="Star Theme" command="0x0A" request="0x04F5"/>
+      <track id="BGM_F5_70" title="Hammer Bros" command="0x70" request="0x04F5"/>
+      <track id="BGM_F5_0E" title="Spade Bonus" command="0x0E" request="0x04F5"/>
+      <track id="BGM_F5_A0" title="Toad's House Theme" command="0xA0" request="0x04F5"/>
+      <track id="BGM_F5_0B" title="Recorder Theme" command="0x0B" request="0x04F5"/>
+      <track id="BGM_F5_0C" title="Music Box" command="0x0C" request="0x04F5"/>
+      <track id="BGM_F5_50" title="Boss Battle" command="0x50" request="0x04F5"/>
+      <track id="BGM_F5_B0" title="Bowser Battle" command="0xB0" request="0x04F5"/>
+      <track id="BGM_F5_60" title="Airship Theme" command="0x60" request="0x04F5"/>
+      <track id="BGM_F5_0F" title="Ending Theme" command="0x0F" request="0x04F5"/>
+      <track id="BGM_F5_C0" title="Koopa Kid Battle Theme" command="0xC0" request="0x04F5"/>
+      <track id="BGM_F5_D0" title="BGM 28" command="0xD0" request="0x04F5"/>
+      <track id="SFX_F4_20" title="Stage Clear" command="0x20" request="0x04F4" loops="false"/>
+      <track id="SFX_F4_08" title="Rescued Kings" command="0x08" request="0x04F4" loops="false"/>
+      <track id="SFX_F4_04" title="Received Sceptor" command="0x04" request="0x04F4" loops="false"/>
+      <track id="SFX_F4_40" title="Hurry up" command="0x40" request="0x04F4" loops="false"/>
+      <track id="SFX_F4_01" title="Life Lost" command="0x01" request="0x04F4" loops="false"/>
+      <track id="SFX_F4_02" title="Game Over" command="0x02" request="0x04F4" loops="false"/>
+      <!-- Only the following commands exist. -->
+      <track id="SFX_F4_10" title="[SFX] 05" command="0x10" request="0x04F4" loops="false"/>
+      <track id="SFX_F1_01" title="[SFX] 08" command="0x01" request="0x04F1" loops="false"/>
+      <track id="SFX_F1_02" title="[SFX] 09" command="0x02" request="0x04F1" loops="false"/>
+      <track id="SFX_F1_04" title="[SFX] 10" command="0x04" request="0x04F1" loops="false"/>
+      <track id="SFX_F1_08" title="[SFX] 11" command="0x08" request="0x04F1" loops="false"/>
+      <track id="SFX_F1_10" title="[SFX] 12" command="0x10" request="0x04F1" loops="false"/>
+      <track id="SFX_F1_20" title="[SFX] 13" command="0x20" request="0x04F1" loops="false"/>
+      <track id="SFX_F1_80" title="[SFX] 14" command="0x80" request="0x04F1" loops="false"/>
+      <track id="SFX_F2_01" title="[SFX] 15" command="0x01" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_02" title="[SFX] 16" command="0x02" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_04" title="[SFX] 17" command="0x04" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_08" title="[SFX] 18" command="0x08" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_10" title="[SFX] 19" command="0x10" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_20" title="[SFX] 20" command="0x20" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_40" title="[SFX] 21" command="0x40" request="0x04F2" loops="false"/>
+      <track id="SFX_F2_80" title="[SFX] 22" command="0x80" request="0x04F2" loops="false"/>
+      <track id="SFX_F3_01" title="[SFX] 23" command="0x01" request="0x04F3" loops="false"/>
+      <track id="SFX_F3_02" title="[SFX] 24" command="0x02" request="0x04F3" loops="false"/>
+      <track id="SFX_F3_04" title="[SFX] 25" command="0x04" request="0x04F3" loops="false"/>
+      <track id="SFX_F3_08" title="[SFX] 26" command="0x08" request="0x04F3" loops="false"/>
+      <track id="SFX_F3_10" title="[SFX] 27" command="0x10" request="0x04F3" loops="false"/>
+      <track id="SFX_F3_80" title="[SFX] 28" command="0x80" request="0x04F3" loops="false"/>
+      <track id="SFX_F6_01" title="[SFX] 29" command="0x01" request="0x04F6" loops="false"/>
+      <track id="SFX_F6_02" title="[SFX] 30" command="0x02" request="0x04F6" loops="false"/>
+      <track id="SFX_F6_04" title="[SFX] 31" command="0x04" request="0x04F6" loops="false"/>
+      <track id="SFX_F6_08" title="[SFX] 32" command="0x08" request="0x04F6" loops="false"/>
+      <track id="SFX_F6_10" title="[SFX] 33" command="0x10" request="0x04F6" loops="false"/>
+      <track id="SFX_F6_80" title="[SFX] 34" command="0x80" request="0x04F6" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

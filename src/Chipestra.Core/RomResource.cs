@@ -24,5 +24,8 @@ namespace Chipestra.Core
 
         /// <summary>&lt;rom sha1="..."&gt; as a hex string, if declared.</summary>
         public string? Sha1 { get; init; }
+
+        /// <summary>&lt;rom archive="..."&gt;: the archive this resource is looked for in; null takes the game's archive.</summary>
+        public string? Archive { get; init; }
     }
 }

@@ -34,5 +34,11 @@ namespace Chipestra.Core
 
         /// <summary>Mirrors ChipestraTrackInfo::is_wsg (0/1) - see <see cref="TrackDefinition.IsWsg"/>.</summary>
         public byte IsWsg;
+
+        /// <summary>Mirrors ChipestraTrackInfo::is_effect (0/1) - see <see cref="TrackDefinition.IsEffect"/>.</summary>
+        public byte IsEffect;
+
+        /// <summary>Mirrors ChipestraTrackInfo::auxiliary - see <see cref="TrackDefinition.Auxiliary"/>.</summary>
+        public byte Auxiliary;
     }
 }

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tom Water Hill
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Chipestra.App.ViewModels;
 using Chipestra.Core;
 using Xunit;
@@ -46,6 +47,115 @@ namespace Chipestra.App.Tests
             LibraryTreeNode game = Assert.Single(system.Children);
             Assert.True(game.IsGame);
             Assert.Equal("After Burner II", game.Header);
+        }
+
+        private static GameDefinition MakeConsoleGame(string id, string title, string? publisher)
+        {
+            return new GameDefinition
+            {
+                GameId = id,
+                Title = title,
+                MachineId = "NINTENDO_NES",
+                VariantId = "NES_BASE",
+                Manufacturer = publisher,
+                RequiredResources = Array.Empty<RomResource>(),
+                Tracks = new List<TrackDefinition>
+                {
+                    new TrackDefinition { Id = "T1", DisplayName = "Track 1", Command = 1 },
+                },
+            };
+        }
+
+        [Fact]
+        public void DisplayNodes_ConsoleGame_HasAPublisherLevelBetweenSystemAndGame()
+        {
+            var catalog = new Dictionary<string, GameDefinition>(StringComparer.Ordinal)
+            {
+                { "G1", MakeConsoleGame("G1", "Star Soldier", "Hudson") },
+            };
+            var library = new LibraryViewModel(catalog, new MachineCatalogLookup());
+
+            LibraryTreeNode category = Assert.Single(library.DisplayNodes);
+            Assert.Equal("CONSOLE", category.Header);
+            LibraryTreeNode maker = Assert.Single(category.Children);
+            Assert.Equal("Nintendo", maker.Header);
+            LibraryTreeNode system = Assert.Single(maker.Children);
+            Assert.Equal("NES", system.Header);
+            LibraryTreeNode publisher = Assert.Single(system.Children);
+            Assert.False(publisher.IsGame);
+            Assert.Equal("Hudson", publisher.Header);
+            LibraryTreeNode game = Assert.Single(publisher.Children);
+            Assert.True(game.IsGame);
+            Assert.Equal("Star Soldier", game.Header);
+        }
+
+        [Fact]
+        public void DisplayNodes_ConsoleGames_AreGroupedByPublisherInAlphabeticalOrder()
+        {
+            var catalog = new Dictionary<string, GameDefinition>(StringComparer.Ordinal)
+            {
+                { "G1", MakeConsoleGame("G1", "Zeta Game", "Konami") },
+                { "G2", MakeConsoleGame("G2", "Alpha Game", "Hudson") },
+                { "G3", MakeConsoleGame("G3", "Beta Game", "Konami") },
+            };
+            var library = new LibraryViewModel(catalog, new MachineCatalogLookup());
+
+            LibraryTreeNode system = library.DisplayNodes[0].Children[0].Children[0];
+            Assert.Equal(new[] { "Hudson", "Konami" }, system.Children.Select(c => c.Header).ToArray());
+            Assert.Equal(new[] { "Beta Game", "Zeta Game" }, system.Children[1].Children.Select(c => c.Header).ToArray());
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void DisplayNodes_ConsoleGameWithoutPublisher_IsListedUnderUnknown(string? publisher)
+        {
+            var catalog = new Dictionary<string, GameDefinition>(StringComparer.Ordinal)
+            {
+                { "G1", MakeConsoleGame("G1", "Some Game", publisher) },
+            };
+            var library = new LibraryViewModel(catalog, new MachineCatalogLookup());
+
+            LibraryTreeNode system = library.DisplayNodes[0].Children[0].Children[0];
+            LibraryTreeNode unknown = Assert.Single(system.Children);
+            Assert.Equal("Unknown", unknown.Header);
+            Assert.Equal("Some Game", Assert.Single(unknown.Children).Header);
+        }
+
+        [Fact]
+        public void DisplayNodes_ArcadeGame_IgnoresTheGamesManufacturerAndKeepsTheOldLevels()
+        {
+            GameDefinition arcade = MakeGame("G1", "After Burner II");
+            arcade = new GameDefinition
+            {
+                GameId = arcade.GameId,
+                Title = arcade.Title,
+                MachineId = arcade.MachineId,
+                VariantId = arcade.VariantId,
+                Manufacturer = "Sega",
+                RequiredResources = arcade.RequiredResources,
+                Tracks = arcade.Tracks,
+            };
+            var catalog = new Dictionary<string, GameDefinition>(StringComparer.Ordinal) { { "G1", arcade } };
+            var library = new LibraryViewModel(catalog, new MachineCatalogLookup());
+
+            LibraryTreeNode system = library.DisplayNodes[0].Children[0].Children[0];
+            Assert.True(Assert.Single(system.Children).IsGame);
+        }
+
+        [Fact]
+        public void SearchText_FindsAConsoleGameAcrossThePublisherLevel()
+        {
+            var catalog = new Dictionary<string, GameDefinition>(StringComparer.Ordinal)
+            {
+                { "G1", MakeConsoleGame("G1", "Star Soldier", "Hudson") },
+            };
+            var library = new LibraryViewModel(catalog, new MachineCatalogLookup());
+
+            library.SearchText = "soldier";
+
+            Assert.True(Assert.Single(library.DisplayNodes).IsGame);
         }
 
         [Fact]

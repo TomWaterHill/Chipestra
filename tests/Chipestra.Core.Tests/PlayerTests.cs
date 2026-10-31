@@ -701,12 +701,7 @@ namespace Chipestra.Core.Tests
             {
                 return null;
             }
-            var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
-            while (!System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "xml", "dspirit.xml")))
-            {
-                dir = dir.Parent!;
-            }
-            GameDefinition g = GameDefinitionXml.Load(System.IO.Path.Combine(dir.FullName, "xml", "dspirit.xml"));
+            GameDefinition g = GameDefinitionXml.Load(RepositoryXml.Require("dspirit.xml"));
             var p = new Player(new Dictionary<string, GameDefinition>(StringComparer.Ordinal) { { g.GameId, g } });
             Assert.Equal(ChipestraResult.Ok, p.LoadGame(g.GameId, root));
             Assert.Equal(ChipestraResult.Ok, p.SelectOutput(OutputKind.Null));
@@ -756,6 +751,105 @@ namespace Chipestra.Core.Tests
                 Thread.Sleep(20);
             }
             Assert.True(soundedAgain, "after the auto-stop, Play re-sends the WSG request and it sounds again");
+        }
+
+        // --- Sound-effect tracks of a game's own sound program (type="sfx") ---
+
+        [Fact]
+        public void SelectTrack_SfxTrackOnAGameWithoutEffectRequests_FailsWithUnsupportedCommand()
+        {
+            var game = new GameDefinition
+            {
+                GameId = "NOSFX",
+                Title = "No SFX",
+                MachineId = "TEST_MACHINE",
+                VariantId = "STANDARD",
+                RequiredResources = Array.Empty<RomResource>(),
+                Tracks = new List<TrackDefinition>
+                {
+                    new TrackDefinition { Id = "E", DisplayName = "sfx", Command = 5, IsEffect = true, Loops = false },
+                },
+            };
+            using var player = new Player(new Dictionary<string, GameDefinition>(StringComparer.Ordinal) { { "NOSFX", game } });
+            Assert.Equal(ChipestraResult.Ok, player.LoadGame("NOSFX"));
+            Assert.Equal(ChipestraResult.Ok, player.SelectOutput(OutputKind.Null));
+
+            Assert.Equal(ChipestraResult.UnsupportedCommand, player.SelectTrack("E"));
+            Assert.NotEqual(PlaybackState.Playing, player.Status.State);
+        }
+
+        private static Player? RealStarSoldier()
+        {
+            string? root = Environment.GetEnvironmentVariable("CHIPESTRA_ROM_ROOT");
+            if (string.IsNullOrEmpty(root))
+            {
+                return null;
+            }
+            GameDefinition g = GameDefinitionXml.Load(RepositoryXml.Require("starsoldier.xml"));
+            var p = new Player(new Dictionary<string, GameDefinition>(StringComparer.Ordinal) { { g.GameId, g } });
+            Assert.Equal(ChipestraResult.Ok, p.LoadGame(g.GameId, root));
+            Assert.Equal(ChipestraResult.Ok, p.SelectOutput(OutputKind.Null));
+            return p;
+        }
+
+        private static float NesSourcePeak(Player p)
+        {
+            float peak = 0;
+            int n = p.Status.ChannelCount ?? 0;
+            for (int i = 0; i < n; i++)
+            {
+                peak = Math.Max(peak, p.GetChannelInfo(i)?.SourcePeak ?? 0);
+            }
+            return peak;
+        }
+
+        [Fact]
+        public void RealRom_StarSoldier_SongAndEffectSound_AndEffectAutoStops()
+        {
+            using Player? player = RealStarSoldier();
+            if (player == null)
+            {
+                return;  // needs CHIPESTRA_ROM_ROOT
+            }
+            Assert.Equal(5, player.Status.ChannelCount);
+
+            Assert.Equal(ChipestraResult.Ok, player.SelectTrack("2"));  // "BGM 02", loops
+            bool songSounded = false;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (sw.Elapsed.TotalSeconds < 3)
+            {
+                songSounded |= NesSourcePeak(player) > 0.001f;
+                Thread.Sleep(20);
+            }
+            Assert.True(songSounded, "the song sounded");
+            Assert.Equal(PlaybackState.Playing, player.Status.State);
+
+            // Music Stop (control track): nothing plays afterwards, and a song chosen next sounds again.
+            Assert.Equal(ChipestraResult.Ok, player.SelectTrack("0"));
+            Assert.NotEqual(PlaybackState.Playing, player.Status.State);
+            Thread.Sleep(300);
+            Assert.True(NesSourcePeak(player) < 0.001f, "Music Stop silences every channel");
+            Assert.Equal(ChipestraResult.Ok, player.SelectTrack("3"));
+            bool afterStop = false;
+            sw.Restart();
+            while (sw.Elapsed.TotalSeconds < 3)
+            {
+                afterStop |= NesSourcePeak(player) > 0.001f;
+                Thread.Sleep(20);
+            }
+            Assert.True(afterStop, "a song chosen after Music Stop sounded");
+
+            Assert.Equal(ChipestraResult.Ok, player.SelectTrack("11"));  // "[SFX] 01", loops="false"
+            bool effectSounded = false;
+            sw.Restart();
+            while (sw.Elapsed.TotalSeconds < 20 && player.Status.State == PlaybackState.Playing)
+            {
+                player.PollTrackEndBySilence();
+                effectSounded |= NesSourcePeak(player) > 0.001f;
+                Thread.Sleep(20);
+            }
+            Assert.True(effectSounded, "the effect sounded");
+            Assert.Equal(PlaybackState.Ready, player.Status.State);  // stopped by itself after the effect ended
         }
     }
 }

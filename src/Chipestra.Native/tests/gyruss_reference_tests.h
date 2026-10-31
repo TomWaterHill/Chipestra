@@ -5,7 +5,7 @@
 // Real Gyruss ROM bring-up native tests.
 //
 // GyrussDefinitionXmlIsValid() always runs (no ROM needed - just validates
-// xml/gyruss.xml parses and matches AssembleGyrussSoundRoms's
+// gyruss.xml parses and matches AssembleGyrussSoundRoms's
 // own expectations, same pattern as every other board's *DefinitionXmlIsValid).
 //
 // GyrussViaDefinitionXmlRealRomBringUp() SKIPs (not fails) when

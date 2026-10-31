@@ -21,11 +21,20 @@ namespace Chipestra.Core
         /// <summary>VariantId, one of that Machine's registered Variants.</summary>
         public required string VariantId { get; init; }
 
+        /// <summary>&lt;game manufacturer="..."&gt;: informational for an arcade game; for a console game it is the
+        /// publisher, the level between the system and the game in the Library tree. Null if omitted.</summary>
         public string? Manufacturer { get; init; }
 
         /// <summary>&lt;game archive="..."&gt;: optional ROM-resolution archive
         /// scope hint (a ZIP stem or ROM Root subfolder name), or null if omitted.</summary>
         public string? Archive { get; init; }
+
+        /// <summary>
+        /// The text of the game's <c>&lt;driver&gt;</c> element (the settings of a game whose sound driver is called
+        /// as routines of the game program, e.g. a console cartridge), or null if the XML has none. It is handed to
+        /// the Machine as an extra resource named <c>driver_xml</c>; Native never interprets it.
+        /// </summary>
+        public string? DriverXml { get; init; }
 
         public required IReadOnlyList<RomResource> RequiredResources { get; init; }
 

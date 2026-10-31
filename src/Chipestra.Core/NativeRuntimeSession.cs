@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Chipestra.Core
 {
@@ -13,6 +15,9 @@ namespace Chipestra.Core
     /// </summary>
     public sealed class NativeRuntimeSession : IDisposable
     {
+        /// <summary>The logical name of the extra resource that carries <see cref="GameDefinition.DriverXml"/>.</summary>
+        public const string DriverXmlResourceName = "driver_xml";
+
         private IntPtr _handle;
         private bool _disposed;
 
@@ -78,10 +83,14 @@ namespace Chipestra.Core
         ///
         /// <paramref name="archive"/>, if given, scopes resolution to one
         /// archive/folder (<see cref="GameDefinition.Archive"/>); null searches the whole ROM Root.
+        ///
+        /// <paramref name="driverXml"/>, if given (<see cref="GameDefinition.DriverXml"/>), is handed to the
+        /// Machine as one more resource named <c>driver_xml</c> (its UTF-8 text); it is not looked up in the
+        /// ROM Root.
         /// </summary>
         public ChipestraResult LoadMachineWithResources(string machineId, string variantId,
             IReadOnlyList<RomResource> requiredResources, string romRoot, out RomResolutionResult resolution,
-            string? archive = null)
+            string? archive = null, string? driverXml = null)
         {
             if (_disposed)
             {
@@ -147,7 +156,8 @@ namespace Chipestra.Core
                         : ChipestraResult.NotFound;
                 }
 
-                var resolvedArray = new ChipestraResolvedResourceNative[summary.ResolvedCount];
+                int extraCount = driverXml != null ? 1 : 0;
+                var resolvedArray = new ChipestraResolvedResourceNative[summary.ResolvedCount + extraCount];
                 for (uint i = 0; i < summary.ResolvedCount; i++)
                 {
                     ChipestraResult resolvedResult = NativeMethods.chipestra_resource_resolution_get_resolved(resolutionHandle, i, out ChipestraResolvedResourceNative resolved);
@@ -158,7 +168,31 @@ namespace Chipestra.Core
                     resolvedArray[i] = resolved;
                 }
 
-                return NativeMethods.chipestra_load_machine(_handle, machineId, variantId, resolvedArray, (uint)resolvedArray.Length);
+                IntPtr driverBytes = IntPtr.Zero;
+                try
+                {
+                    if (driverXml != null)
+                    {
+                        byte[] text = Encoding.UTF8.GetBytes(driverXml);
+                        driverBytes = Marshal.AllocHGlobal(Math.Max(text.Length, 1));
+                        Marshal.Copy(text, 0, driverBytes, text.Length);
+                        resolvedArray[summary.ResolvedCount] = new ChipestraResolvedResourceNative
+                        {
+                            LogicalName = DriverXmlResourceName,
+                            Data = driverBytes,
+                            Size = (ulong)text.Length,
+                        };
+                    }
+
+                    return NativeMethods.chipestra_load_machine(_handle, machineId, variantId, resolvedArray, (uint)resolvedArray.Length);
+                }
+                finally
+                {
+                    if (driverBytes != IntPtr.Zero)
+                    {
+                        Marshal.FreeHGlobal(driverBytes);
+                    }
+                }
             }
             finally
             {
@@ -182,9 +216,8 @@ namespace Chipestra.Core
                 HasCrc32 = resource.Crc32 != null ? (byte)1 : (byte)0,
                 Sha1 = resource.Sha1 ?? string.Empty,
                 Required = 1,
-                // archive is a per-Game value (GameDefinition.Archive), not per-resource, so it is
-                // passed as its own parameter; every resource of one Game shares the same scope.
-                Archive = archive ?? string.Empty,
+                // The resource's own archive wins; otherwise the game's (GameDefinition.Archive).
+                Archive = resource.Archive ?? archive ?? string.Empty,
             };
         }
 

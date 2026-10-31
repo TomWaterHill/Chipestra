@@ -8,12 +8,12 @@ Chipestra (pronounced "chip-es-tra", from "chip" and "orchestra") plays the
 music of classic arcade games on Windows. Instead of playing back recordings,
 it runs each game's own sound program on emulated sound hardware (the sound
 CPUs and sound chips of the original board), using ROMs you supply yourself.
-Support for home consoles is planned.
+It also plays the music of some Famicom / NES and Famicom Disk System games.
 
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.001.00
+Version: Ver 1.002.00
 
 ### Supported Boards & Verified Titles
 
@@ -33,6 +33,13 @@ not verified, even if they run on the same hardware family.
 - Data East Caveman Ninja Hardware: Vapor Trail
 - Namco System 1: Dragon Spirit
 - Capcom 68000 Based: Street Fighter (US version only: the ROM set "sf"; music, sound effects and voices)
+- Nintendo NES (Famicom): Star Soldier, Super Mario Bros. 3, Akumajou Densetsu, Lagrange Point, Rolling Thunder, Gimmick! (Japanese versions)
+- Nintendo Famicom Disk System: Metroid
+
+For the NES and the Famicom Disk System, Chipestra runs the game's own sound
+routines on an emulated CPU and sound hardware (including the cartridge chips
+of the Konami VRC6 and VRC7, Namco 163 and Sunsoft 5B). The track titles of
+these games are given by the XML files.
 
 ### Features
 
@@ -55,11 +62,15 @@ not verified, even if they run on the same hardware family.
 - ROM files of the games you want to play. Chipestra does NOT include any
   ROMs, BIOS images or other game data. You must supply your own, and
   point Chipestra at the folder that contains them (Settings > ROM Root).
+  For the NES, a .nes image of the game is used; for the Famicom Disk System,
+  a .fds disk image (no BIOS is needed). Lagrange Point additionally needs
+  the ROM set "ds1001" (ds1001.zip), which holds the instrument table of the
+  VRC7 sound chip.
 
 ### Download and run
 
-1. Download Chipestra-1.001.00.zip from the Releases page of this repository.
-2. Extract it. You get a folder named Chipestra-1.001.00.
+1. Download Chipestra-1.002.00.zip from the Releases page of this repository.
+2. Extract it. You get a folder named Chipestra-1.002.00.
 3. Run Chipestra.exe in that folder.
 4. Open Settings and set ROM Root to the folder that contains your ROM files.
    Sub-folders are searched too.
@@ -141,11 +152,11 @@ belong to their respective owners.
 
 ## 日本語
 
-Chipestra（チップエストラ。「チップ」と「オーケストラ」から）は、昔のアーケードゲームの音楽を Windows で再生するソフトです。録音した音を流すのではなく、ご自身で用意した ROM を使い、元の基板のサウンド CPU と音源チップをエミュレートして、ゲーム自身のサウンドプログラムを動かして鳴らします。家庭用ゲーム機への対応も予定しています。
+Chipestra（チップエストラ。「チップ」と「オーケストラ」から）は、昔のアーケードゲームの音楽を Windows で再生するソフトです。録音した音を流すのではなく、ご自身で用意した ROM を使い、元の基板のサウンド CPU と音源チップをエミュレートして、ゲーム自身のサウンドプログラムを動かして鳴らします。ファミコン（NES）とファミコン ディスクシステムの一部のゲームの音楽も再生できます。
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.001.00
+バージョン: Ver 1.002.00
 
 ### 対応基板と確認済みタイトル
 
@@ -162,6 +173,10 @@ Chipestra は、対応している基板上のゲームを、XML 定義ファイ
 - Data East Caveman Ninja Hardware: Vapor Trail（空牙）
 - Namco System 1: Dragon Spirit（ドラゴンスピリット）
 - Capcom 68000 Based: Street Fighter（ストリートファイター。US 版の ROM セット sf のみ対応。BGM、効果音、ボイスを再生できます）
+- Nintendo NES（ファミコン）: Star Soldier（スターソルジャー）、Super Mario Bros. 3（スーパーマリオブラザーズ3）、Akumajou Densetsu（悪魔城伝説）、Lagrange Point（ラグランジュポイント）、Rolling Thunder（ローリングサンダー）、Gimmick!（ギミック！）（いずれも日本版）
+- Nintendo Famicom Disk System（ファミコン ディスクシステム）: Metroid（メトロイド）
+
+NES とファミコン ディスクシステムでは、エミュレートした CPU と音源（Konami の VRC6・VRC7、Namco 163、Sunsoft 5B のカートリッジ内の音源を含む）の上で、ゲーム自身のサウンドのルーチンを動かします。これらのゲームの曲名は、XML ファイルで与えています。
 
 ### 機能
 
@@ -176,12 +191,12 @@ Chipestra は、対応している基板上のゲームを、XML 定義ファイ
 
 - Windows 11（64bit）。Windows 11 でのみ動作を確認しています。
 - .NET 10 Desktop Runtime（x64）。[Microsoft のサイト](https://dotnet.microsoft.com/download/dotnet/10.0)から入手できます。入っていない場合は、Chipestra の起動時に、Windows がダウンロード先の案内を表示します。
-- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。
+- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージを使います（BIOS は要りません）。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
 
 ### ダウンロードと起動
 
-1. このリポジトリの Releases のページから、Chipestra-1.001.00.zip をダウンロードします。
-2. 展開すると、Chipestra-1.001.00 というフォルダができます。
+1. このリポジトリの Releases のページから、Chipestra-1.002.00.zip をダウンロードします。
+2. 展開すると、Chipestra-1.002.00 というフォルダができます。
 3. そのフォルダの Chipestra.exe を起動します。
 4. Settings を開き、ROM Root に、ROM ファイルのあるフォルダを指定します。サブフォルダの中も探します。
 

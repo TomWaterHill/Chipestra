@@ -4,7 +4,7 @@
 
 // Real Ninja Warriors ROM bring-up native tests.
 //
-// NinjaWarriorsDefinitionXmlIsValid() always runs (no ROM needed): it checks that xml/ninjaw.xml
+// NinjaWarriorsDefinitionXmlIsValid() always runs (no ROM needed): it checks that ninjaw.xml
 // parses and matches AssembleNinjaWarriorsSoundRoms's expectations.
 // NinjaWarriorsViaDefinitionXmlRealRomBringUp() SKIPs (not fails) when
 // CHIPESTRA_ROM_ROOT is not set, like every other real-ROM bring-up test

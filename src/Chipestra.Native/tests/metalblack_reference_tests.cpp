@@ -4,7 +4,7 @@
 //
 // ROM handling: this file never hard-codes a ROM Root path, and only prints
 // derived metadata (peak levels, command sweep counts), never ROM-derived
-// sample data. The crc32/size/filename constants in xml/metalblk.xml are MAME's
+// sample data. The crc32/size/filename constants in metalblk.xml are MAME's
 // public ROM-catalog metadata (ROM_START(metalb)), not ROM byte content.
 //
 // This file tracks nmiServiceCount per phase, not just once at the end.
@@ -14,6 +14,7 @@
 // background output unrelated to SendCommand(). A "no command sent yet" BASELINE phase plus
 // per-phase nmiServiceCount deltas distinguish the two.
 
+#include "../tests/definition_xml_locator.h"
 #include "metalblack_reference_tests.h"
 
 #include "default_machine_catalog.h"
@@ -54,20 +55,7 @@ const char* GetEnvVar(const char* name) {
 }
 
 std::optional<std::filesystem::path> FindMetalBlackDefinitionFile() {
-    const std::filesystem::path relative = std::filesystem::path("xml") / "metalblk.xml";
-    std::filesystem::path dir = std::filesystem::current_path();
-    for (int depth = 0; depth < 8; ++depth) {
-        std::error_code ec;
-        const std::filesystem::path candidate = dir / relative;
-        if (std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-        if (!dir.has_parent_path() || dir.parent_path() == dir) {
-            break;
-        }
-        dir = dir.parent_path();
-    }
-    return std::nullopt;
+    return FindDefinitionXml("metalblk.xml");
 }
 
 std::optional<std::string> ReadFileText(const std::filesystem::path& path) {
@@ -138,7 +126,7 @@ std::unique_ptr<IMachine> ResolveAndConstructMetalBlack(const char* callerLabel)
 
     const auto path = FindMetalBlackDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/metalblk.xml not found (run from the repo root)\n");
+        std::printf("  SKIP: metalblk.xml not found (run from the repo root)\n");
         return nullptr;
     }
     const auto text = ReadFileText(*path);
@@ -192,7 +180,7 @@ void MetalBlackDefinitionXmlIsValid() {
     std::printf("MetalBlackDefinitionXmlIsValid\n");
 
     const auto path = FindMetalBlackDefinitionFile();
-    Check(path.has_value(), "definition xml: xml/metalblk.xml is present (run from the repo root)");
+    Check(path.has_value(), "definition xml: metalblk.xml is present (run from the repo root)");
     if (!path.has_value()) return;
 
     const auto text = ReadFileText(*path);
@@ -246,7 +234,7 @@ void MetalBlackViaDefinitionXmlRealRomBringUp() {
     }
 
     const auto path = FindMetalBlackDefinitionFile();
-    Check(path.has_value(), "xml bring-up: xml/metalblk.xml is present (run from the repo root)");
+    Check(path.has_value(), "xml bring-up: metalblk.xml is present (run from the repo root)");
     if (!path.has_value()) return;
     const auto text = ReadFileText(*path);
     Check(text.has_value(), "xml bring-up: file is readable");
@@ -649,7 +637,7 @@ void MetalBlackKeyOnSweepDiagnostic() {
     }
     const auto path = FindMetalBlackDefinitionFile();
     if (!path.has_value()) {
-        std::printf("  SKIP: xml/metalblk.xml not found\n");
+        std::printf("  SKIP: metalblk.xml not found\n");
         return;
     }
     const auto text = ReadFileText(*path);

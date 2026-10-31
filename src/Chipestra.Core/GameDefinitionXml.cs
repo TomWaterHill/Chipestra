@@ -6,11 +6,13 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Chipestra.Core
 {
     /// <summary>
-    /// Parses a game definition XML (e.g. xml/afterburn2.xml)
+    /// Parses a game definition XML (e.g. afterburn2.xml)
     /// into a <see cref="GameDefinition"/>, via Native's own XML parser over the C ABI's
     /// GameDefinition group - <c>chipestra_parse_game_definition</c> +
     /// <c>chipestra_game_definition_get_info</c>/<c>_get_resource</c>/<c>_get_track</c>.
@@ -65,7 +67,7 @@ namespace Chipestra.Core
 
                 try
                 {
-                    return ReadGameDefinition(handle);
+                    return ReadGameDefinition(handle, ExtractDriverXml(xml));
                 }
                 finally
                 {
@@ -78,7 +80,7 @@ namespace Chipestra.Core
             }
         }
 
-        private static GameDefinition ReadGameDefinition(IntPtr handle)
+        private static GameDefinition ReadGameDefinition(IntPtr handle, string? driverXml)
         {
             ChipestraResult infoResult = NativeMethods.chipestra_game_definition_get_info(handle, out ChipestraGameInfo info);
             if (infoResult != ChipestraResult.Ok)
@@ -101,6 +103,7 @@ namespace Chipestra.Core
                     SizeBytes = resourceInfo.HasSizeBytes != 0 ? (long)resourceInfo.SizeBytes : null,
                     Crc32 = resourceInfo.HasCrc32 != 0 ? resourceInfo.Crc32.ToString("x8", CultureInfo.InvariantCulture) : null,
                     Sha1 = string.IsNullOrEmpty(resourceInfo.Sha1) ? null : resourceInfo.Sha1,
+                    Archive = string.IsNullOrEmpty(resourceInfo.Archive) ? null : resourceInfo.Archive,
                 });
             }
 
@@ -120,6 +123,8 @@ namespace Chipestra.Core
                     IsControlCommand = trackInfo.IsControlCommand != 0,
                     Loops = trackInfo.Loops != 0,
                     IsWsg = trackInfo.IsWsg != 0,
+                    IsEffect = trackInfo.IsEffect != 0,
+                    Auxiliary = trackInfo.Auxiliary,
                 });
             }
 
@@ -131,9 +136,20 @@ namespace Chipestra.Core
                 VariantId = info.VariantId,
                 Manufacturer = string.IsNullOrEmpty(info.Manufacturer) ? null : info.Manufacturer,
                 Archive = string.IsNullOrEmpty(info.Archive) ? null : info.Archive,
+                DriverXml = driverXml,
                 RequiredResources = resources,
                 Tracks = tracks,
             };
+        }
+
+        // The text of the first <game>'s <driver> element, or null if there is none. Native has already accepted
+        // the document (it rejects a DOCTYPE), and the reader prohibits DTDs anyway.
+        private static string? ExtractDriverXml(string xml)
+        {
+            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
+            using var reader = XmlReader.Create(new StringReader(xml), settings);
+            XElement? driver = XDocument.Load(reader).Root?.Element("game")?.Element("driver");
+            return driver?.ToString(SaveOptions.DisableFormatting);
         }
 
         private static byte ParseCommandByte(string text)

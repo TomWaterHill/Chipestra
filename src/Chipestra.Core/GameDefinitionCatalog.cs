@@ -29,14 +29,15 @@ namespace Chipestra.Core
     }
 
     /// <summary>
-    /// Loads every game definition XML file in a directory into a
+    /// Loads every game definition XML file in a directory and in all folders below it into a
     /// GameId-keyed catalog, one file at a time: a file that cannot be read or
     /// parsed is recorded in <see cref="GameDefinitionLoadResult.Failures"/> and
     /// the rest still load (one broken XML must not take the whole app down).
-    /// Files are read in file-name order (ordinal), so the result does not depend
-    /// on the file system's enumeration order. If a GameId appears in more than
-    /// one file, the file that comes first by name is kept and each later one is
-    /// reported as a failure.
+    /// Files are read in the order of their path relative to the directory (written with '/', compared
+    /// ordinally), so the result does not depend on the file system's enumeration order, and a file is
+    /// named by that relative path in the failure list. Where a file sits has no meaning: the Library
+    /// groups games by what the XML says. If a GameId appears in more than one file, the file that comes
+    /// first is kept and each later one is reported as a failure that names both paths.
     /// </summary>
     public static class GameDefinitionCatalog
     {
@@ -46,11 +47,12 @@ namespace Chipestra.Core
             var sourceOfGame = new Dictionary<string, string>(StringComparer.Ordinal);
             var failures = new List<GameDefinitionLoadFailure>();
 
-            string[] files;
+            (string File, string Relative)[] files;
             try
             {
-                files = Directory.EnumerateFiles(definitionsDirectory, "*.xml")
-                    .OrderBy(f => Path.GetFileName(f), StringComparer.Ordinal)
+                files = Directory.EnumerateFiles(definitionsDirectory, "*.xml", SearchOption.AllDirectories)
+                    .Select(f => (File: f, Relative: Path.GetRelativePath(definitionsDirectory, f).Replace(Path.DirectorySeparatorChar, '/')))
+                    .OrderBy(f => f.Relative, StringComparer.Ordinal)
                     .ToArray();
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException)
@@ -59,16 +61,15 @@ namespace Chipestra.Core
                 return new GameDefinitionLoadResult(catalog, failures);
             }
 
-            foreach (string file in files)
+            foreach ((string file, string name) in files)
             {
-                string name = Path.GetFileName(file);
                 try
                 {
                     GameDefinition definition = GameDefinitionXml.Load(file);
                     if (sourceOfGame.TryGetValue(definition.GameId, out string? firstFile))
                     {
                         failures.Add(new GameDefinitionLoadFailure(
-                            name, $"game id \"{definition.GameId}\" is already defined by {firstFile}"));
+                            name, $"game id \"{definition.GameId}\" is already defined by {firstFile} ({name} is ignored)"));
                         continue;
                     }
                     catalog[definition.GameId] = definition;

@@ -255,7 +255,7 @@ extern "C" ChipestraResult chipestra_get_machine_channel_count(ChipestraHandle h
 }
 
 extern "C" ChipestraResult chipestra_send_command(ChipestraHandle handle, uint8_t kind, uint8_t value, uint8_t auxiliary) noexcept {
-    if (handle == nullptr || kind > static_cast<uint8_t>(MusicCommandKind::Wsg)) {
+    if (handle == nullptr || kind > static_cast<uint8_t>(MusicCommandKind::Effect)) {
         return CHIPESTRA_E_INVALID_ARGUMENT;
     }
     if (!IsLiveInstance(handle)) {
@@ -868,11 +868,9 @@ extern "C" ChipestraResult chipestra_game_definition_get_resource(ChipestraGameD
     out_info->has_crc32 = rom.Crc32.has_value() ? 1 : 0;
     out_info->crc32 = rom.Crc32.value_or(0);
     CopyTruncated(rom.Sha1.value_or(std::string()), out_info->sha1, sizeof(out_info->sha1));
+    // The resource's own <rom archive="...">, "" if it takes the game's archive.
+    CopyTruncated(rom.Archive, out_info->archive, sizeof(out_info->archive));
     out_info->required = 1;  // every declared resource is Required=true
-    // archive is a per-<game> attribute, not per-<rom> (see this struct's own
-    // comment in chipestra_abi.h) - always "" here; read it once from
-    // chipestra_game_definition_get_info's ChipestraGameInfo::archive instead.
-    out_info->archive[0] = '\0';
     return CHIPESTRA_OK;
 }
 
@@ -894,6 +892,8 @@ extern "C" ChipestraResult chipestra_game_definition_get_track(ChipestraGameDefi
     out_info->is_control_command = track.IsControlCommand ? 1 : 0;
     out_info->loops = track.Loops ? 1 : 0;
     out_info->is_wsg = track.IsWsg ? 1 : 0;
+    out_info->is_effect = track.IsEffect ? 1 : 0;
+    out_info->auxiliary = track.Auxiliary;
     return CHIPESTRA_OK;
 }
 
