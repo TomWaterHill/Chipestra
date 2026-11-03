@@ -30,11 +30,12 @@ struct CodeBanks {
     bool fme7 = false;
     std::uint8_t callR8 = 0, idleR8 = 0;
     std::uint8_t vrc7Line = 4;
+    bool mmc3PrgMode0 = false;  // MMC3: PRG mode 0 ($8000 = R6) instead of the default mode 1 ($C000 = R6)
 };
 
 inline void AppendBankSwitch(std::vector<std::uint8_t>& code, std::uint8_t r6, std::uint8_t r7, bool vrc6 = false,
                              bool vrc7 = false, std::uint8_t r8 = 0, std::uint8_t vrc7Line = 4, bool n163 = false,
-                             bool fme7 = false) {
+                             bool fme7 = false, bool mmc3PrgMode0 = false) {
     if (fme7) {
         const std::uint8_t bytes[] = {0xA9, 0x09, 0x8D, 0x00, 0x80, 0xA9, r6, 0x8D, 0x00, 0xA0,
                                       0xA9, 0x0A, 0x8D, 0x00, 0x80, 0xA9, r7, 0x8D, 0x00, 0xA0};
@@ -57,8 +58,9 @@ inline void AppendBankSwitch(std::vector<std::uint8_t>& code, std::uint8_t r6, s
         code.insert(code.end(), std::begin(bytes), std::end(bytes));
         return;
     }
-    const std::uint8_t bytes[] = {0xA9, 0x46, 0x8D, 0x00, 0x80, 0xA9, r6, 0x8D, 0x01, 0x80,
-                                  0xA9, 0x47, 0x8D, 0x00, 0x80, 0xA9, r7, 0x8D, 0x01, 0x80};
+    const std::uint8_t mode = mmc3PrgMode0 ? 0x00 : 0x40;
+    const std::uint8_t bytes[] = {0xA9, static_cast<std::uint8_t>(mode | 0x06), 0x8D, 0x00, 0x80, 0xA9, r6, 0x8D, 0x01, 0x80,
+                                  0xA9, static_cast<std::uint8_t>(mode | 0x07), 0x8D, 0x00, 0x80, 0xA9, r7, 0x8D, 0x01, 0x80};
     code.insert(code.end(), std::begin(bytes), std::end(bytes));
 }
 
@@ -79,15 +81,20 @@ inline void AppendCall(std::vector<std::uint8_t>& code, std::uint16_t routine, b
 // start-up code: JSR for every init routine, then `JMP self` (the CPU spins there). With `banks` the routines
 // are called between the two bank switches, with X = 0.
 inline void AppendCallBanks(std::vector<std::uint8_t>& code, const CodeBanks& banks) {
-    AppendBankSwitch(code, banks.callR6, banks.callR7, banks.vrc6, banks.vrc7, banks.callR8, banks.vrc7Line, banks.n163, banks.fme7);
+    AppendBankSwitch(code, banks.callR6, banks.callR7, banks.vrc6, banks.vrc7, banks.callR8, banks.vrc7Line, banks.n163, banks.fme7, banks.mmc3PrgMode0);
 }
 inline void AppendIdleBanks(std::vector<std::uint8_t>& code, const CodeBanks& banks) {
-    AppendBankSwitch(code, banks.idleR6, banks.idleR7, banks.vrc6, banks.vrc7, banks.idleR8, banks.vrc7Line, banks.n163, banks.fme7);
+    AppendBankSwitch(code, banks.idleR6, banks.idleR7, banks.vrc6, banks.vrc7, banks.idleR8, banks.vrc7Line, banks.n163, banks.fme7, banks.mmc3PrgMode0);
 }
 
 inline std::vector<std::uint8_t> BuildStartCode(const std::vector<std::uint16_t>& initRoutines, std::uint16_t baseAddress,
-                                                const CodeBanks* banks = nullptr) {
+                                                const CodeBanks* banks = nullptr, bool inhibitFrameIrq = false) {
     std::vector<std::uint8_t> code;
+    // frame_irq="off": LDA #$40; STA $4017 - what a game's reset code does, so the APU's frame IRQ never fires.
+    if (inhibitFrameIrq) {
+        const std::uint8_t inhibit[] = {0xA9, 0x40, 0x8D, 0x17, 0x40};
+        code.insert(code.end(), std::begin(inhibit), std::end(inhibit));
+    }
     // The VRC7 driver's routines do not read X, so it is not cleared there (the other mappers' drivers may).
     const bool clearX = banks != nullptr && !banks->vrc7;
     if (banks != nullptr && !initRoutines.empty()) AppendCallBanks(code, *banks);
@@ -101,36 +108,51 @@ inline std::vector<std::uint8_t> BuildStartCode(const std::vector<std::uint16_t>
     return code;
 }
 
-// Where the Machine puts a pending request for a driver that is called with the request number in A
+// Where the Machine puts a pending request for a driver that is called with the request number in a register
 // (`request_call`): the value at kRequestValueAddress, a non-zero flag at kRequestPendingAddress (read once).
+// A driver with a separate routine for effects (`sfx_call`) gets its effect requests at kSfxValueAddress and
+// kSfxPendingAddress.
 inline constexpr std::uint16_t kRequestValueAddress = 0x4600;
 inline constexpr std::uint16_t kRequestPendingAddress = 0x4601;
+inline constexpr std::uint16_t kSfxValueAddress = 0x4602;
+inline constexpr std::uint16_t kSfxPendingAddress = 0x4603;
+
+// One request: LDA/LDX/LDY value; JSR routine. `reg` is the register the number is passed in ('A', 'X' or 'Y');
+// that register is not cleared before the call.
+inline void AppendRequest(std::vector<std::uint8_t>& code, std::uint16_t valueAddress, std::uint16_t routine, char reg,
+                          bool clearX, bool clearY) {
+    code.push_back(reg == 'X' ? 0xAE : reg == 'Y' ? 0xAC : 0xAD);
+    code.push_back(static_cast<std::uint8_t>(valueAddress & 0xFF));
+    code.push_back(static_cast<std::uint8_t>(valueAddress >> 8));
+    AppendCall(code, routine, clearX && reg != 'X', clearY && reg != 'Y');
+}
 
 // per-frame code (the NMI handler): JSR for every frame routine, then (with `requestCall`) the request if one is
-// pending: LDA flag; BEQ skip; LDA value; JSR requestCall; then RTI.
+// pending: LDA flag; BEQ skip; LDA value; JSR requestCall; then (with `sfxCall`) the same for an effect; then RTI.
 inline std::vector<std::uint8_t> BuildFrameCode(const std::vector<std::uint16_t>& frameRoutines, const CodeBanks* banks = nullptr,
                                                 const std::uint16_t* requestCall = nullptr,
-                                                const std::uint16_t* frameCounter = nullptr) {
+                                                const std::uint16_t* frameCounter = nullptr,
+                                                char requestRegister = 'A',
+                                                const std::uint16_t* sfxCall = nullptr) {
     std::vector<std::uint8_t> code;
     const bool clearX = banks != nullptr && !banks->vrc7;
     if (banks != nullptr && !frameRoutines.empty()) AppendCallBanks(code, *banks);
     const bool clearY = banks != nullptr && (banks->n163 || banks->fme7);
     for (std::uint16_t routine : frameRoutines) AppendCall(code, routine, clearX, clearY);
-    if (requestCall != nullptr) {
+    const auto appendPending = [&](std::uint16_t pendingAddress, std::uint16_t valueAddress, std::uint16_t routine) {
         std::vector<std::uint8_t> request;
         // A VRC7 driver's update may have changed a bank by itself, so the banks it is called with are set again.
         if (banks != nullptr && banks->vrc7) AppendCallBanks(request, *banks);
-        request.push_back(0xAD);
-        request.push_back(static_cast<std::uint8_t>(kRequestValueAddress & 0xFF));
-        request.push_back(static_cast<std::uint8_t>(kRequestValueAddress >> 8));
-        AppendCall(request, *requestCall, clearX, clearY);
+        AppendRequest(request, valueAddress, routine, requestRegister, clearX, clearY);
         code.push_back(0xAD);  // LDA flag
-        code.push_back(static_cast<std::uint8_t>(kRequestPendingAddress & 0xFF));
-        code.push_back(static_cast<std::uint8_t>(kRequestPendingAddress >> 8));
+        code.push_back(static_cast<std::uint8_t>(pendingAddress & 0xFF));
+        code.push_back(static_cast<std::uint8_t>(pendingAddress >> 8));
         code.push_back(0xF0);  // BEQ over the request
         code.push_back(static_cast<std::uint8_t>(request.size()));
         code.insert(code.end(), request.begin(), request.end());
-    }
+    };
+    if (requestCall != nullptr) appendPending(kRequestPendingAddress, kRequestValueAddress, *requestCall);
+    if (sfxCall != nullptr) appendPending(kSfxPendingAddress, kSfxValueAddress, *sfxCall);
     if (frameCounter != nullptr) {
         // INC zp / INC abs: the frame count the game's own code would keep
         if (*frameCounter < 0x100) {

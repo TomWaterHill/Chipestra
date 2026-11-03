@@ -128,6 +128,31 @@ bool ParseNesDriverConfig(std::string_view driverXml, NesDriverConfig& out, std:
             return Fail(error, std::string("<driver request_call>: bad address \"") + call.value() + "\"");
         out.requestCall = address;
     }
+    if (const pugi::xml_attribute mode = node.attribute("mmc3_prg_mode")) {
+        const std::string_view text(mode.value());
+        if (text != "0" && text != "1")
+            return Fail(error, std::string("<driver mmc3_prg_mode>: expected \"0\" or \"1\", got \"") + mode.value() + "\"");
+        out.mmc3PrgMode0 = text == "0";
+    }
+    if (const pugi::xml_attribute irq = node.attribute("frame_irq")) {
+        if (std::string_view(irq.value()) != "off")
+            return Fail(error, std::string("<driver frame_irq>: expected \"off\", got \"") + irq.value() + "\"");
+        out.inhibitFrameIrq = true;
+    }
+    if (const pugi::xml_attribute sfx = node.attribute("sfx_call")) {
+        std::uint16_t address = 0;
+        if (!ParseAddress(sfx.value(), address))
+            return Fail(error, std::string("<driver sfx_call>: bad address \"") + sfx.value() + "\"");
+        if (!out.requestCall) return Fail(error, "<driver sfx_call>: needs request_call");
+        out.sfxCall = address;
+    }
+    if (const pugi::xml_attribute reg = node.attribute("request_register")) {
+        const std::string_view text(reg.value());
+        if (text != "A" && text != "X" && text != "Y")
+            return Fail(error, std::string("<driver request_register>: expected \"A\", \"X\" or \"Y\", got \"") + reg.value() + "\"");
+        if (!out.requestCall) return Fail(error, "<driver request_register>: needs request_call");
+        out.requestRegister = text[0];
+    }
     if (!ParseCrc(node, "prg_crc32", out.prgCrc32, error)) return false;
     if (!ParseCrc(node, "chr_crc32", out.chrCrc32, error)) return false;
 

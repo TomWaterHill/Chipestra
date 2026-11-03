@@ -176,6 +176,15 @@ if ($suspicious) {
     throw "Refusing to leave this package assembled: found $($suspicious.Count) ROM-like file(s) - see above. Investigate before distributing."
 }
 
+# No binary may carry a path of the build machine (the PDB path of an assembly or a native DLL, the repository
+# folder, the user name). A hit means a Release build setting is missing (Directory.Build.props PathMap for the
+# .NET assemblies, the triplet in src/Chipestra.Native/triplets for the vcpkg libraries).
+& (Join-Path $PSScriptRoot "check-binary-paths.ps1") -Path $packageDir
+if ($LASTEXITCODE -ne 0) {
+    Remove-Item $packageDir -Recurse -Force
+    throw "Refusing to leave this package assembled: a binary contains a path of the build machine - see above. The package folder was removed."
+}
+
 Write-Host "Package assembled at: $packageDir" -ForegroundColor Green
 $fileCount = (Get-ChildItem -Path $packageDir -Recurse -File).Count
 $totalSizeMb = (Get-ChildItem -Path $packageDir -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB

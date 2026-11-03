@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 Tom Water Hill
 cmake_minimum_required(VERSION 3.24)
+# Read by the vcpkg toolchain when project() loads it: the x64-windows triplet in triplets/ is the
+# vcpkg one plus /PDBALTPATH, so the libraries it builds carry no build-directory path.
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/triplets")
 # C is needed for the vendored miniz tinfl module (thirdparty/miniz).
 project(ChipestraNative LANGUAGES CXX C)
 
@@ -396,6 +399,7 @@ add_executable(chipestra_native_tests
     tests/nes_namco163_tests.cpp
     tests/nes_vrc7_tests.cpp
     tests/nes_fme7_tests.cpp
+    tests/nes_request_register_tests.cpp
     tests/hd63701_adapter_tests.cpp
     tests/gyruss_machine_tests.cpp
     tests/bubble_system_bios_tests.cpp

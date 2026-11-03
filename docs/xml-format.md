@@ -204,6 +204,10 @@ variable. The game's program is never changed. `<driver>` goes between `<resourc
 | `warmup_frames` | no | Number of frames the `frame` routines run at start-up, before the first request (1 to 600; default 1). |
 | `requests` | no | RAM addresses (below `0x2000`, at most 7) a track may write its value to, for a driver with several request variables. A track names one with `request` (section 5). See "Request variables" below. |
 | `request_call` | no | Address of a routine the game calls with the request number in the A register (a sound driver that takes its requests as a call, not through RAM variables). See "Request routine" below. |
+| `request_register` | no | `A` (default), `X` or `Y`: the register `request_call` (and `sfx_call`) takes the request number in. Needs `request_call`. |
+| `sfx_call` | no | Address of a second routine, called the same way as `request_call`, that a `type="sfx"` track requests its sound effect from; without it effects use `request_call` too. Needs `request_call`. |
+| `frame_irq` | no | `off`: the start-up code writes `0x40` to `$4017`, as the game's own reset code does, so that the APU's frame interrupt (enabled at power-on) never reaches the CPU. For a game whose sound routines do not write it themselves. |
+| `mmc3_prg_mode` | no | `0` or `1` (default `1`): the PRG mode an MMC3 cartridge is switched in. In mode 1 the `R6` bank is mapped at `$C000` (and a fixed bank at `$8000`), in mode 0 at `$8000` (and a fixed bank at `$C000`). |
 | `prg_banks_call`, `prg_banks_idle` | no | For a cartridge with banked program ROM: the banks the game has mapped while its sound routines run (`prg_banks_call`) and the rest of the time (`prg_banks_idle`), each as two numbers (three on a VRC7 or a Namco 163). Both are required together, with the same number of values. The two numbers mean `R6 R7` on an MMC3 (mapper 4), the values of the `$8000` and `$C000` bank registers on a VRC6 (mapper 24 or 26) and the banks of the commands 9 and A on an FME-7 (mapper 69); the three numbers are the banks at `$8000`, `$A000` and `$C000` on a VRC7 (mapper 85) and the values of the bank registers on a Namco 163 (mapper 19). See "MMC3 cartridges", "VRC6 cartridges", "VRC7 cartridges", "Namco 163 cartridges" and "FME-7 / Sunsoft 5B cartridges" below. |
 | `vrc7_register_line` | VRC7 only | `A3` or `A4`: the address line that tells the registers of a VRC7 apart (the board's wiring; it is not in the iNES header). Required for a VRC7 cartridge and refused for any other. |
 | `n163_channels`, `n163_volume` | Namco 163 only | The number of sound channels shown in the meters (1-8) and the volume number of the board (0-5). Both are required for a Namco 163 cartridge and refused for any other. See "Namco 163 cartridges" below. |
@@ -241,6 +245,16 @@ to the mapper, so each DMC byte is read through the banks that were mapped at th
 a routine. `request_call="0xE249"` names that routine. The generated frame code calls the `frame` routines and then, in the
 same frame, loads the track's `command` into A and calls the routine once, as the game's own code does. A track's
 `command` is that number, for songs and for `type="sfx"` tracks alike, `0` included (a track with `command="0x00"` that is not a `control` track requests the number 0); `request` and `set` are not used. The routines are called with the X register set to 0 when the cartridge is an MMC3, a VRC6, a Namco 163 or an FME-7 (and the Y register too on a Namco 163 and an FME-7).
+
+A driver that takes the number in another register says so with `request_register="X"` (or `"Y"`): the generated code then loads that register
+from the request (and does not set it to 0 first) before the call. A driver with a separate routine for sound effects names it with
+`sfx_call`: a `type="sfx"` track calls that routine, a song track calls `request_call`, both with the number in the register chosen. Without these
+two attributes a request is made in A, with `request_call`, as before.
+
+```xml
+<driver ram_clear="0x0000-0x07FF" init="0x8000" frame="0x8006" request_call="0x8003" request_register="X" sfx_call="0x8009"
+        frame_irq="off" mmc3_prg_mode="0" prg_banks_call="0x02 0x03" prg_banks_idle="0x02 0x03"/>
+```
 
 **Control tracks.** A track of `type="control"` (the Music Stop) makes no request, with a `request_call`, a `bgm` variable or a `request` alike: choosing it only starts the Machine again from the freshly initialized state, which silences everything. Every other track makes its request whatever its number.
 

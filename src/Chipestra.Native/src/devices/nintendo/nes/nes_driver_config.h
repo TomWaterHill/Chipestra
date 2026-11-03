@@ -28,6 +28,14 @@
 //              takes its requests as a call, not through RAM variables). A track's command is that number, 0 included; a
 //              <track type="control"> (the Music Stop) makes no request: the Machine only starts again from the freshly
 //              initialized state.
+//   mmc3_prg_mode  (MMC3 cartridges) "0" or "1" (default 1): the PRG mode the banks are switched in. Mode 1 maps R6 at
+//              $C000 and a fixed bank at $8000, mode 0 maps R6 at $8000 and a fixed bank at $C000. Silver Surfer's
+//              driver (banks 2 and 3 at $8000 and $A000) needs mode 0: mmc3_prg_mode="0"
+//   frame_irq  "off": the start-up code writes $40 to $4017, as the game's own reset code does, so that the APU's frame
+//              interrupt (enabled at power-on) never reaches the CPU; for a game whose sound routines do not write it
+//   request_register  (with request_call) the register the request number is passed in: "A" (the default), "X" or "Y"
+//   sfx_call   (with request_call) address of a second routine that an effect (<track type="sfx">) is requested from,
+//              the same way; without it effects use request_call too
 //   prg_banks_call / prg_banks_idle  (MMC3 cartridges) "R6 R7": the PRG banks the game maps while its sound
 //              routines run and the banks it has mapped the rest of the time (the program banks the sound data
 //              reads through while the routines are called, and the banks the DMC samples are read from in
@@ -74,6 +82,10 @@ struct NesDriverConfig {
     std::optional<std::uint16_t> bgmVariable;
     std::optional<std::uint16_t> sfxVariable;
     std::optional<std::uint16_t> requestCall;
+    std::optional<std::uint16_t> sfxCall;
+    char requestRegister = 'A';
+    bool inhibitFrameIrq = false;
+    bool mmc3PrgMode0 = false;
     std::optional<std::uint32_t> prgCrc32;
     std::optional<std::uint32_t> chrCrc32;
     std::vector<std::pair<std::uint16_t, std::uint8_t>> ramSet;

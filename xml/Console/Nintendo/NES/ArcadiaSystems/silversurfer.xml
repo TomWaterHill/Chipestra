@@ -1,0 +1,41 @@
+<chipestra>
+  <game id="silversurfer_us" title="Silver Surfer" manufacturer="Arcadia Systems"
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Silver Surfer">
+    <resources>
+      <rom name="cart" file="Silver Surfer (US) (1990) (Shoot Em Up) (NES).nes" size="393232" crc32="9a83817c"/>
+    </resources>
+    <!-- MMC3 cartridge. The sound driver is in PRG banks 2 and 3 (mapped at $8000 and $A000) and is called through a
+         jump table at $8000: $8000 resets it, $8003 starts song X (0-8), $8006 is the update the game calls once a
+         frame, $8009 starts sound effect X (0-13). The number is passed in the X register. The driver does not use
+         the DMC. Song n is track n+1 of the soundtrack file of the game. Songs 2, 3 and 4 end by themselves. -->
+    <driver ram_clear="0x0000-0x07FF" init="0x8000" frame="0x8006" request_call="0x8003" request_register="X" frame_irq="off" mmc3_prg_mode="0"
+            sfx_call="0x8009" prg_banks_call="0x02 0x03" prg_banks_idle="0x02 0x03"
+            prg_crc32="8c940984" chr_crc32="58e3fe8a"/>
+    <tracks>
+      <track id="STOP" title="Music Stop" command="0x00" type="control"/>
+      <track id="BGM_00" title="BGM 01" command="0"/>
+      <track id="BGM_01" title="BGM 02" command="1" loops="false"/>
+      <track id="BGM_02" title="BGM 03" command="2" loops="false"/>
+      <track id="BGM_03" title="BGM 04" command="3" loops="false"/>
+      <track id="BGM_04" title="BGM 05" command="4" loops="false"/>
+      <track id="BGM_05" title="BGM 06" command="5"/>
+      <track id="BGM_06" title="BGM 07" command="6"/>
+      <track id="BGM_07" title="BGM 08" command="7"/>
+      <track id="BGM_08" title="BGM 09" command="8"/>
+      <track id="SFX_00" title="[SFX] 01" command="0" type="sfx" loops="false"/>
+      <track id="SFX_01" title="[SFX] 02" command="1" type="sfx" loops="false"/>
+      <track id="SFX_02" title="[SFX] 03" command="2" type="sfx" loops="false"/>
+      <track id="SFX_03" title="[SFX] 04" command="3" type="sfx" loops="false"/>
+      <track id="SFX_04" title="[SFX] 05" command="4" type="sfx" loops="false"/>
+      <track id="SFX_05" title="[SFX] 06" command="5" type="sfx" loops="false"/>
+      <track id="SFX_06" title="[SFX] 07" command="6" type="sfx" loops="false"/>
+      <track id="SFX_07" title="[SFX] 08" command="7" type="sfx" loops="false"/>
+      <track id="SFX_08" title="[SFX] 09" command="8" type="sfx" loops="false"/>
+      <track id="SFX_09" title="[SFX] 10" command="9" type="sfx" loops="false"/>
+      <track id="SFX_10" title="[SFX] 11" command="10" type="sfx" loops="false"/>
+      <track id="SFX_11" title="[SFX] 12" command="11" type="sfx" loops="false"/>
+      <track id="SFX_12" title="[SFX] 13" command="12" type="sfx" loops="false"/>
+      <track id="SFX_13" title="[SFX] 14" command="13" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

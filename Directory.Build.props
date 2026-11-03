@@ -1,0 +1,10 @@
+<Project>
+
+  <!-- Release builds: the PDB path that the compiler writes into each assembly, and the source paths in the
+       PDB, start at /_/ instead of the absolute path of the build machine's checkout. Debug builds and
+       debugging from the checkout are unchanged. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PathMap>$(MSBuildThisFileDirectory)=/_/</PathMap>
+  </PropertyGroup>
+
+</Project>

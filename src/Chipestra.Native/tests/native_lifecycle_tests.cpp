@@ -62,6 +62,7 @@
 #include "vrc6_adapter_tests.h"
 #include "namco_163_adapter_tests.h"
 #include "nes_fme7_tests.h"
+#include "nes_request_register_tests.h"
 #include "sunsoft_5b_adapter_tests.h"
 #include "vrc7_adapter_tests.h"
 #include "fds_machine_tests.h"
@@ -1664,6 +1665,10 @@ int main() {
     NesMachineFme7BankingSoundAndChannels();
     NesMachineControlTracksMakeNoRequestAndZeroIsARequest();
     GimmickViaDefinitionXmlRealRomMatchesTheRealGame();
+    NesRequestRegisterSettingsParseAndReject();
+    NesFrameCodeIsUnchangedWithoutTheNewSettings();
+    NesMachinePassesTheRequestInTheChosenRegister();
+    SilverSurferViaDefinitionXmlRealRomMatchesTheRealGame();
     RollingThunderViaDefinitionXmlRealRomMatchesTheRealGame();
 
     Hd63701ResetState();

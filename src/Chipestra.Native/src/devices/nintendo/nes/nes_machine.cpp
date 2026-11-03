@@ -134,11 +134,13 @@ void NesMachine::BuildStartCode() {
         banks.callR8 = driver_.prgBanksCall->r8;
         banks.idleR8 = driver_.prgBanksIdle->r8;
         banks.vrc7Line = driver_.vrc7RegisterLine.value_or(4);
+        banks.mmc3PrgMode0 = driver_.mmc3PrgMode0;
     }
-    start_code_ = ::BuildStartCode(driver_.init, kStartCodeAddress, banked ? &banks : nullptr);
+    start_code_ = ::BuildStartCode(driver_.init, kStartCodeAddress, banked ? &banks : nullptr, driver_.inhibitFrameIrq);
     const std::uint16_t* requestCall = driver_.requestCall ? &*driver_.requestCall : nullptr;
     const std::uint16_t* frameCounter = driver_.frameCounter ? &*driver_.frameCounter : nullptr;
-    frame_code_ = BuildFrameCode(driver_.frame, banked ? &banks : nullptr, requestCall, frameCounter);
+    const std::uint16_t* sfxCall = driver_.sfxCall ? &*driver_.sfxCall : nullptr;
+    frame_code_ = BuildFrameCode(driver_.frame, banked ? &banks : nullptr, requestCall, frameCounter, driver_.requestRegister, sfxCall);
 }
 
 void NesMachine::Initialize() {
@@ -171,7 +173,7 @@ void NesMachine::ColdStart() {
     ram_.fill(0xFF);
     wram_.fill(0);
     if (mmc3_enabled_) {
-        if (driver_.prgBanksIdle) mmc3_.SetState(driver_.prgBanksIdle->r6, driver_.prgBanksIdle->r7, true);
+        if (driver_.prgBanksIdle) mmc3_.SetState(driver_.prgBanksIdle->r6, driver_.prgBanksIdle->r7, !driver_.mmc3PrgMode0);
         else mmc3_.Reset();
     }
     if (vrc6_enabled_) {
@@ -196,6 +198,8 @@ void NesMachine::ColdStart() {
     }
     request_value_ = 0;
     request_pending_ = 0;
+    sfx_value_ = 0;
+    sfx_pending_ = 0;
     if (driver_.ramClear) {
         for (std::uint32_t a = driver_.ramClear->first; a <= driver_.ramClear->second; ++a) ram_[a & 0x7FF] = 0;
     }
@@ -324,6 +328,12 @@ std::uint8_t NesMachine::ReadBus(std::uint16_t address) {
     if (address == kRequestPendingAddress) {
         const std::uint8_t pending = request_pending_;
         request_pending_ = 0;  // read once, by the generated frame code
+        return pending;
+    }
+    if (address == kSfxValueAddress) return sfx_value_;
+    if (address == kSfxPendingAddress) {
+        const std::uint8_t pending = sfx_pending_;
+        sfx_pending_ = 0;  // read once, by the generated frame code
         return pending;
     }
     if (address >= kStartCodeAddress && address < kStartCodeAddress + 0x100) {
@@ -497,8 +507,13 @@ void NesMachine::SendCommand(const MusicCommand& command) {
     if (command.Kind == MusicCommandKind::Stop || control) return;
     if (driver_.requestCall) {
         // The request is made by the next frame's generated code; a number of 0 is a request like any other.
-        request_value_ = command.Value;
-        request_pending_ = 1;
+        if (driver_.sfxCall && command.Kind == MusicCommandKind::Effect) {
+            sfx_value_ = command.Value;
+            sfx_pending_ = 1;
+        } else {
+            request_value_ = command.Value;
+            request_pending_ = 1;
+        }
         command_sent_since_reset_ = true;
         return;
     }

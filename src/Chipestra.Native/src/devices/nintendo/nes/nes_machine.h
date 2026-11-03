@@ -90,7 +90,8 @@
 // then the request routine with the number in A, in the same frame, as the game itself does. A track that is not a
 // control track makes its request whatever its number (0 too); a control track (<track type="control">, whose
 // Auxiliary byte has NesDriverConfig::kControlFlag set) makes none and only resets the Machine - for a driver that
-// takes its requests through RAM variables as well.
+// takes its requests through RAM variables as well. request_register ("A", "X" or "Y") names the register the number
+// is passed in, and sfx_call a second routine that effects are requested from (the same way).
 //
 // Switching: like Namco System 1 in this project, a command sent after another command first resets the whole
 // Machine (so the previous song cannot leak into the next), then starts the new one; the result is bit for bit
@@ -255,6 +256,8 @@ private:
     Sunsoft5bWriteObserver sun5b_write_observer_;
     std::uint8_t request_value_ = 0;
     std::uint8_t request_pending_ = 0;
+    std::uint8_t sfx_value_ = 0;
+    std::uint8_t sfx_pending_ = 0;
     DmcReadObserver dmc_read_observer_;
     BusStats bus_stats_;
 
