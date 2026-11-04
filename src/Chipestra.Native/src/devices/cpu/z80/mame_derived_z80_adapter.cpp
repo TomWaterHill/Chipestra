@@ -1406,3 +1406,31 @@ void MameDerivedZ80Adapter::ExecuteEd(std::uint8_t opcode) {
 
     AddCycles(8);  // undocumented ED opcode - no-op
 }
+
+MameDerivedZ80Adapter::SavedState MameDerivedZ80Adapter::SaveState() const {
+    SavedState s;
+    s.af = af_; s.bc = bc_; s.de = de_; s.hl = hl_; s.ix = ix_; s.iy = iy_; s.sp = sp_; s.pc = pc_; s.wz = wz_;
+    s.af2 = af2_; s.bc2 = bc2_; s.de2 = de2_; s.hl2 = hl2_;
+    s.f = f_;
+    s.i = i_; s.r = r_; s.r2 = r2_; s.im = im_;
+    s.iff1 = iff1_; s.iff2 = iff2_; s.halted = halted_;
+    s.im0ServiceCount = im0ServiceCount_; s.im0UnhandledServiceCount = im0UnhandledServiceCount_;
+    s.nmiServiceCount = nmiServiceCount_; s.irqServiceCount = irqServiceCount_;
+    s.nmiPending = nmiPending_; s.irqAsserted = irqAsserted_; s.irqHoldLine = irqHoldLine_;
+    s.eiDelayActive = eiDelayActive_; s.nmiLineState = nmiLineState_;
+    s.cyclesConsumedThisCall = cyclesConsumedThisCall_;
+    return s;
+}
+
+void MameDerivedZ80Adapter::RestoreState(const SavedState& s) {
+    af_ = s.af; bc_ = s.bc; de_ = s.de; hl_ = s.hl; ix_ = s.ix; iy_ = s.iy; sp_ = s.sp; pc_ = s.pc; wz_ = s.wz;
+    af2_ = s.af2; bc2_ = s.bc2; de2_ = s.de2; hl2_ = s.hl2;
+    f_ = s.f;
+    i_ = s.i; r_ = s.r; r2_ = s.r2; im_ = s.im;
+    iff1_ = s.iff1; iff2_ = s.iff2; halted_ = s.halted;
+    im0ServiceCount_ = s.im0ServiceCount; im0UnhandledServiceCount_ = s.im0UnhandledServiceCount;
+    nmiServiceCount_ = s.nmiServiceCount; irqServiceCount_ = s.irqServiceCount;
+    nmiPending_ = s.nmiPending; irqAsserted_ = s.irqAsserted; irqHoldLine_ = s.irqHoldLine;
+    eiDelayActive_ = s.eiDelayActive; nmiLineState_ = s.nmiLineState;
+    cyclesConsumedThisCall_ = s.cyclesConsumedThisCall;
+}

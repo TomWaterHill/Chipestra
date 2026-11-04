@@ -107,6 +107,10 @@ All of the following come from MAME (https://github.com/mamedev/mame), tag mame0
 - Copyright holders (as listed in the original files): cam900
 - Original implementation (path in mame0289): src/devices/sound/namco_163.cpp, namco_163.h
 
+#### SN76489 (the programmable sound generator of the Sega VDP)
+- Copyright holders (as listed in the original files): Nicola Salmoria
+- Original implementation (path in mame0289): src/devices/sound/sn76496.cpp, sn76496.h
+
 #### Sunsoft 5B (the sound chip of the Sunsoft 5B cartridge board)
 - Copyright holders (as listed in the original files): Couriersud
 - Original implementation (path in mame0289): src/devices/sound/ay8910.cpp, ay8910.h
@@ -190,7 +194,7 @@ Parts copied directly (notes):
 - Copyright notice: Copyright (c) 2021, Aaron Giles
 - License: BSD-3-Clause
 - Source: https://github.com/aaronsgiles/ymfm (3rdparty/ymfm bundled with MAME mame0289)
-- How Chipestra uses it: the source, identical to the one bundled with MAME mame0289, is compiled into Chipestra (used for YM2151, YM2203, YM2610 and, through the DS1001 class of ymfm_opl, the Konami VRC7). The files ymfm_opl.h, ymfm_opl.cpp, ymfm_pcm.h and ymfm_pcm.cpp are the same unmodified files; only the DS1001 class is used
+- How Chipestra uses it: the source, identical to the one bundled with MAME mame0289, is compiled into Chipestra (used for YM2151, YM2203, YM2610, YM2612 and, through the DS1001 class of ymfm_opl, the Konami VRC7). The files ymfm_opl.h, ymfm_opl.cpp, ymfm_pcm.h and ymfm_pcm.cpp are the same unmodified files; only the DS1001 class is used
 - VRC7 instrument table: the 15 built-in instruments of the VRC7 are in a 144-byte table that the user supplies as a ROM (ds1001_instruments.bin, the MAME device ROM "ds1001", CRC-32 9d699efc). Chipestra does not include it, and does not use the table that ymfm contains
 
 #### libsoxr (SoX Resampler Library)

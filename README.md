@@ -8,12 +8,12 @@ Chipestra (pronounced "chip-es-tra", from "chip" and "orchestra") plays the
 music of classic arcade games on Windows. Instead of playing back recordings,
 it runs each game's own sound program on emulated sound hardware (the sound
 CPUs and sound chips of the original board), using ROMs you supply yourself.
-It also plays the music of some Famicom / NES and Famicom Disk System games.
+It also plays the music of some Famicom / NES, Famicom Disk System and Mega Drive games.
 
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.002.01
+Version: Ver 1.003.00
 
 ### Supported Boards & Verified Titles
 
@@ -35,6 +35,7 @@ not verified, even if they run on the same hardware family.
 - Capcom 68000 Based: Street Fighter (US version only: the ROM set "sf"; music, sound effects and voices)
 - Nintendo NES (Famicom): Star Soldier, Super Mario Bros. 3, Akumajou Densetsu, Lagrange Point, Rolling Thunder, Gimmick! (Japanese versions), Silver Surfer (US version)
 - Nintendo Famicom Disk System: Metroid
+- Sega Mega Drive / Genesis: Space Harrier II (Mega Drive (Japan); music, sound effects and voices), Sorcerian (Mega Drive (Japan); music and sound effects), Time Trax (prototype; music, sound effects and sampled sounds; it can be played at 60 Hz (Genesis) or at 50 Hz (Mega Drive (Europe)), listed as two games)
 
 For the NES and the Famicom Disk System, Chipestra runs the game's own sound
 routines on an emulated CPU and sound hardware (including the cartridge chips
@@ -63,14 +64,23 @@ these games are given by the XML files.
   ROMs, BIOS images or other game data. You must supply your own, and
   point Chipestra at the folder that contains them (Settings > ROM Root).
   For the NES, a .nes image of the game is used; for the Famicom Disk System,
-  a .fds disk image (no BIOS is needed). Lagrange Point additionally needs
+  a .fds disk image (no BIOS is needed); for the Mega Drive, the cartridge image
+  (SpaceHarrier2.smd, SpaceHarrier2.bin or SpaceHarrier2.md; the layout is recognised) in SpaceHarrier2.zip, likewise Sorcerian.smd, Sorcerian.bin or Sorcerian.md in Sorcerian.zip, and TimeTrax.bin, TimeTrax.md or TimeTrax.smd for Time Trax. Lagrange Point additionally needs
   the ROM set "ds1001" (ds1001.zip), which holds the instrument table of the
   VRC7 sound chip.
+- The names of the NES, Famicom Disk System and Mega Drive files and of their
+  .zip files need not match the ones above (for example
+  "Space Harrier II (Japan, USA).md" in any .zip). When no file has the
+  expected name, Chipestra looks inside the .zip files under the ROM Root for
+  the file by its CRC-32 (a Mega Drive file in the Super Magic Drive layout, by
+  its size). A file found this way is used only if it is the only match; the
+  window shows which file was used. Files that are not in a .zip are found by
+  name only.
 
 ### Download and run
 
-1. Download Chipestra-1.002.01.zip from the Releases page of this repository.
-2. Extract it. You get a folder named Chipestra-1.002.01.
+1. Download Chipestra-1.003.00.zip from the Releases page of this repository.
+2. Extract it. You get a folder named Chipestra-1.003.00.
 3. Run Chipestra.exe in that folder.
 4. Open Settings and set ROM Root to the folder that contains your ROM files.
    Sub-folders are searched too.
@@ -152,17 +162,17 @@ belong to their respective owners.
 
 ## 日本語
 
-Chipestra（チップエストラ。「チップ」と「オーケストラ」から）は、昔のアーケードゲームの音楽を Windows で再生するソフトです。録音した音を流すのではなく、ご自身で用意した ROM を使い、元の基板のサウンド CPU と音源チップをエミュレートして、ゲーム自身のサウンドプログラムを動かして鳴らします。ファミコン（NES）とファミコン ディスクシステムの一部のゲームの音楽も再生できます。
+Chipestra（チップエストラ。「チップ」と「オーケストラ」から）は、昔のアーケードゲームの音楽を Windows で再生するソフトです。録音した音を流すのではなく、ご自身で用意した ROM を使い、元の基板のサウンド CPU と音源チップをエミュレートして、ゲーム自身のサウンドプログラムを動かして鳴らします。ファミコン（NES）、ファミコン ディスクシステム、メガドライブの一部のゲームの音楽も再生できます。
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.002.01
+バージョン: Ver 1.003.00
 
 ### 対応基板と確認済みタイトル
 
 Chipestra は、対応している基板上のゲームを、XML 定義ファイルを書くことで追加できるように設計されています（[docs/xml-format.md](docs/xml-format.md) を参照。英語）。ここに挙げたタイトルは、作者が確認したものです。同じハードウェア系列でも、載っていないタイトルは、確認していません。
 
-- Sega X-Board: After Burner II（アフターバーナーII）、GP Rider、Thunder Blade（サンダーブレード）
+- Sega X-Board: After Burner II（アフターバーナー II）、GP Rider、Thunder Blade（サンダーブレード）
 - Sega Out Run: Out Run（アウトラン）
 - Konami Gyruss: Gyruss（ジャイラス）
 - Konami Bubble System: Bubble System BIOS
@@ -173,8 +183,9 @@ Chipestra は、対応している基板上のゲームを、XML 定義ファイ
 - Data East Caveman Ninja Hardware: Vapor Trail（空牙）
 - Namco System 1: Dragon Spirit（ドラゴンスピリット）
 - Capcom 68000 Based: Street Fighter（ストリートファイター。US 版の ROM セット sf のみ対応。BGM、効果音、ボイスを再生できます）
-- Nintendo NES（ファミコン）: Star Soldier（スターソルジャー）、Super Mario Bros. 3（スーパーマリオブラザーズ3）、Akumajou Densetsu（悪魔城伝説）、Lagrange Point（ラグランジュポイント）、Rolling Thunder（ローリングサンダー）、Gimmick!（ギミック！）（いずれも日本版）、Silver Surfer（シルバーサーファー。US 版）
+- Nintendo NES（ファミコン）: Star Soldier（スターソルジャー）、Super Mario Bros. 3（スーパーマリオブラザーズ 3）、Akumajou Densetsu（悪魔城伝説）、Lagrange Point（ラグランジュポイント）、Rolling Thunder（ローリングサンダー）、Gimmick!（ギミック！）（いずれも日本版）、Silver Surfer（シルバーサーファー。US 版）
 - Nintendo Famicom Disk System（ファミコン ディスクシステム）: Metroid（メトロイド）
+- Sega Mega Drive / Genesis（メガドライブ）: Space Harrier II（スペースハリアー II。Mega Drive（日本）。BGM、効果音、ボイスを再生できます）、Sorcerian（ソーサリアン。Mega Drive（日本）。BGM、効果音を再生できます）、Time Trax（タイムトラックス。試作版。BGM、効果音、サンプル音を再生できます。60 Hz（Genesis）と 50 Hz（Mega Drive（欧州））の両方で再生でき、一覧には 2 つのゲームとして並びます）
 
 NES とファミコン ディスクシステムでは、エミュレートした CPU と音源（Konami の VRC6・VRC7、Namco 163、Sunsoft 5B のカートリッジ内の音源を含む）の上で、ゲーム自身のサウンドのルーチンを動かします。これらのゲームの曲名は、XML ファイルで与えています。
 
@@ -190,13 +201,14 @@ NES とファミコン ディスクシステムでは、エミュレートした
 ### 必要なもの
 
 - Windows 11（64bit）。Windows 11 でのみ動作を確認しています。
-- .NET 10 Desktop Runtime（x64）。[Microsoft のサイト](https://dotnet.microsoft.com/download/dotnet/10.0)から入手できます。入っていない場合は、Chipestra の起動時に、Windows がダウンロード先の案内を表示します。
-- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージを使います（BIOS は要りません）。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
+- .NET 10 Desktop Runtime（x64）。[Microsoft のサイト](https://dotnet.microsoft.com/download/dotnet/10.0) から入手できます。入っていない場合は、Chipestra の起動時に、Windows がダウンロード先の案内を表示します。
+- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージ（BIOS は要りません）、メガドライブはカートリッジのイメージ（SpaceHarrier2.smd、SpaceHarrier2.bin、SpaceHarrier2.md のいずれか。並びは中身から判定します）を SpaceHarrier2.zip に入れたものを使います（Sorcerian も同様に、Sorcerian.smd、Sorcerian.bin、Sorcerian.md のいずれかを Sorcerian.zip に入れます。Time Trax は TimeTrax.bin、TimeTrax.md、TimeTrax.smd のいずれかです）。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
+- NES、ファミコン ディスクシステム、メガドライブのファイル名や、それを入れた .zip の名前は、上の名前と同じでなくても構いません（たとえば「Space Harrier II (Japan, USA).md」をどんな名前の .zip に入れてもよい）。期待する名前のファイルが無いときは、ROM Root の下の .zip の中から CRC-32 でファイルを探します（Super Magic Drive 形式のメガドライブのファイルは、サイズで探します）。この方法で見つかったファイルは、候補が 1 つだけのときにだけ使い、どのファイルを使ったかをウィンドウに表示します。.zip に入っていないファイルは、名前だけで探します。
 
 ### ダウンロードと起動
 
-1. このリポジトリの Releases のページから、Chipestra-1.002.01.zip をダウンロードします。
-2. 展開すると、Chipestra-1.002.01 というフォルダができます。
+1. このリポジトリの Releases のページから、Chipestra-1.003.00.zip をダウンロードします。
+2. 展開すると、Chipestra-1.003.00 というフォルダができます。
 3. そのフォルダの Chipestra.exe を起動します。
 4. Settings を開き、ROM Root に、ROM ファイルのあるフォルダを指定します。サブフォルダの中も探します。
 

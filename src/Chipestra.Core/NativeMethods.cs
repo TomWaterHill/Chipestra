@@ -134,6 +134,9 @@ namespace Chipestra.Core
         public static extern ChipestraResult chipestra_resource_resolution_get_failure(IntPtr handle, uint index, out ChipestraResolutionFailure outFailure);
 
         [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ChipestraResult chipestra_resource_resolution_get_source(IntPtr handle, uint index, out ChipestraResolvedSource outSource);
+
+        [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern ChipestraResult chipestra_resource_resolution_get_resolved(IntPtr handle, uint index, out ChipestraResolvedResourceNative outResolved);
 
         // --- Channel Meter group ---

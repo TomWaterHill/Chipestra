@@ -1,0 +1,75 @@
+<chipestra>
+  <game id="spaceharrier2_jp" title="Space Harrier II" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="SpaceHarrier2">
+    <resources>
+      <rom name="rom" file="SpaceHarrier2.smd|SpaceHarrier2.bin|SpaceHarrier2.md" crc_search="true" search_crc32="edc0fb28" search_size="524800"/>
+    </resources>
+    <!-- The sound driver is a Z80 program in the cartridge (music). The game's 68000 copies it to the Z80's RAM,
+         releases the Z80 from reset (the Z80 runs from release_cycle) and writes a request number to the driver's request byte
+         (warmup_frames is how many frames later the game first does that). Requests: 0x81-0x99 songs, 0xA0-0xBF effects, 0xC0 fade
+         out and stop, 0xC1 silence every channel once (the song goes on), 0xC2 stop (the driver then runs on past
+         its program); 0x80 does nothing. Music Stop sends 0x80: the Machine starts again, which silences everything.
+         The two sets are Z80 programs that play a spoken phrase; each replaces the sound driver. -->
+    <driver music="0x16A6C:5366" request="0x1804" release_cycle="3365294" warmup_frames="104" region="japan" cart_crc32="edc0fb28">
+      <set id="voice1" image="0x15904:4456"/>
+      <set id="voice2" image="0x14724:4576"/>
+    </driver>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x80" type="control"/>
+      <track id="BGM_24" title="Motion [Title]" command="0x98"/>
+      <track id="BGM_01" title="Harrier Saga [Main Theme]" command="0x81"/>
+      <track id="BGM_02" title="Harrier Saga [Main Theme (B)]" command="0x82"/>
+      <track id="BGM_03" title="Harrier Saga [Main Theme (C)]" command="0x83"/>
+      <track id="BGM_04" title="Harrier Saga [Main Theme (D)]" command="0x84"/>
+      <track id="BGM_05" title="Harrier Saga [Main Theme (E)]" command="0x85"/>
+      <track id="BGM_06" title="Harrier Saga [Main Theme (F)]" command="0x86"/>
+      <track id="BGM_20" title="Winner's Flight [Bonus Stage]" command="0x94"/>
+      <track id="BGM_19" title="Nuclear Shock [Boss-01 Trimuller]" command="0x93"/>
+      <track id="BGM_17" title="Mind Quake [Boss-02 Paranoia]" command="0x91"/>
+      <track id="BGM_12" title="Neo [Boss-03 Brizard]" command="0x8C"/>
+      <track id="BGM_18" title="Giga [Boss-04 Neo Dom]" command="0x92"/>
+      <track id="BGM_11" title="The Stairs to Z [Boss-05 Mantichora]" command="0x8B"/>
+      <track id="BGM_16" title="Handcuff [Boss-06 Wizard]" command="0x90"/>
+      <track id="BGM_13" title="Perspective [Boss-07 Medusa]" command="0x8D"/>
+      <track id="BGM_15" title="Machine Henge [Boss-08 Neo Tomos]" command="0x8F"/>
+      <track id="BGM_14" title="Jelly Syndrome [Boss-09 Cragon]" command="0x8E"/>
+      <track id="BGM_08" title="Outsider [Boss-10 Bins Been]" command="0x88"/>
+      <track id="BGM_07" title="An Omen [Boss-11 Love Face]" command="0x87"/>
+      <track id="BGM_09" title="Mega Chance [Boss-12 Cthugha]" command="0x89"/>
+      <track id="BGM_10" title="Reverse Infect [Final Boss Dark Harrier]" command="0x8A"/>
+      <track id="BGM_21" title="An Epitaph [Ending]" command="0x95"/>
+      <track id="BGM_22" title="Illusion [Staff Roll]" command="0x96"/>
+      <track id="BGM_25" title="Name Entry" command="0x99"/>
+      <track id="BGM_23" title="GAME OVER" loops="false" command="0x97"/>
+      <track id="SFX_01" title="[SFX] 01" command="0xA0" type="sfx" loops="false"/>
+      <track id="SFX_02" title="[SFX] 02" command="0xA1" type="sfx" loops="false"/>
+      <track id="SFX_03" title="[SFX] 03" command="0xA2" type="sfx" loops="false"/>
+      <track id="SFX_04" title="[SFX] 04" command="0xA3" type="sfx" loops="false"/>
+      <track id="SFX_05" title="[SFX] 05" command="0xA4" type="sfx" loops="false"/>
+      <track id="SFX_06" title="[SFX] 06" command="0xA5" type="sfx" loops="false"/>
+      <track id="SFX_07" title="[SFX] 07" command="0xA6" type="sfx" loops="false"/>
+      <track id="SFX_08" title="[SFX] 08" command="0xA7" type="sfx" loops="false"/>
+      <track id="SFX_09" title="[SFX] 09" command="0xA8" type="sfx" loops="false"/>
+      <track id="SFX_10" title="[SFX] 10" command="0xA9" type="sfx" loops="false"/>
+      <track id="SFX_11" title="[SFX] 11" command="0xAA" type="sfx" loops="false"/>
+      <track id="SFX_12" title="[SFX] 12" command="0xAB" type="sfx" loops="false"/>
+      <track id="SFX_13" title="[SFX] 13" command="0xAC" type="sfx" loops="false"/>
+      <track id="SFX_14" title="[SFX] 14" command="0xAD" type="sfx" loops="false"/>
+      <track id="SFX_15" title="[SFX] 15" command="0xAE" type="sfx" loops="false"/>
+      <track id="SFX_16" title="[SFX] 16" command="0xAF" type="sfx" loops="false"/>
+      <track id="SFX_17" title="[SFX] 17" command="0xB0" type="sfx" loops="false"/>
+      <track id="SFX_18" title="[SFX] 18" command="0xB1" type="sfx" loops="false"/>
+      <track id="SFX_19" title="[SFX] 19" command="0xB2" type="sfx" loops="false"/>
+      <track id="SFX_20" title="[SFX] 20" command="0xB3" type="sfx" loops="false"/>
+      <track id="SFX_21" title="[SFX] 21" command="0xB4" type="sfx" loops="false"/>
+      <track id="SFX_22" title="[SFX] 22" command="0xB5" type="sfx" loops="false"/>
+      <track id="SFX_23" title="[SFX] 23" command="0xB6" type="sfx" loops="false"/>
+      <track id="SFX_24" title="[SFX] 24" command="0xB7" type="sfx" loops="false"/>
+      <track id="SFX_25" title="[SFX] 25" command="0xB8" type="sfx" loops="false"/>
+      <track id="SFX_26" title="[SFX] 26" command="0xB9" type="sfx" loops="false"/>
+      <track id="SFX_27" title="[SFX] 27" command="0xBB" type="sfx" loops="false"/>
+      <track id="VOICE_1" title="[Voice] 01" command="0x00" set="voice1" loops="false"/>
+      <track id="VOICE_2" title="[Voice] 02" command="0x00" set="voice2" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

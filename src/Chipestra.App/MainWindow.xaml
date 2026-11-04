@@ -510,11 +510,17 @@
         </Grid>
 
         <!-- Error banner: ROM resolution failures, Machine load failures, etc. -->
-        <TextBlock x:Name="ErrorMessageText"
-                   Grid.Row="3"
-                   Foreground="Red"
-                   Margin="10,4,10,8"
-                   TextWrapping="Wrap"
-                   Text="{Binding ErrorMessage}" />
+        <StackPanel Grid.Row="3">
+            <TextBlock x:Name="NoticeMessageText"
+                       Margin="10,4,10,0"
+                       TextWrapping="Wrap"
+                       Text="{Binding NoticeMessage}"
+                       AutomationProperties.Name="Notice" />
+            <TextBlock x:Name="ErrorMessageText"
+                       Foreground="Red"
+                       Margin="10,4,10,8"
+                       TextWrapping="Wrap"
+                       Text="{Binding ErrorMessage}" />
+        </StackPanel>
     </Grid>
 </Window>

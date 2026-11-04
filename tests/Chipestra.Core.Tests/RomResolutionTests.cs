@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Chipestra.Core;
 using Xunit;
 
@@ -51,6 +52,83 @@ namespace Chipestra.Core.Tests
             Assert.Equal(ChipestraResult.Ok, player.LoadGame("TEST_GAME"));
             Assert.Null(player.RomResolution);
             Assert.Equal(PlaybackState.MachineLoaded, player.Status.State);
+        }
+
+        private static string Crc32Hex(byte[] data)
+        {
+            uint crc = 0xFFFFFFFF;
+            foreach (byte value in data)
+            {
+                crc ^= value;
+                for (int bit = 0; bit < 8; bit++)
+                {
+                    crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320 : crc >> 1;
+                }
+            }
+            return (~crc).ToString("x8");
+        }
+
+        private static void WriteZip(string path, string entryName, byte[] content)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            using var stream = File.Create(path);
+            using var zip = new System.IO.Compression.ZipArchive(stream, System.IO.Compression.ZipArchiveMode.Create);
+            var entry = zip.CreateEntry(entryName, System.IO.Compression.CompressionLevel.NoCompression);
+            using var entryStream = entry.Open();
+            entryStream.Write(content, 0, content.Length);
+        }
+
+        [Fact]
+        public void LoadGame_RenamedZipEntry_IsFoundByCrcAndReportsTheFileUsed()
+        {
+            string root = MakeTempRomRoot("crc_search");
+            try
+            {
+                byte[] content = Enumerable.Range(0, 300).Select(i => (byte)(i * 7 + 3)).ToArray();
+                string crc = Crc32Hex(content);
+                WriteZip(Path.Combine(root, "sub", "Some Dump.zip"), "Game (World).bin", content);
+                var catalog = CatalogWithResources(new[]
+                {
+                    new RomResource { Name = "r1", FileName = "listed.bin", SizeBytes = content.Length, Crc32 = crc, CrcSearch = true },
+                });
+                using var player = new Player(catalog);
+
+                Assert.Equal(ChipestraResult.Ok, player.LoadGame("TEST_GAME", root));
+
+                RomResolutionEntry entry = Assert.Single(player.RomResolution!.Entries);
+                Assert.Equal(RomResolutionStatus.Resolved, entry.Status);
+                Assert.True(entry.FoundByCrcSearch);
+                Assert.Contains("Some Dump.zip!Game (World).bin", entry.SourcePath);
+                Assert.Contains("CRC-32", entry.Detail);
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void LoadGame_RenamedZipEntryWithoutCrcSearch_IsNotFound()
+        {
+            string root = MakeTempRomRoot("crc_search_off");
+            try
+            {
+                byte[] content = Enumerable.Range(0, 300).Select(i => (byte)(i * 5 + 1)).ToArray();
+                string crc = Crc32Hex(content);
+                WriteZip(Path.Combine(root, "Some Dump.zip"), "Game (World).bin", content);
+                var catalog = CatalogWithResources(new[]
+                {
+                    new RomResource { Name = "r1", FileName = "listed.bin", Crc32 = crc },
+                });
+                using var player = new Player(catalog);
+
+                Assert.NotEqual(ChipestraResult.Ok, player.LoadGame("TEST_GAME", root));
+                Assert.Equal(RomResolutionStatus.NotFound, player.RomResolution!.Entries[0].Status);
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
         }
 
         [Fact]

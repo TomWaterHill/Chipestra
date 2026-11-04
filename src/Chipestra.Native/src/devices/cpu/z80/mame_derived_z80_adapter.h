@@ -88,6 +88,22 @@ public:
         memoryWriteObserver_ = std::move(observer);
     }
 
+    // The CPU's own state (registers, interrupt state, counters), without the callbacks. A Machine saves it after a
+    // start-up run and restores it later.
+    struct SavedState {
+        Z80RegisterPair af, bc, de, hl, ix, iy, sp, pc, wz;
+        Z80RegisterPair af2, bc2, de2, hl2;
+        Z80Flags f;
+        std::uint8_t i = 0, r = 0, r2 = 0, im = 0;
+        bool iff1 = false, iff2 = false, halted = false;
+        std::uint64_t im0ServiceCount = 0, im0UnhandledServiceCount = 0, nmiServiceCount = 0, irqServiceCount = 0;
+        bool nmiPending = false, irqAsserted = false, irqHoldLine = false, eiDelayActive = false;
+        Z80InputLineState nmiLineState = Z80InputLineState::Clear;
+        std::uint64_t cyclesConsumedThisCall = 0;
+    };
+    SavedState SaveState() const;
+    void RestoreState(const SavedState& state);
+
 private:
     Z80RegisterPair af_, bc_, de_, hl_, ix_, iy_, sp_, pc_, wz_;
     Z80RegisterPair af2_, bc2_, de2_, hl2_;

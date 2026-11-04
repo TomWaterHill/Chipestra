@@ -2,7 +2,7 @@
   <game id="gimmick_japan" title="Gimmick!" manufacturer="Sunsoft"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Gimmick! (Japan)">
     <resources>
-      <rom name="cart" file="Gimmick! (Japan).nes" size="393232" crc32="eeb6b362"/>
+      <rom name="cart" file="Gimmick! (Japan).nes" size="393232" crc32="eeb6b362" crc_search="true"/>
     </resources>
     <!-- Sunsoft FME-7 / 5B cartridge (mapper 69, with the 5B's three extra tone channels). The game's sound driver is
          called as the game's own NMI does: the update routine ($8009) once a frame and, to start a sound, the

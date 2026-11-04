@@ -2,7 +2,7 @@
   <game id="starsoldier" title="Star Soldier" manufacturer="Hudson"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Star Soldier (Japan)">
     <resources>
-      <rom name="cart" file="Star Soldier (Japan).nes" size="65552" crc32="7abe32dd"/>
+      <rom name="cart" file="Star Soldier (Japan).nes" size="65552" crc32="7abe32dd" crc_search="true"/>
     </resources>
     <!-- How Chipestra runs the game's own sound routines (no picture chip, no main loop). -->
     <driver ram_clear="0x0000-0x07FF" init="0xB666 0xB809" frame="0xB690 0xB82A"

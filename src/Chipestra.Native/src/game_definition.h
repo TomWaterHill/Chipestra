@@ -9,6 +9,65 @@
 #include <string>
 #include <vector>
 
+// A <rom file="..."> (and the C ABI's accepted_name) may list alternative names separated by '|' ("a.smd|a.bin"):
+// a '|' cannot be part of a file name on Windows. Empty parts are dropped; a value without '|' is one name.
+inline std::vector<std::string> SplitAcceptedNames(const std::string& file) {
+    std::vector<std::string> names;
+    std::size_t start = 0;
+    while (start <= file.size()) {
+        const std::size_t bar = file.find('|', start);
+        const std::size_t end = bar == std::string::npos ? file.size() : bar;
+        if (end > start) names.push_back(file.substr(start, end - start));
+        if (bar == std::string::npos) break;
+        start = bar + 1;
+    }
+    if (names.empty()) names.push_back(file);
+    return names;
+}
+
+// Lists of numbers in <rom crc32 / search_crc32 / search_size> (and the matching C ABI text fields) are separated
+// by '|'. CRC-32 values are hexadecimal, sizes decimal. ParseNumberList returns false for an empty part or a
+// character that is not a digit of the base; the C ABI side ignores such text (it was produced by FormatNumberList).
+inline bool ParseNumberList(const std::string& text, int base, std::vector<std::uint64_t>& out) {
+    out.clear();
+    std::size_t start = 0;
+    while (start <= text.size()) {
+        const std::size_t bar = text.find('|', start);
+        const std::size_t end = bar == std::string::npos ? text.size() : bar;
+        if (end == start) return false;
+        std::uint64_t value = 0;
+        for (std::size_t i = start; i < end; ++i) {
+            const char c = text[i];
+            int digit = -1;
+            if (c >= '0' && c <= '9') digit = c - '0';
+            else if (base == 16 && c >= 'a' && c <= 'f') digit = c - 'a' + 10;
+            else if (base == 16 && c >= 'A' && c <= 'F') digit = c - 'A' + 10;
+            if (digit < 0 || digit >= base || (end - start) > 16) return false;
+            value = value * static_cast<std::uint64_t>(base) + static_cast<std::uint64_t>(digit);
+        }
+        out.push_back(value);
+        if (bar == std::string::npos) break;
+        start = bar + 1;
+    }
+    return true;
+}
+
+inline std::string FormatNumberList(const std::vector<std::uint64_t>& values, int base) {
+    std::string text;
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        if (i > 0) text += '|';
+        std::uint64_t v = values[i];
+        std::string digits;
+        do {
+            digits.insert(digits.begin(), "0123456789abcdef"[v % static_cast<std::uint64_t>(base)]);
+            v /= static_cast<std::uint64_t>(base);
+        } while (v != 0);
+        if (base == 16) digits.insert(0, digits.size() < 8 ? 8 - digits.size() : 0, '0');
+        text += digits;
+    }
+    return text;
+}
+
 // RomResourceDefinition (<rom>) - one ROM/data file a Game's Machine needs, as declared
 // in definition XML. Converts 1:1 into a RequiredResource via
 // GameDefinition::BuildRequiredResources().
@@ -18,6 +77,17 @@ struct RomResourceDefinition {
     std::optional<std::uint64_t> SizeBytes;
     std::optional<std::uint32_t> Crc32;
     std::optional<std::string> Sha1;
+
+    // <rom crc32="a|b"> - Crc32 is the first value; any further values (for example the same disk image with
+    // and without a file header) are alternatives, and a candidate must match one of them.
+    std::vector<std::uint32_t> AlternateCrc32;
+
+    // <rom crc_search="true"> - when no file of an accepted name is found, look for a ZIP entry by its CRC-32
+    // (see RequiredResource::CrcSearch). <rom search_crc32="a|b"> adds CRC-32 values used only for that
+    // search; <rom search_size="n|m"> adds entry sizes used only when no CRC-32 matched.
+    bool CrcSearch = false;
+    std::vector<std::uint32_t> SearchCrc32;
+    std::vector<std::uint64_t> SearchSizes;
 
     // <rom archive="..."> (optional) - the archive this resource is looked for in (a ZIP name without its
     // extension, or a folder name). Empty means the game's own archive (GameDefinition::Archive). It lets a

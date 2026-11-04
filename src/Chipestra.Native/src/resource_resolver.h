@@ -22,9 +22,17 @@ public:
     const std::uint8_t* Data() const;
     std::size_t Size() const;
 
+    // Where the bytes came from: a loose file's path, or "<zip path>!<entry name>"; empty if unknown.
+    const std::string& SourcePath() const;
+    // True if no file had an accepted name and the entry was found by its CRC-32 (or size).
+    bool FoundByCrcSearch() const;
+    void SetSource(std::string sourcePath, bool foundByCrcSearch);
+
 private:
     std::string logical_name_;
     std::vector<std::uint8_t> data_;
+    std::string source_path_;
+    bool found_by_crc_search_ = false;
 };
 
 // MachineResources - the set of resources resolved for one Machine instance, looked up

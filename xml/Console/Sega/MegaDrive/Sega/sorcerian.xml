@@ -1,0 +1,104 @@
+<chipestra>
+  <game id="sorcerian_jp" title="Sorcerian" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="Sorcerian">
+    <resources>
+      <rom name="rom" file="Sorcerian.smd|Sorcerian.bin|Sorcerian.md" crc_search="true" search_crc32="a143a8c5" search_size="524800"/>
+    </resources>
+    <!-- The sound driver is a Z80 program kept compressed in the cartridge. The game's 68000 decompresses it into the
+         Z80's RAM, copies a few constants after it, then for each song decompresses that song's data into the Z80's RAM
+         (at 0x1000), writes the song's request number to the driver's request byte and releases the Z80 from reset (the
+         driver clears its variables when it starts but keeps a request that is already there, so warmup_frames is 0).
+         Requests: 0x81-0xAC songs (each with its own block of data), 0xB0-0xF2 sound effects (they work with
+         any song loaded, so the first is used), other numbers do not make a sound. The driver has no request that
+         silences everything: Music Stop starts the Machine again. -->
+    <driver music="0x18C34:lzss" music_data="0x7A56:10@0x1C00" song_table="0x19AC0" song_first="0x81" song_address="0x1000" request="0x1C0A" release_cycle="13607624" warmup_frames="0" region="japan" cart_crc32="a143a8c5"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x80" type="control"/>
+      <track id="BGM_01" title="Opening [Title]" command="0x81"/>
+      <track id="BGM_02" title="城「ここで逢えるね」" command="0x82"/>
+      <track id="BGM_04" title="町「ペンタウァ I」" command="0x84"/>
+      <track id="BGM_03" title="町「ペンタウァ II」" command="0x83"/>
+      <track id="BGM_35" title="灰色のダンジョン         [Dungeon]" command="0xA3"/>
+      <track id="BGM_36" title="灰色のダンジョン         [Deamon Soldier (Boss)]" command="0xA4"/>
+      <track id="BGM_14" title="常春の村                 [Village]" command="0x8E"/>
+      <track id="BGM_15" title="常春の村                 [Cave and Dungeon]" command="0x8F"/>
+      <track id="BGM_16" title="常春の村                 [Mosma (Boss)]" command="0x90"/>
+      <track id="BGM_21" title="天空の滝                 [On Earth]" command="0x95"/>
+      <track id="BGM_22" title="天空の滝                 [In The Sky]" command="0x96"/>
+      <track id="BGM_23" title="天空の滝                 [Earthwind (Boss)]" command="0x97"/>
+      <track id="BGM_17" title="チャイニーズ・メディスン [China Town]" command="0x91"/>
+      <track id="BGM_18" title="チャイニーズ・メディスン [China Village]" command="0x92"/>
+      <track id="BGM_19" title="チャイニーズ・メディスン [Angel's Song]" command="0x93"/>
+      <track id="BGM_20" title="チャイニーズ・メディスン [China Dragon (Boss)]" command="0x94"/>
+      <track id="BGM_41" title="ペストの祭壇             [Ice Dungeon]" command="0xA9"/>
+      <track id="BGM_42" title="ペストの祭壇             [Ice Dragon (Boss)]" command="0xAA"/>
+      <track id="BGM_11" title="魔法使いの弟子           [The Magic School I]" command="0x8B"/>
+      <track id="BGM_12" title="魔法使いの弟子           [The Magic School II]" command="0x8C"/>
+      <track id="BGM_13" title="魔法使いの弟子           [Master Monster (Boss)]" command="0x8D"/>
+      <track id="BGM_37" title="ツイン・アイランズ       [Twin Island]" command="0xA5"/>
+      <track id="BGM_29" title="ツイン・アイランズ       [Windy Cave]" command="0x9D"/>
+      <track id="BGM_39" title="ツイン・アイランズ       [Melody I]" command="0xA7" loops="false"/>
+      <track id="BGM_40" title="ツイン・アイランズ       [Melody II]" command="0xA8" loops="false"/>
+      <track id="BGM_38" title="ツイン・アイランズ       [Fairy's Harp]" command="0xA6"/>
+      <track id="BGM_43" title="ツイン・アイランズ       [High Minotaur (Boss)]" command="0xAB"/>
+      <track id="BGM_24" title="マリオネットの館         [Human World]" command="0x98"/>
+      <track id="BGM_25" title="マリオネットの館         [Marionette's World]" command="0x99"/>
+      <track id="BGM_44" title="マリオネットの館         [King of Marionette]" command="0xAC"/>
+      <track id="BGM_26" title="マリオネットの館         [Behind The Marionette (Boss)]" command="0x9A"/>
+      <track id="BGM_27" title="狙われた村               [Eerir Village]" command="0x9B"/>
+      <track id="BGM_28" title="狙われた村               [Underground Dungeon]" command="0x9C"/>
+      <track id="BGM_30" title="狙われた村               [Fire Dragon (Boss)]" command="0x9E"/>
+      <track id="BGM_31" title="邪神の砦                 [Again]" command="0x9F"/>
+      <track id="BGM_32" title="邪神の砦                 [The Castle of Zander]" command="0xA0"/>
+      <track id="BGM_33" title="邪神の砦                 [The Castle of Zander -B-]" command="0xA1"/>
+      <track id="BGM_34" title="邪神の砦                 [Zander Dragon (Boss)]" command="0xA2"/>
+      <track id="BGM_10" title="ファンファーレ" command="0x8A" loops="false"/>
+      <track id="BGM_06" title="シナリオクリア「Beautiful Day」" command="0x86"/>
+      <track id="BGM_07" title="ゲームオーバー「Sigh and Tear」" command="0x87"/>
+      <track id="BGM_05" title="トラベラーズ イン" command="0x85"/>
+      <track id="BGM_08" title="エンディング I" command="0x88" loops="false"/>
+      <track id="BGM_09" title="エンディング II" command="0x89"/>
+      <track id="SFX_01" title="[SFX] 01" command="0xB0" type="sfx" loops="false"/>
+      <track id="SFX_02" title="[SFX] 02" command="0xB1" type="sfx" loops="false"/>
+      <track id="SFX_03" title="[SFX] 03" command="0xB2" type="sfx" loops="false"/>
+      <track id="SFX_04" title="[SFX] 04" command="0xB3" type="sfx" loops="false"/>
+      <track id="SFX_05" title="[SFX] 05" command="0xB4" type="sfx" loops="false"/>
+      <track id="SFX_06" title="[SFX] 06" command="0xB5" type="sfx" loops="false"/>
+      <track id="SFX_07" title="[SFX] 07" command="0xB6" type="sfx" loops="false"/>
+      <track id="SFX_08" title="[SFX] 08" command="0xB7" type="sfx" loops="false"/>
+      <track id="SFX_09" title="[SFX] 09" command="0xB8" type="sfx" loops="false"/>
+      <track id="SFX_10" title="[SFX] 10" command="0xB9" type="sfx" loops="false"/>
+      <track id="SFX_11" title="[SFX] 11" command="0xBA" type="sfx" loops="false"/>
+      <track id="SFX_12" title="[SFX] 12" command="0xBB" type="sfx" loops="false"/>
+      <track id="SFX_13" title="[SFX] 13" command="0xBC" type="sfx" loops="false"/>
+      <track id="SFX_14" title="[SFX] 14" command="0xBD" type="sfx" loops="false"/>
+      <track id="SFX_15" title="[SFX] 15" command="0xBE" type="sfx" loops="false"/>
+      <track id="SFX_16" title="[SFX] 16" command="0xBF" type="sfx" loops="false"/>
+      <track id="SFX_17" title="[SFX] 17" command="0xC0" type="sfx" loops="false"/>
+      <track id="SFX_18" title="[SFX] 18" command="0xC1" type="sfx" loops="false"/>
+      <track id="SFX_19" title="[SFX] 19" command="0xC2" type="sfx" loops="false"/>
+      <track id="SFX_20" title="[SFX] 20" command="0xC3" type="sfx" loops="false"/>
+      <track id="SFX_21" title="[SFX] 21" command="0xC4" type="sfx" loops="false"/>
+      <track id="SFX_22" title="[SFX] 22" command="0xC5" type="sfx" loops="false"/>
+      <track id="SFX_23" title="[SFX] 23" command="0xC7" type="sfx" loops="false"/>
+      <track id="SFX_24" title="[SFX] 24" command="0xC8" type="sfx" loops="false"/>
+      <track id="SFX_25" title="[SFX] 25" command="0xC9" type="sfx" loops="false"/>
+      <track id="SFX_26" title="[SFX] 26" command="0xCA" type="sfx" loops="false"/>
+      <track id="SFX_27" title="[SFX] 27" command="0xCB" type="sfx" loops="false"/>
+      <track id="SFX_28" title="[SFX] 28" command="0xCD" type="sfx" loops="false"/>
+      <track id="SFX_29" title="[SFX] 29" command="0xD2" type="sfx" loops="false"/>
+      <track id="SFX_30" title="[SFX] 30" command="0xD3" type="sfx" loops="false"/>
+      <track id="SFX_31" title="[SFX] 31" command="0xD6" type="sfx" loops="false"/>
+      <track id="SFX_32" title="[SFX] 32" command="0xD8" type="sfx" loops="false"/>
+      <track id="SFX_33" title="[SFX] 33" command="0xD9" type="sfx" loops="false"/>
+      <track id="SFX_34" title="[SFX] 34" command="0xDA" type="sfx" loops="false"/>
+      <track id="SFX_35" title="[SFX] 35" command="0xDB" type="sfx" loops="false"/>
+      <track id="SFX_36" title="[SFX] 36" command="0xDE" type="sfx" loops="false"/>
+      <track id="SFX_37" title="[SFX] 37" command="0xE1" type="sfx" loops="false"/>
+      <track id="SFX_38" title="[SFX] 38" command="0xE2" type="sfx" loops="false"/>
+      <track id="SFX_39" title="[SFX] 39" command="0xE3" type="sfx" loops="false"/>
+      <track id="SFX_40" title="[SFX] 40" command="0xE4" type="sfx" loops="false"/>
+      <track id="SFX_41" title="[SFX] 41" command="0xE6" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

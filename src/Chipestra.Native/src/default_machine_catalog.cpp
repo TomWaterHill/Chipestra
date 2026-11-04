@@ -12,6 +12,7 @@
 #include "devices/konami/gyruss/gyruss_rom_layout.h"
 #include "devices/namco/dragonspirit/dragon_spirit_machine.h"
 #include "devices/nintendo/fds/fds_machine.h"
+#include "devices/sega/megadrive/megadrive_machine.h"
 #include "devices/nintendo/nes/nes_cartridge.h"
 #include "devices/nintendo/nes/nes_machine.h"
 #include "devices/namco/dragonspirit/dragon_spirit_rom_layout.h"
@@ -269,6 +270,21 @@ MachineRegistry BuildDefaultRegistry() {
         return std::make_unique<FdsMachine>(std::move(inputs.disk), std::move(inputs.driver));
     };
     registry.Register(std::move(fds_def));
+
+    MachineDefinition md_def;
+    // A Mega Drive as far as its sound goes: the Z80 program of the cartridge, the YM2612 and the PSG (see
+    // MegaDriveMachine). One variant.
+    md_def.Id = MachineId("SEGA_MEGADRIVE");
+    md_def.DisplayName = "Mega Drive";  // shown with the region of the game: "Mega Drive (Japan)" by default
+    md_def.Category = MachineCategory::Console;
+    md_def.Manufacturer = "Sega";
+    md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_BASE"), "Base"});
+    // Without resources: a registered-but-not-playable Machine (no cartridge).
+    md_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        MegaDriveMachineInputs inputs = AssembleMegaDriveMachineInputs(resources);
+        return std::make_unique<MegaDriveMachine>(std::move(inputs.cartridge), std::move(inputs.driver));
+    };
+    registry.Register(std::move(md_def));
 
     return registry;
 }

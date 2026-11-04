@@ -867,6 +867,12 @@ extern "C" ChipestraResult chipestra_game_definition_get_resource(ChipestraGameD
     out_info->size_bytes = rom.SizeBytes.value_or(0);
     out_info->has_crc32 = rom.Crc32.has_value() ? 1 : 0;
     out_info->crc32 = rom.Crc32.value_or(0);
+    CopyTruncated(FormatNumberList(std::vector<std::uint64_t>(rom.AlternateCrc32.begin(), rom.AlternateCrc32.end()), 16),
+                  out_info->crc32_alternatives, sizeof(out_info->crc32_alternatives));
+    out_info->crc_search = rom.CrcSearch ? 1 : 0;
+    CopyTruncated(FormatNumberList(std::vector<std::uint64_t>(rom.SearchCrc32.begin(), rom.SearchCrc32.end()), 16),
+                  out_info->search_crc32, sizeof(out_info->search_crc32));
+    CopyTruncated(FormatNumberList(rom.SearchSizes, 10), out_info->search_size, sizeof(out_info->search_size));
     CopyTruncated(rom.Sha1.value_or(std::string()), out_info->sha1, sizeof(out_info->sha1));
     // The resource's own <rom archive="...">, "" if it takes the game's archive.
     CopyTruncated(rom.Archive, out_info->archive, sizeof(out_info->archive));
@@ -918,7 +924,7 @@ extern "C" ChipestraResult chipestra_resolve_resources(const char* rom_root, con
             const ChipestraRequiredResourceInfo& info = resources[i];
             RequiredResource req;
             req.LogicalName = info.logical_name;
-            req.AcceptedNames = {info.accepted_name};
+            req.AcceptedNames = SplitAcceptedNames(info.accepted_name);
             if (info.has_size_bytes) {
                 req.SizeBytes = info.size_bytes;
             }
@@ -927,6 +933,18 @@ extern "C" ChipestraResult chipestra_resolve_resources(const char* rom_root, con
             }
             if (info.sha1[0] != '\0') {
                 req.Sha1 = info.sha1;
+            }
+            {
+                // Lists written by chipestra_game_definition_get_resource; text that does not parse is ignored.
+                std::vector<std::uint64_t> values;
+                if (ParseNumberList(info.crc32_alternatives, 16, values)) {
+                    for (std::uint64_t v : values) req.AlternateCrc32.push_back(static_cast<std::uint32_t>(v));
+                }
+                if (ParseNumberList(info.search_crc32, 16, values)) {
+                    for (std::uint64_t v : values) req.SearchCrc32.push_back(static_cast<std::uint32_t>(v));
+                }
+                if (!ParseNumberList(info.search_size, 10, req.SearchSizes)) req.SearchSizes.clear();
+                req.CrcSearch = info.crc_search != 0;
             }
             req.Required = info.required != 0;
             if (info.archive[0] != '\0') {
@@ -994,5 +1012,23 @@ extern "C" ChipestraResult chipestra_resource_resolution_get_resolved(ChipestraR
     CopyTruncated(resource.LogicalName(), out_resolved->logical_name, sizeof(out_resolved->logical_name));
     out_resolved->data = resource.Data();  // non-owning: valid only until `handle` is freed (ChipestraResolvedResource's own doc comment)
     out_resolved->size = static_cast<uint64_t>(resource.Size());
+    return CHIPESTRA_OK;
+}
+
+extern "C" ChipestraResult chipestra_resource_resolution_get_source(ChipestraResourceResolutionHandle handle, uint32_t index,
+                                                         ChipestraResolvedSource* out_source) noexcept {
+    if (handle == nullptr || out_source == nullptr) {
+        return CHIPESTRA_E_INVALID_ARGUMENT;
+    }
+
+    const MachineResources& resources = handle->Result.Resources;
+    if (index >= resources.Count()) {
+        return CHIPESTRA_E_NOT_FOUND;
+    }
+
+    const ResolvedResource& resource = resources.At(index);
+    CopyTruncated(resource.LogicalName(), out_source->logical_name, sizeof(out_source->logical_name));
+    out_source->found_by_crc = resource.FoundByCrcSearch() ? 1 : 0;
+    CopyTruncated(resource.SourcePath(), out_source->path, sizeof(out_source->path));
     return CHIPESTRA_OK;
 }

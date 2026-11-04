@@ -34,6 +34,7 @@
 #include "k005289_adapter_tests.h"
 #include "vlm5030_adapter_tests.h"
 #include "resource_resolver_tests.h"
+#include "rom_crc_search_tests.h"
 #include "sample_rate_converter_tests.h"
 #include "segapcm_adapter_tests.h"
 #include "outrun_machine_tests.h"
@@ -64,6 +65,8 @@
 #include "nes_fme7_tests.h"
 #include "nes_request_register_tests.h"
 #include "sunsoft_5b_adapter_tests.h"
+#include "md_sound_adapter_tests.h"
+#include "megadrive_machine_tests.h"
 #include "vrc7_adapter_tests.h"
 #include "fds_machine_tests.h"
 #include "nes_machine_tests.h"
@@ -87,6 +90,8 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <string_view>
 #include <cstdio>
 #include <stdexcept>
 #include <thread>
@@ -1368,6 +1373,26 @@ void ChannelMeterAndMasterAffectMixedOutput() {
     chipestra_destroy_instance(handle);
 }
 
+void RunMegaDriveTests() {
+    MegaDriveCartridgeDecodingAndDriverConfig();
+    MegaDriveCartridgeFileLayouts();
+    MegaDriveCompressedDriverSongsAndConstants();
+    MegaDriveInterruptIsOneScanlineLongAndLostWhenDisabled();
+    MegaDriveRegionSetsTheClocksAndTheFrame();
+    MegaDriveRegionListSelectsOneRegion();
+    MegaDriveYm2612StatusShowsBusyAfterADataWrite();
+    MegaDriveBankRegisterAndChipPorts();
+    MegaDriveSwitchingStartsAfresh();
+    MegaDriveViaDefinitionXmlMatchesTheOriginalsChipWrites();
+    MegaDriveSorcerianMatchesTheOriginalsChipWrites();
+    MegaDriveTimeTraxMatchesTheOriginalsChipWrites();
+    MegaDriveVoicesPlayTheSameSamplesAsTheOriginal();
+    MegaDriveSwitchTimeReport();
+    MegaDriveRestoredStateSoundsLikeTheWarmUp();
+    MegaDriveVoiceEndsInSilence();
+    MegaDriveSongSoundsFromTheRequestOn();
+}
+
 }  // namespace
 
 int main() {
@@ -1375,6 +1400,12 @@ int main() {
     // than just failing), the last line printed is the test it died in
     // instead of being lost in a stale buffer.
     std::setvbuf(stdout, nullptr, _IONBF, 0);
+    // CHIPESTRA_TEST_GROUP=megadrive runs only the Mega Drive tests (a shorter run while working on them).
+    if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "megadrive") {
+        RunMegaDriveTests();
+        std::printf(g_failures == 0 ? "native lifecycle tests (Mega Drive only): all checks passed\n" : "native lifecycle tests (Mega Drive only): %d check(s) FAILED\n", g_failures);
+        return g_failures == 0 ? 0 : 1;
+    }
     TestMachineDeterminism();
     AbiCycleDeterminism();
     InvalidTransitionsAndUnknownMachine();
@@ -1427,6 +1458,15 @@ int main() {
     ResourceResolverNoArchiveRemainsAmbiguousAcrossArchives();
     ResourceResolverArchiveScopeDeterministicAcrossRepeatedResolves();
     ResourceResolverArchiveScopeSameNameAtDifferentPathsIsAmbiguousWithPathDetail();
+    RomCrcSearchFindsRenamedZipEntry();
+    RomCrcSearchIsOnlyUsedWhenNoNameMatches();
+    RomCrcSearchAcceptsAlternativeCrcValues();
+    RomCrcSearchFallsBackToEntrySize();
+    RomCrcSearchRefusesSeveralMatches();
+    RomCrcSearchReportsMismatches();
+    RomCrcSearchDefinitionAttributesReachTheResolver();
+    RomCrcSearchRepositoryDefinitionsAreOptedIn();
+    RomCrcSearchFindsRenamedRealRoms();
 
     ParseGameDefinitionValidXml();
     ParseGameDefinitionMissingGameAttribute();
@@ -1608,6 +1648,14 @@ int main() {
     Sunsoft5bChannelsAddUpAndMuteTakesAChannelOut();
     Sunsoft5bSampleCountChunksAndDeterminism();
     Sunsoft5bReplayMatchesTheRecordedStreams();
+    Ym2612RegistersTimersAndDac();
+    Ym2612ChannelsAddUpToTheChipOutput();
+    Ym2612ChunkingAndDeterminism();
+    Ym2612ReplayMatchesTheRecordedStreams();
+    Sn76489TonesVolumesAndNoise();
+    Sn76489ChunkingAndDeterminism();
+    Sn76489ReplayMatchesTheRecordedStreams();
+    RunMegaDriveTests();
     Vrc7InstrumentTableIsRequired();
     Vrc7RenderCountsSamplesAndCarriesTheRemainder();
     Vrc7UserInstrumentSoundsOnlyOnItsChannel();

@@ -10,8 +10,8 @@
        tools/verify.ps1 checks this file's shape (three integers, Minor 0-999, Patch 0-99). -->
   <PropertyGroup>
     <ChipestraMajor>1</ChipestraMajor>
-    <ChipestraMinor>2</ChipestraMinor>
-    <ChipestraPatch>1</ChipestraPatch>
+    <ChipestraMinor>3</ChipestraMinor>
+    <ChipestraPatch>0</ChipestraPatch>
   </PropertyGroup>
 
 </Project>

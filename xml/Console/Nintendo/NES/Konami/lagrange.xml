@@ -2,9 +2,9 @@
   <game id="lagrange_point_japan" title="Lagrange Point" manufacturer="Konami"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Lagrange Point (Japan)">
     <resources>
-      <rom name="cart" file="Lagrange Point (Japan).nes" size="524304" crc32="ead4dedc"/>
+      <rom name="cart" file="Lagrange Point (Japan).nes" size="524304" crc32="ead4dedc" crc_search="true"/>
       <!-- The VRC7's built-in instrument table, in the archive ds1001.zip (not part of the game's archive). -->
-      <rom name="instruments" file="ds1001_instruments.bin" archive="ds1001" size="144" crc32="9d699efc"/>
+      <rom name="instruments" file="ds1001_instruments.bin" archive="ds1001" size="144" crc32="9d699efc" crc_search="true"/>
     </resources>
     <!-- Konami VRC7 cartridge (mapper 85; the registers are told apart by address line A4). The game's sound driver
          is called as the game's own NMI does: the update routine ($8304) once a frame and, to start a sound, the

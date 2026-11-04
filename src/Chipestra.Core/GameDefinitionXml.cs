@@ -48,6 +48,62 @@ namespace Chipestra.Core
             return Parse(File.ReadAllText(filePath));
         }
 
+        /// <summary>
+        /// Like <see cref="Load"/>, but a game whose <c>&lt;driver region="usa|europe"&gt;</c> lists several consoles
+        /// becomes one game for each (see <see cref="ParseAll"/>).
+        /// </summary>
+        public static IReadOnlyList<GameDefinition> LoadAll(string filePath)
+        {
+            return ParseAll(File.ReadAllText(filePath));
+        }
+
+        /// <summary>
+        /// A game that can be played on more than one console lists them in the <c>region</c> of its driver separated by
+        /// '|' (<c>usa|europe</c>), and may give <c>warmup_frames</c> and <c>release_cycle</c> for each in the same order
+        /// (<c>784|782</c>; one value serves all). This returns one game for each region: the same tracks and
+        /// resources, the id <c>{id}@{region}</c>, the title <c>{title} (60Hz)</c> or <c>(50Hz)</c> (NTSC or PAL), and a
+        /// driver with the values of its region alone. A game with one region (or none) is returned as it is.
+        /// </summary>
+        public static IReadOnlyList<GameDefinition> ParseAll(string xml)
+        {
+            GameDefinition game = Parse(xml);
+            if (game.DriverXml == null) return new[] { game };
+            XElement driver = XElement.Parse(game.DriverXml);
+            string[] regions = (driver.Attribute("region")?.Value ?? string.Empty).Split('|');
+            if (regions.Length < 2) return new[] { game };
+
+            var games = new List<GameDefinition>();
+            for (int i = 0; i < regions.Length; i++)
+            {
+                var copy = new XElement(driver);
+                foreach (string name in new[] { "region", "warmup_frames", "release_cycle" })
+                {
+                    XAttribute? attribute = copy.Attribute(name);
+                    if (attribute == null) continue;
+                    string[] values = attribute.Value.Split('|');
+                    if (values.Length != 1 && values.Length != regions.Length)
+                        throw new FormatException($"<driver {name}>: expected one value or one for each of the {regions.Length} regions");
+                    attribute.Value = values.Length == 1 ? values[0] : values[i];
+                }
+                string region = regions[i];
+                string hertz = region == "europe" ? "50Hz" : "60Hz";
+                games.Add(new GameDefinition
+                {
+                    GameId = $"{game.GameId}@{region}",
+                    Title = $"{game.Title} ({hertz})",
+                    MachineId = game.MachineId,
+                    VariantId = game.VariantId,
+                    Manufacturer = game.Manufacturer,
+                    Archive = game.Archive,
+                    DriverXml = copy.ToString(SaveOptions.DisableFormatting),
+                    Region = region,
+                    RequiredResources = game.RequiredResources,
+                    Tracks = game.Tracks,
+                });
+            }
+            return games;
+        }
+
         public static GameDefinition Parse(string xml)
         {
             uint xmlLength = (uint)Encoding.UTF8.GetByteCount(xml);
@@ -104,6 +160,10 @@ namespace Chipestra.Core
                     Crc32 = resourceInfo.HasCrc32 != 0 ? resourceInfo.Crc32.ToString("x8", CultureInfo.InvariantCulture) : null,
                     Sha1 = string.IsNullOrEmpty(resourceInfo.Sha1) ? null : resourceInfo.Sha1,
                     Archive = string.IsNullOrEmpty(resourceInfo.Archive) ? null : resourceInfo.Archive,
+                    Crc32Alternatives = string.IsNullOrEmpty(resourceInfo.Crc32Alternatives) ? null : resourceInfo.Crc32Alternatives,
+                    CrcSearch = resourceInfo.CrcSearch != 0,
+                    SearchCrc32 = string.IsNullOrEmpty(resourceInfo.SearchCrc32) ? null : resourceInfo.SearchCrc32,
+                    SearchSize = string.IsNullOrEmpty(resourceInfo.SearchSize) ? null : resourceInfo.SearchSize,
                 });
             }
 
@@ -137,6 +197,7 @@ namespace Chipestra.Core
                 Manufacturer = string.IsNullOrEmpty(info.Manufacturer) ? null : info.Manufacturer,
                 Archive = string.IsNullOrEmpty(info.Archive) ? null : info.Archive,
                 DriverXml = driverXml,
+                Region = ExtractRegion(driverXml),
                 RequiredResources = resources,
                 Tracks = tracks,
             };
@@ -150,6 +211,13 @@ namespace Chipestra.Core
             using var reader = XmlReader.Create(new StringReader(xml), settings);
             XElement? driver = XDocument.Load(reader).Root?.Element("game")?.Element("driver");
             return driver?.ToString(SaveOptions.DisableFormatting);
+        }
+
+        private static string? ExtractRegion(string? driverXml)
+        {
+            if (driverXml == null) return null;
+            string? region = XElement.Parse(driverXml).Attribute("region")?.Value;
+            return string.IsNullOrEmpty(region) ? null : region;
         }
 
         private static byte ParseCommandByte(string text)

@@ -1,0 +1,60 @@
+<chipestra>
+  <game id="timetrax_proto" title="Time Trax (prototype)" manufacturer="Malibu Interactive"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="TimeTrax">
+    <resources>
+      <rom name="rom" file="TimeTrax.bin|TimeTrax.md|TimeTrax.smd" crc_search="true" search_crc32="dff045eb" search_size="1048576|1049088"/>
+    </resources>
+    <!-- The sound driver is a Z80 program kept as it is in the cartridge (6798 bytes). The game's 68000 copies it to the
+         Z80's RAM, releases the Z80 from reset, puts three set-up entries into the driver's request ring (Z80 RAM 0xE0, two
+         bytes each: a value and a command code; the 68000 moves the write position in 0x09, the driver the read
+         position in 0x08), and much later (warmup_frames) a request of command code 0 with the number of a song
+         or sound as its value. Requests 0x00-0x05 are songs, 0x06-0x26 sounds (0x06, 0x07 and 0x19-0x1F are
+         sampled sounds played through the YM2612's DAC, the others use FM and the PSG). Numbers above 0x26 read past the end of the
+         driver's table and stop the driver, so they are not listed. The driver has no request that silences
+         everything: Music Stop starts the Machine again. This is a prototype of the game: several of the
+         sounds are a single short blip (0x08, 0x0A, 0x0B, 0x0E, 0x10, 0x11, 0x13-0x17, 0x20, 0x24-0x26). -->
+    <driver music="0xC618E:6798" queue="0xE0:0x08:0x09:0x1E" queue_code="0" queue_init="F0:05 F0:01 FF:05" stop_request="0xFF" release_cycle="243044" warmup_frames="784|782" region="usa|europe" cart_crc32="dff045eb"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0xFF" type="control"/>
+      <track id="BGM_01" title="BGM 01" command="0x00"/>
+      <track id="BGM_02" title="BGM 02" command="0x01"/>
+      <track id="BGM_03" title="BGM 03" command="0x02"/>
+      <track id="BGM_04" title="BGM 04" command="0x03"/>
+      <track id="BGM_05" title="BGM 05" command="0x04"/>
+      <track id="BGM_06" title="BGM 06" command="0x05"/>
+      <track id="PCM_01" title="[PCM] 01" command="0x06" type="sfx" loops="false"/>
+      <track id="PCM_02" title="[PCM] 02" command="0x07" type="sfx" loops="false"/>
+      <track id="SFX_01" title="[SFX] 01" command="0x08" type="sfx" loops="false"/>
+      <track id="SFX_02" title="[SFX] 02" command="0x09" type="sfx" loops="false"/>
+      <track id="SFX_03" title="[SFX] 03" command="0x0A" type="sfx" loops="false"/>
+      <track id="SFX_04" title="[SFX] 04" command="0x0B" type="sfx" loops="false"/>
+      <track id="SFX_05" title="[SFX] 05" command="0x0C" type="sfx" loops="false"/>
+      <track id="SFX_06" title="[SFX] 06" command="0x0D" type="sfx" loops="false"/>
+      <track id="SFX_07" title="[SFX] 07" command="0x0E" type="sfx" loops="false"/>
+      <track id="SFX_08" title="[SFX] 08" command="0x0F" type="sfx" loops="false"/>
+      <track id="SFX_09" title="[SFX] 09" command="0x10" type="sfx" loops="false"/>
+      <track id="SFX_10" title="[SFX] 10" command="0x11" type="sfx" loops="false"/>
+      <track id="SFX_11" title="[SFX] 11" command="0x12" type="sfx" loops="false"/>
+      <track id="SFX_12" title="[SFX] 12" command="0x13" type="sfx" loops="false"/>
+      <track id="SFX_13" title="[SFX] 13" command="0x14" type="sfx" loops="false"/>
+      <track id="SFX_14" title="[SFX] 14" command="0x15" type="sfx" loops="false"/>
+      <track id="SFX_15" title="[SFX] 15" command="0x16" type="sfx" loops="false"/>
+      <track id="SFX_16" title="[SFX] 16" command="0x17" type="sfx" loops="false"/>
+      <track id="SFX_17" title="[SFX] 17" command="0x18" type="sfx" loops="false"/>
+      <track id="PCM_03" title="[PCM] 03" command="0x19" type="sfx" loops="false"/>
+      <track id="PCM_04" title="[PCM] 04" command="0x1A" type="sfx" loops="false"/>
+      <track id="PCM_05" title="[PCM] 05" command="0x1B" type="sfx" loops="false"/>
+      <track id="PCM_06" title="[PCM] 06" command="0x1C" type="sfx" loops="false"/>
+      <track id="PCM_07" title="[PCM] 07" command="0x1D" type="sfx" loops="false"/>
+      <track id="PCM_08" title="[PCM] 08" command="0x1E" type="sfx" loops="false"/>
+      <track id="PCM_09" title="[PCM] 09" command="0x1F" type="sfx" loops="false"/>
+      <track id="SFX_18" title="[SFX] 18" command="0x20" type="sfx" loops="false"/>
+      <track id="SFX_19" title="[SFX] 19" command="0x21" type="sfx" loops="false"/>
+      <track id="SFX_20" title="[SFX] 20" command="0x22" type="sfx" loops="false"/>
+      <track id="SFX_21" title="[SFX] 21" command="0x23" type="sfx" loops="false"/>
+      <track id="SFX_22" title="[SFX] 22" command="0x24" type="sfx" loops="false"/>
+      <track id="SFX_23" title="[SFX] 23" command="0x25" type="sfx" loops="false"/>
+      <track id="SFX_24" title="[SFX] 24" command="0x26" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

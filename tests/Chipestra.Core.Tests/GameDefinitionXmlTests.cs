@@ -72,6 +72,27 @@ namespace Chipestra.Core.Tests
         }
 
         [Fact]
+        public void Parse_RomCrcSearchAttributes_ReachTheRequiredResources()
+        {
+            const string xml =
+                "<chipestra><game id=\"G\" title=\"G\" machine=\"M\" variant=\"V\">" +
+                "<resources><rom name=\"a\" file=\"a.bin\" crc32=\"94e80fce|2477d0bc\" crc_search=\"true\"/>" +
+                "<rom name=\"b\" file=\"b.bin\" crc_search=\"true\" search_crc32=\"edc0fb28\" search_size=\"524800\"/>" +
+                "<rom name=\"c\" file=\"c.bin\"/></resources>" +
+                "<tracks><track id=\"T\" command=\"1\" title=\"T\"/></tracks></game></chipestra>";
+            GameDefinition def = GameDefinitionXml.Parse(xml);
+
+            Assert.Equal("94e80fce", def.RequiredResources[0].Crc32);
+            Assert.Equal("2477d0bc", def.RequiredResources[0].Crc32Alternatives);
+            Assert.True(def.RequiredResources[0].CrcSearch);
+            Assert.Null(def.RequiredResources[1].Crc32);
+            Assert.Equal("edc0fb28", def.RequiredResources[1].SearchCrc32);
+            Assert.Equal("524800", def.RequiredResources[1].SearchSize);
+            Assert.False(def.RequiredResources[2].CrcSearch);
+            Assert.Null(def.RequiredResources[2].SearchSize);
+        }
+
+        [Fact]
         public void Parse_ValidXml_ReadsTracksAndAcceptsHexOrDecimalCommand()
         {
             GameDefinition def = GameDefinitionXml.Parse(ValidXml);

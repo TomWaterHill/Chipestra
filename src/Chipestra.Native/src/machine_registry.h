@@ -86,6 +86,18 @@ struct RequiredResource {
     // only considers candidates from the ZIP of this name (stem, case-insensitive)
     // or the ROM Root subfolder of this name; nullopt means unscoped.
     std::optional<std::string> Archive;
+
+    // Further acceptable file CRC-32 values besides Crc32 (a candidate matches if its CRC-32 is any of them).
+    std::vector<std::uint32_t> AlternateCrc32;
+
+    // CRC search. When no candidate has an accepted name, ZIP entries anywhere under the ROM Root (the
+    // Archive scope is not applied, since a user's ZIP can have any name) are matched by the CRC-32 their
+    // central directory declares: Crc32, AlternateCrc32 and SearchCrc32. If none matches and SearchSizes is
+    // not empty, entries of those sizes are the candidates (the Machine checks their content). One match is
+    // used, after its content is hashed again; more than one is CHIPESTRA_E_AMBIGUOUS. Loose files are not searched.
+    bool CrcSearch = false;
+    std::vector<std::uint32_t> SearchCrc32;
+    std::vector<std::uint64_t> SearchSizes;
 };
 
 // MachineDefinition - static description of one Machine: identity, selectable

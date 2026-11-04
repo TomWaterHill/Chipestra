@@ -38,6 +38,15 @@ namespace Chipestra.Core
         /// Resolved.
         /// </summary>
         public string? Detail { get; init; }
+
+        /// <summary>The file the resource was read from (a loose file's path, or "zip path!entry name"); null if not resolved.</summary>
+        public string? SourcePath { get; init; }
+
+        /// <summary>
+        /// True if no file had an accepted name and the entry was found by its CRC-32 (or size).
+        /// <see cref="Detail"/> then says which file was used.
+        /// </summary>
+        public bool FoundByCrcSearch { get; init; }
     }
 
     /// <summary>

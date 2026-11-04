@@ -122,8 +122,44 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
             rom.SizeBytes = static_cast<std::uint64_t>(sizeAttr.as_ullong());
         }
         if (pugi::xml_attribute crcAttr = romNode.attribute("crc32")) {
-            // CRC32 values are written in hex, as in common ROM lists.
-            rom.Crc32 = static_cast<std::uint32_t>(std::strtoul(crcAttr.value(), nullptr, 16));
+            // CRC32 values are written in hex, as in common ROM lists. "a|b" lists alternatives (any one matches).
+            std::vector<std::uint64_t> values;
+            if (!ParseNumberList(crcAttr.value(), 16, values)) {
+                result.Status = XmlParseStatus::InvalidAttributeValue;
+                result.Detail = "<rom name=\"" + rom.Name + "\">: crc32 \"" + std::string(crcAttr.value()) +
+                                "\" is not a hexadecimal CRC-32 (or a list of them separated by \"|\")";
+                return result;
+            }
+            rom.Crc32 = static_cast<std::uint32_t>(values.front());
+            for (std::size_t i = 1; i < values.size(); ++i) rom.AlternateCrc32.push_back(static_cast<std::uint32_t>(values[i]));
+        }
+        if (pugi::xml_attribute searchAttr = romNode.attribute("crc_search")) {
+            const std::string_view value(searchAttr.value());
+            if (value != "true" && value != "false") {
+                result.Status = XmlParseStatus::InvalidAttributeValue;
+                result.Detail = "<rom name=\"" + rom.Name + "\">: crc_search \"" + std::string(value) +
+                                "\" (expected \"true\" or \"false\")";
+                return result;
+            }
+            rom.CrcSearch = value == "true";
+        }
+        if (pugi::xml_attribute attr = romNode.attribute("search_crc32")) {
+            std::vector<std::uint64_t> values;
+            if (!ParseNumberList(attr.value(), 16, values)) {
+                result.Status = XmlParseStatus::InvalidAttributeValue;
+                result.Detail = "<rom name=\"" + rom.Name + "\">: search_crc32 \"" + std::string(attr.value()) +
+                                "\" is not a hexadecimal CRC-32 (or a list of them separated by \"|\")";
+                return result;
+            }
+            for (std::uint64_t v : values) rom.SearchCrc32.push_back(static_cast<std::uint32_t>(v));
+        }
+        if (pugi::xml_attribute attr = romNode.attribute("search_size")) {
+            if (!ParseNumberList(attr.value(), 10, rom.SearchSizes)) {
+                result.Status = XmlParseStatus::InvalidAttributeValue;
+                result.Detail = "<rom name=\"" + rom.Name + "\">: search_size \"" + std::string(attr.value()) +
+                                "\" is not a size in bytes (or a list of them separated by \"|\")";
+                return result;
+            }
         }
         if (pugi::xml_attribute shaAttr = romNode.attribute("sha1")) {
             rom.Sha1 = shaAttr.value();

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 Tom Water Hill
+using System;
 using System.Collections.Generic;
 
 namespace Chipestra.Core
@@ -35,6 +36,27 @@ namespace Chipestra.Core
         /// the Machine as an extra resource named <c>driver_xml</c>; Native never interprets it.
         /// </summary>
         public string? DriverXml { get; init; }
+
+        /// <summary>
+        /// The <c>region</c> attribute of the <c>&lt;driver&gt;</c> element (<c>japan</c>, <c>usa</c> or <c>europe</c>),
+        /// or null if there is none. Only a Mega Drive game uses it.
+        /// </summary>
+        public string? Region { get; init; }
+
+        /// <summary>
+        /// The name of the console the game is shown under: the Machine's display name, except that a Mega Drive game
+        /// with a <see cref="Region"/> is shown as "Mega Drive (Japan)", "Genesis (North America)" or "Mega Drive (Europe)".
+        /// </summary>
+        public string SystemName(string machineDisplayName)
+        {
+            if (!machineDisplayName.StartsWith("Mega Drive", StringComparison.Ordinal)) return machineDisplayName;
+            return Region switch
+            {
+                "usa" => "Genesis (North America)",
+                "europe" => "Mega Drive (Europe)",
+                _ => "Mega Drive (Japan)",
+            };
+        }
 
         public required IReadOnlyList<RomResource> RequiredResources { get; init; }
 

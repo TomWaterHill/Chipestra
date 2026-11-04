@@ -100,6 +100,25 @@ namespace Chipestra.App.ViewModels
         /// <summary>User-facing error text - ROM resolution failures, Machine load failures, etc. Empty/null when nothing needs surfacing.</summary>
         public string? ErrorMessage { get => _errorMessage; private set => SetField(ref _errorMessage, value); }
 
+        private string? _noticeMessage;
+
+        /// <summary>Information about the loaded game that is not an error, e.g. a ROM that was found by its CRC-32 under another name.</summary>
+        public string? NoticeMessage { get => _noticeMessage; private set => SetField(ref _noticeMessage, value); }
+
+        /// <summary>The notice for ROMs the resolver found by CRC-32 (no file had the name the game definition lists); null if there are none.</summary>
+        internal static string? BuildRomSourceNotice(RomResolutionResult? resolution)
+        {
+            if (resolution == null)
+            {
+                return null;
+            }
+            string[] used = resolution.Entries
+                .Where(e => e.FoundByCrcSearch && e.SourcePath != null)
+                .Select(e => e.SourcePath!)
+                .ToArray();
+            return used.Length == 0 ? null : $"ROM found by its CRC-32 under another name: {string.Join("; ", used)}";
+        }
+
         // --- Transport ---
 
         public ICommand PlayCommand { get; }
@@ -201,6 +220,7 @@ namespace Chipestra.App.ViewModels
             _player?.Dispose();
             _player = new Player(Library.Catalog);
             _loadedGameId = null;
+            NoticeMessage = null;
             ChannelMixer.Rebind(null);  // clears any channels from the previous game while this one loads
 
             ChipestraResult loadResult = _player.LoadGame(game.GameId, _settings.RomRoot);
@@ -233,6 +253,7 @@ namespace Chipestra.App.ViewModels
 
             _loadedGameId = game.GameId;
             ErrorMessage = null;
+            NoticeMessage = BuildRomSourceNotice(_player.RomResolution);
             return true;
         }
 
@@ -284,7 +305,7 @@ namespace Chipestra.App.ViewModels
             GameText = status.Game?.Title ?? "-";
             MusicText = status.Track?.DisplayName ?? "-";
             SystemText = status.Game != null
-                ? _machines.Find(status.Game.MachineId)?.DisplayName ?? status.Game.MachineId
+                ? status.Game.SystemName(_machines.Find(status.Game.MachineId)?.DisplayName ?? status.Game.MachineId)
                 : "-";
             TimeText = PlayTimeFormatter.Format(status.Position);
             ChannelsText = status.ChannelCount?.ToString() ?? "-";

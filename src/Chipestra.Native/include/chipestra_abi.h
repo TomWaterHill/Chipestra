@@ -580,7 +580,7 @@ CHIPESTRA_API ChipestraResult chipestra_game_definition_get_info(ChipestraGameDe
 // element (to chipestra_resolve_resources).
 typedef struct ChipestraRequiredResourceInfo {
     char logical_name[64];    // <rom name="..."> - RequiredResource::LogicalName
-    char accepted_name[260];  // <rom file="..."> (one file per <rom>)
+    char accepted_name[260];  // <rom file="..."> (names separated by "|" are alternatives)
     uint64_t size_bytes;      // meaningful only if has_size_bytes is nonzero
     uint8_t has_size_bytes;
     uint32_t crc32;           // meaningful only if has_crc32 is nonzero
@@ -592,6 +592,11 @@ typedef struct ChipestraRequiredResourceInfo {
     // ChipestraGameInfo::archive); callers building a chipestra_resolve_resources request populate it
     // themselves (the resource's own archive, otherwise the game's).
     char archive[64];
+    // Appended. Lists are hexadecimal CRC-32 values (sizes: decimal) separated by "|"; "" if none.
+    char crc32_alternatives[64];  // further file CRC-32 values besides crc32 (any one matches)
+    uint8_t crc_search;           // nonzero: look for a ZIP entry by CRC-32 when no file has an accepted name
+    char search_crc32[64];        // CRC-32 values used only by that search
+    char search_size[64];         // entry sizes used only by that search, when no CRC-32 matched
 } ChipestraRequiredResourceInfo;
 
 // Writes `handle`'s `index`-th declared resource (0-based, matching
@@ -710,6 +715,21 @@ CHIPESTRA_API ChipestraResult chipestra_resource_resolution_get_failure(Chipestr
 // Returns CHIPESTRA_E_NOT_FOUND if index >= that resolution's resolved_count.
 CHIPESTRA_API ChipestraResult chipestra_resource_resolution_get_resolved(ChipestraResourceResolutionHandle handle, uint32_t index,
                                                         ChipestraResolvedResource* out_resolved) CHIPESTRA_NOEXCEPT;
+
+// Where one resolved resource came from.
+typedef struct ChipestraResolvedSource {
+    char logical_name[64];
+    uint8_t found_by_crc;  // nonzero: no file had an accepted name; the entry was found by its CRC-32 (or size)
+    char path[520];        // the file used: a loose file's path, or "<zip path>!<entry name>"; local, for messages only
+} ChipestraResolvedSource;
+
+// Writes where `handle`'s `index`-th successfully resolved resource (the same index as
+// chipestra_resource_resolution_get_resolved) was found to *out_source.
+//
+// Returns CHIPESTRA_E_INVALID_ARGUMENT if handle or out_source is null.
+// Returns CHIPESTRA_E_NOT_FOUND if index >= that resolution's resolved_count.
+CHIPESTRA_API ChipestraResult chipestra_resource_resolution_get_source(ChipestraResourceResolutionHandle handle, uint32_t index,
+                                                      ChipestraResolvedSource* out_source) CHIPESTRA_NOEXCEPT;
 
 #ifdef __cplusplus
 }

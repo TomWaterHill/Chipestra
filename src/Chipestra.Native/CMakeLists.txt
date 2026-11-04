@@ -112,6 +112,8 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/nintendo/nes/nes_machine.cpp
     src/devices/nintendo/fds/fds_disk.h
     src/devices/nintendo/fds/fds_disk.cpp
+    src/devices/sega/megadrive/megadrive_machine.h
+    src/devices/sega/megadrive/megadrive_machine.cpp
     src/devices/nintendo/fds/fds_machine.h
     src/devices/nintendo/fds/fds_machine.cpp
     src/devices/cpu/hd63701/ihd63701_core.h
@@ -141,6 +143,10 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/sega/outrun/outrun_machine.cpp
     src/devices/sega/outrun/outrun_rom_layout.h
     src/devices/sega/outrun/outrun_rom_layout.cpp
+    src/devices/sound/ym2612/ym2612_device_adapter.h
+    src/devices/sound/ym2612/ym2612_device_adapter.cpp
+    src/devices/sound/sn76489/sn76489_sound_device_adapter.h
+    src/devices/sound/sn76489/sn76489_sound_device_adapter.cpp
     src/devices/sound/ym2151/ym2151_device_adapter.h
     src/devices/sound/ym2151/ym2151_device_adapter.cpp
     src/devices/sound/ym2203/ym2203_device_adapter.h
@@ -379,6 +385,7 @@ add_executable(chipestra_native_tests
     ${CHIPESTRA_THIRDPARTY_SOURCES}
     tests/native_lifecycle_tests.cpp
     tests/resource_resolver_tests.cpp
+    tests/rom_crc_search_tests.cpp
     tests/game_definition_tests.cpp
     tests/z80_adapter_tests.cpp
     tests/m68000_adapter_tests.cpp
@@ -391,6 +398,8 @@ add_executable(chipestra_native_tests
     tests/vrc6_adapter_tests.cpp
     tests/namco_163_adapter_tests.cpp
     tests/sunsoft_5b_adapter_tests.cpp
+    tests/md_sound_adapter_tests.cpp
+    tests/megadrive_machine_tests.cpp
     tests/vrc7_adapter_tests.cpp
     tests/fds_machine_tests.cpp
     tests/nes_machine_tests.cpp

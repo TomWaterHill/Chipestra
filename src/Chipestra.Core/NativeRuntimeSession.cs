@@ -126,6 +126,15 @@ namespace Chipestra.Core
                     }
                 }
 
+                var sourcesByLogicalName = new Dictionary<string, ChipestraResolvedSource>(StringComparer.Ordinal);
+                for (uint i = 0; i < summary.ResolvedCount; i++)
+                {
+                    if (NativeMethods.chipestra_resource_resolution_get_source(resolutionHandle, i, out ChipestraResolvedSource source) == ChipestraResult.Ok)
+                    {
+                        sourcesByLogicalName[source.LogicalName] = source;
+                    }
+                }
+
                 var entries = new List<RomResolutionEntry>(requiredResources.Count);
                 foreach (RomResource resource in requiredResources)
                 {
@@ -140,7 +149,17 @@ namespace Chipestra.Core
                     }
                     else
                     {
-                        entries.Add(new RomResolutionEntry { Resource = resource, Status = RomResolutionStatus.Resolved });
+                        bool haveSource = sourcesByLogicalName.TryGetValue(resource.Name, out ChipestraResolvedSource used);
+                        entries.Add(new RomResolutionEntry
+                        {
+                            Resource = resource,
+                            Status = RomResolutionStatus.Resolved,
+                            SourcePath = haveSource ? used.Path : null,
+                            FoundByCrcSearch = haveSource && used.FoundByCrc != 0,
+                            Detail = haveSource && used.FoundByCrc != 0
+                                ? $"no file named {resource.FileName} was found; used {used.Path}, found by its CRC-32"
+                                : null,
+                        });
                     }
                 }
                 resolution = new RomResolutionResult { Entries = entries };
@@ -218,6 +237,10 @@ namespace Chipestra.Core
                 Required = 1,
                 // The resource's own archive wins; otherwise the game's (GameDefinition.Archive).
                 Archive = resource.Archive ?? archive ?? string.Empty,
+                Crc32Alternatives = resource.Crc32Alternatives ?? string.Empty,
+                CrcSearch = resource.CrcSearch ? (byte)1 : (byte)0,
+                SearchCrc32 = resource.SearchCrc32 ?? string.Empty,
+                SearchSize = resource.SearchSize ?? string.Empty,
             };
         }
 

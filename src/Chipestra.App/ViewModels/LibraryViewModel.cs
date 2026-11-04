@@ -114,7 +114,7 @@ namespace Chipestra.App.ViewModels
             // (informational only). Falls back to something reasonable if the machine isn't registered.
                 string category = !string.IsNullOrEmpty(machine?.Category) ? machine.Value.Category : "ARCADE";
                 string manufacturer = !string.IsNullOrEmpty(machine?.Manufacturer) ? machine.Value.Manufacturer : "Unknown";
-                string system = !string.IsNullOrEmpty(machine?.DisplayName) ? machine.Value.DisplayName : game.MachineId;
+                string system = game.SystemName(!string.IsNullOrEmpty(machine?.DisplayName) ? machine.Value.DisplayName : game.MachineId);
 
                 if (!categories.TryGetValue(category, out Dictionary<string, Dictionary<string, LibraryTreeNode>>? manufacturers))
                 {

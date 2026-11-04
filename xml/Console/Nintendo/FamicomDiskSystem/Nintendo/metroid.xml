@@ -2,7 +2,7 @@
   <game id="metroid_fds" title="Metroid" manufacturer="Nintendo"
         machine="NINTENDO_FDS" variant="FDS_BASE" archive="Metroid">
     <resources>
-      <rom name="disk" file="Metroid.fds"/>
+      <rom name="disk" file="Metroid.fds" crc_search="true" search_crc32="94e80fce|2477d0bc"/>
     </resources>
     <!-- The sound driver is MET.HEX; the area files replace its last 336 bytes (MM*) and add the area program (STG*);
          MMEEE is the ending's song data. The base files are always loaded, a track's set is loaded on top of them.

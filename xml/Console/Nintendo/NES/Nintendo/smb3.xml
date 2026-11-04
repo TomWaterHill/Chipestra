@@ -2,7 +2,7 @@
   <game id="smb3_japan" title="Super Mario Bros. 3" manufacturer="Nintendo"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Super Mario Bros. 3 (Japan)">
     <resources>
-      <rom name="cart" file="Super Mario Bros. 3 (Japan).nes" size="393232" crc32="c2cad43d"/>
+      <rom name="cart" file="Super Mario Bros. 3 (Japan).nes" size="393232" crc32="c2cad43d" crc_search="true"/>
     </resources>
     <!-- The game's sound engine is one routine ($A000 in PRG bank 28), called once per frame with R6 = 0x1D and
          R7 = 0x1C mapped; between the calls the game has its own banks mapped, which the DMC reads samples

@@ -12,10 +12,14 @@ std::vector<RequiredResource> GameDefinition::BuildRequiredResources() const {
     for (const auto& rom : Resources) {
         RequiredResource req;
         req.LogicalName = rom.Name;
-        req.AcceptedNames = {rom.File};
+        req.AcceptedNames = SplitAcceptedNames(rom.File);
         req.SizeBytes = rom.SizeBytes;
         req.Crc32 = rom.Crc32;
         req.Sha1 = rom.Sha1;
+        req.AlternateCrc32 = rom.AlternateCrc32;
+        req.CrcSearch = rom.CrcSearch;
+        req.SearchCrc32 = rom.SearchCrc32;
+        req.SearchSizes = rom.SearchSizes;
         req.Required = true;
         req.Archive = rom.Archive.empty() ? archive : std::make_optional(rom.Archive);
         resources.push_back(std::move(req));

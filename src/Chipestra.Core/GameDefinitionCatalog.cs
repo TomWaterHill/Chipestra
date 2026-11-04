@@ -65,15 +65,18 @@ namespace Chipestra.Core
             {
                 try
                 {
-                    GameDefinition definition = GameDefinitionXml.Load(file);
-                    if (sourceOfGame.TryGetValue(definition.GameId, out string? firstFile))
+                    IReadOnlyList<GameDefinition> definitions = GameDefinitionXml.LoadAll(file);
+                    foreach (GameDefinition definition in definitions)
                     {
-                        failures.Add(new GameDefinitionLoadFailure(
-                            name, $"game id \"{definition.GameId}\" is already defined by {firstFile} ({name} is ignored)"));
-                        continue;
+                        if (sourceOfGame.TryGetValue(definition.GameId, out string? firstFile))
+                        {
+                            failures.Add(new GameDefinitionLoadFailure(
+                                name, $"game id \"{definition.GameId}\" is already defined by {firstFile} ({name} is ignored)"));
+                            continue;
+                        }
+                        catalog[definition.GameId] = definition;
+                        sourceOfGame[definition.GameId] = name;
                     }
-                    catalog[definition.GameId] = definition;
-                    sourceOfGame[definition.GameId] = name;
                 }
                 catch (Exception ex)
                 {

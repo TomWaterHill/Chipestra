@@ -2,7 +2,7 @@
   <game id="silversurfer_us" title="Silver Surfer" manufacturer="Arcadia Systems"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Silver Surfer">
     <resources>
-      <rom name="cart" file="Silver Surfer (US) (1990) (Shoot Em Up) (NES).nes" size="393232" crc32="9a83817c"/>
+      <rom name="cart" file="Silver Surfer (US) (1990) (Shoot Em Up) (NES).nes" size="393232" crc32="9a83817c" crc_search="true"/>
     </resources>
     <!-- MMC3 cartridge. The sound driver is in PRG banks 2 and 3 (mapped at $8000 and $A000) and is called through a
          jump table at $8000: $8000 resets it, $8003 starts song X (0-8), $8006 is the update the game calls once a

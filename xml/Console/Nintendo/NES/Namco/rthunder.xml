@@ -2,7 +2,7 @@
   <game id="rolling_thunder_japan" title="Rolling Thunder" manufacturer="Namco"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Rolling Thunder (Japan)">
     <resources>
-      <rom name="cart" file="Rolling Thunder (Japan).nes" size="393232" crc32="4837b489"/>
+      <rom name="cart" file="Rolling Thunder (Japan).nes" size="393232" crc32="4837b489" crc_search="true"/>
     </resources>
     <!-- Namco 163 cartridge (mapper 19, with the chip's 4 extra sound channels in use). The game's sound driver is
          one routine ($8000), called once a frame with the banks 0x3C and 0x3D mapped at $8000 and $A000 (the third

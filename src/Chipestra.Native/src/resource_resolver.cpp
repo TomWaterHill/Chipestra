@@ -28,6 +28,19 @@ std::size_t ResolvedResource::Size() const {
     return data_.size();
 }
 
+const std::string& ResolvedResource::SourcePath() const {
+    return source_path_;
+}
+
+bool ResolvedResource::FoundByCrcSearch() const {
+    return found_by_crc_search_;
+}
+
+void ResolvedResource::SetSource(std::string sourcePath, bool foundByCrcSearch) {
+    source_path_ = std::move(sourcePath);
+    found_by_crc_search_ = foundByCrcSearch;
+}
+
 void MachineResources::Add(ResolvedResource resource) {
     resources_.push_back(std::move(resource));
 }
@@ -156,6 +169,84 @@ struct SingleResolution {
     std::string Detail;
 };
 
+template <typename T>
+bool ContainsValue(const std::vector<T>& values, T value) {
+    return std::find(values.begin(), values.end(), value) != values.end();
+}
+
+// The fallback for a resource no file of an accepted name provides (RequiredResource::CrcSearch): ZIP entries
+// anywhere under the ROM Root, found by the CRC-32 their central directory declares (or, failing that, by one of
+// the search sizes). The Archive scope is not applied, since a user's ZIP can have any name.
+SingleResolution ResolveByCrcSearch(const RequiredResource& req, const std::vector<Candidate>& allCandidates,
+                                    std::uint64_t maxBytes, const std::string& notFoundDetail) {
+    std::vector<std::uint32_t> crcs = req.AlternateCrc32;
+    crcs.insert(crcs.end(), req.SearchCrc32.begin(), req.SearchCrc32.end());
+    if (req.Crc32.has_value()) {
+        crcs.push_back(*req.Crc32);
+    }
+
+    std::vector<Candidate> found;
+    bool bySize = false;
+    for (const auto& candidate : allCandidates) {
+        if (candidate.kind != Candidate::Kind::Zip) {
+            continue;
+        }
+        if (ContainsValue(crcs, candidate.zipEntry->Crc32) &&
+            (!req.SizeBytes.has_value() || candidate.DeclaredSize() == *req.SizeBytes)) {
+            found.push_back(candidate);
+        }
+    }
+    if (found.empty() && !req.SearchSizes.empty()) {
+        bySize = true;
+        for (const auto& candidate : allCandidates) {
+            if (candidate.kind == Candidate::Kind::Zip && ContainsValue(req.SearchSizes, candidate.DeclaredSize())) {
+                found.push_back(candidate);
+            }
+        }
+    }
+    if (found.empty()) {
+        return {CHIPESTRA_E_NOT_FOUND, std::nullopt, notFoundDetail + " (a search of the ZIP entries by CRC-32 found none either)"};
+    }
+    if (found.size() > 1) {
+        std::string pathList;
+        for (std::size_t i = 0; i < found.size(); ++i) {
+            pathList += (i > 0 ? "; " : "") + found[i].DisplayPath();
+        }
+        return {CHIPESTRA_E_AMBIGUOUS,
+                std::nullopt,
+                std::to_string(found.size()) + " ZIP entries matched '" + req.LogicalName + "' by " +
+                    (bySize ? "size" : "CRC-32") + " - refusing to auto-select: " + pathList};
+    }
+
+    std::string readError;
+    auto data = TryReadCandidateBytes(found.front(), maxBytes, &readError);
+    if (!data.has_value()) {
+        return {CHIPESTRA_E_UNSUPPORTED,
+                std::nullopt,
+                "the ZIP entry found for '" + req.LogicalName + "' (" + found.front().DisplayPath() + ") could not be read"};
+    }
+    if (!bySize) {
+        // The central directory's CRC-32 is only a hint: the content has to hash to one of the values too.
+        const std::uint32_t crc = Crc32(data->data(), data->size());
+        bool ok = ContainsValue(crcs, crc);
+        if (ok && req.Sha1.has_value()) {
+            ok = EqualsIgnoreCase(Sha1Hex(data->data(), data->size()), *req.Sha1);
+        }
+        if (!ok) {
+            return {CHIPESTRA_E_HASH_MISMATCH,
+                    std::nullopt,
+                    "the ZIP entry found for '" + req.LogicalName + "' (" + found.front().DisplayPath() +
+                        ") does not hash to the expected value"};
+        }
+    }
+
+    SingleResolution ok;
+    ok.Result = CHIPESTRA_OK;
+    ok.Resource.emplace(req.LogicalName, std::move(*data));
+    ok.Resource->SetSource(found.front().DisplayPath(), true);
+    return ok;
+}
+
 SingleResolution ResolveOne(const RequiredResource& req, const std::vector<Candidate>& allCandidates,
                              std::uint64_t maxBytes) {
     // Step 0: archive scope filter, if the Game declared one - narrows the search to one
@@ -181,7 +272,11 @@ SingleResolution ResolveOne(const RequiredResource& req, const std::vector<Candi
         }
     }
     if (named.empty()) {
-        return {CHIPESTRA_E_NOT_FOUND, std::nullopt, "no candidate matched an accepted filename for '" + req.LogicalName + "'"};
+        const std::string notFound = "no candidate matched an accepted filename for '" + req.LogicalName + "'";
+        if (req.CrcSearch) {
+            return ResolveByCrcSearch(req, allCandidates, maxBytes, notFound);
+        }
+        return {CHIPESTRA_E_NOT_FOUND, std::nullopt, notFound};
     }
 
     // Step 2: size filter (hard, declared size only - no I/O needed yet).
@@ -238,7 +333,8 @@ SingleResolution ResolveOne(const RequiredResource& req, const std::vector<Candi
         for (auto& candidate : readable) {
             bool matches = true;
             if (req.Crc32.has_value()) {
-                matches = matches && (Crc32(candidate.Data.data(), candidate.Data.size()) == *req.Crc32);
+                const std::uint32_t crc = Crc32(candidate.Data.data(), candidate.Data.size());
+                matches = matches && (crc == *req.Crc32 || ContainsValue(req.AlternateCrc32, crc));
             }
             if (matches && req.Sha1.has_value()) {
                 matches = matches && EqualsIgnoreCase(Sha1Hex(candidate.Data.data(), candidate.Data.size()), *req.Sha1);
@@ -280,6 +376,7 @@ SingleResolution ResolveOne(const RequiredResource& req, const std::vector<Candi
     SingleResolution ok;
     ok.Result = CHIPESTRA_OK;
     ok.Resource.emplace(req.LogicalName, std::move(hashMatched.front().Data));
+    ok.Resource->SetSource(hashMatched.front().Path, false);
     return ok;
 }
 

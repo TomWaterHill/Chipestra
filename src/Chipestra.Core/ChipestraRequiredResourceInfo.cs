@@ -35,5 +35,20 @@ namespace Chipestra.Core
         /// <summary>Optional archive scope; "" means unscoped.</summary>
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
         public string Archive;
+
+        /// <summary>Further file CRC-32 values besides <see cref="Crc32"/>, hexadecimal separated by "|"; "" if none.</summary>
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+        public string Crc32Alternatives;
+
+        /// <summary>Nonzero: look for a ZIP entry by CRC-32 when no file has an accepted name.</summary>
+        public byte CrcSearch;
+
+        /// <summary>CRC-32 values used only by that search (hexadecimal separated by "|"); "" if none.</summary>
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+        public string SearchCrc32;
+
+        /// <summary>Entry sizes used only by that search, when no CRC-32 matched (decimal separated by "|"); "" if none.</summary>
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+        public string SearchSize;
     }
 }

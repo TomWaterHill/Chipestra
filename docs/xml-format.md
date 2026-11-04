@@ -116,14 +116,18 @@ the ROM lists of the corresponding MAME sets.
 | Attribute | Required | Meaning |
 |---|---|---|
 | `name` | yes | The role of the ROM on the board (for example `soundcpu`, `pcm1`). Use exactly the names the board expects (see below). |
-| `file` | yes | File name to look for. |
+| `file` | yes | File name to look for. Several names separated by `\|` are alternatives (`a.smd\|a.bin`); a file that has any of them matches. |
 | `archive` | no | The ROM set this one file comes from, when it is not the game's own (`archive` of `<game>`). Used by a board that needs a file of another set, for example the sound chip's table of a VRC7 game. Same rules as `archive` of `<game>` (see below). |
 | `size` | no | Expected size in bytes (decimal). |
-| `crc32` | no | Expected CRC-32, as hexadecimal digits (for example `d777fc6d`). |
+| `crc32` | no | Expected CRC-32, as hexadecimal digits (for example `d777fc6d`). Several values separated by `\|` (`94e80fce\|2477d0bc`) are alternatives, for example the same disk image with and without a file header; a file that matches any of them is accepted. |
 | `sha1` | no | Expected SHA-1, as hexadecimal digits. |
+| `crc_search` | no | `true` or `false` (default `false`). If `true`, a `.zip` entry is searched for by its CRC-32 when no file has a name from `file` (see "Finding a ROM by its CRC-32" below). Used by the console games, whose files people name in many ways. |
+| `search_crc32` | no | CRC-32 values (hexadecimal, separated by `\|`) that only this search uses. They do not restrict a file found by its name. |
+| `search_size` | no | Entry sizes in bytes (decimal, separated by `\|`) that only this search uses, when no entry had one of the CRC-32 values. |
 
-All listed ROMs are required. A `size`, `crc32` or `sha1` value that is not a valid number is read as
-0, so nothing will match it.
+All listed ROMs are required. A `size`, `crc32`, `search_crc32` or `search_size` value that is not a
+valid number, and a `crc_search` that is neither `true` nor `false`, makes the file unreadable (the
+message names the attribute). A `sha1` that is not a valid hash will not match anything.
 
 **How a ROM is found.** When you select a track, Chipestra looks under the ROM Root folder, including
 all sub-folders, in loose files and in `.zip` files (stored or deflate-compressed entries):
@@ -132,13 +136,32 @@ all sub-folders, in loose files and in `.zip` files (stored or deflate-compresse
    folder with that name are considered. Names are compared without regard to upper/lower case. The
    `archive` of the `<rom>` is used if it has one, otherwise the `archive` of the `<game>`. When the
    archive does not exist, the message names it (for example `ds1001.zip`).
-2. The file name must equal `file` (without regard to case; for a `.zip`, the name of the entry
+2. The file name must equal `file`, or one of its alternatives (without regard to case; for a `.zip`, the name of the entry
    without its folder).
 3. If `size`, `crc32` or `sha1` is given, the candidate must match it.
 4. If more than one candidate is left, Chipestra does not choose one: the ROM is reported as
    ambiguous. Use `archive`, `size` or `crc32` to tell the candidates apart, or remove the duplicate
    files.
 5. A file larger than 64 MiB is not read.
+
+**Finding a ROM by its CRC-32.** If `crc_search="true"` and step 2 finds no file with a name from
+`file`, Chipestra looks at every `.zip` entry under the ROM Root, whatever the `.zip` and the entry
+are called (the `archive` is not applied, since a person's `.zip` can have any name). Loose files are
+not searched.
+
+1. The entries whose CRC-32, as the `.zip` declares it, is `crc32`, one of its alternatives or one of
+   `search_crc32` are the candidates. If `size` is given, the entry must also have that size.
+2. If there is none and `search_size` is given, the entries with one of those sizes are the candidates.
+   Nothing about their content is checked here; the board checks it (the Mega Drive checks the
+   cartridge against `cart_crc32` after laying it out).
+3. One candidate is used, after its content is hashed again (an entry found by CRC-32 must really have
+   one of the CRC-32 values, and `sha1` if given). More than one is ambiguous, as in step 4: nothing is
+   chosen, and the message lists them.
+
+When a ROM was found this way, the window shows `ROM found by its CRC-32 under another name:` and the
+file that was used (`<zip>!<entry>`), and the resolution result keeps the path of every ROM it used.
+A file with a name from `file` is never replaced by this search: if it exists but has another content,
+the result is `HashMismatch`.
 
 If a ROM cannot be resolved, the game does not load and the message lists each problem, for example
 `ROM resolution failed: pcm3: NotFound (no candidate matched an accepted filename for 'pcm3')`. The
@@ -355,7 +378,9 @@ disk's BIOS or the game: it copies the files the sound driver needs into the RAM
 addresses the disk gives for each file, and then calls the driver's entry routine (`frame`, section 4a)
 once for every video frame. The BIOS's start-up settings of the sound registers are applied by Chipestra.
 The `disk` resource is the whole `.fds` file, with or without the 16-byte header; a plain image is a whole
-number of 65,500-byte sides.
+number of 65,500-byte sides. The game's `<rom>` lists the CRC-32 of the image with and without the header in
+`search_crc32` (`94e80fce|2477d0bc`) and has `crc_search="true"`, so the disk is also found when its `.zip` and
+file have other names. The values are not in `crc32`: a disk whose save data differs is still found by its name.
 
 The files are named inside `<driver>`, and checked by name and CRC-32 (not by the CRC of the whole image, so a disk
 whose save data differs is still accepted):
@@ -388,6 +413,78 @@ no `request` only loads its files, which makes it a Music Stop when it is a `con
 A sound driver of this kind may start a request only in the right combination of files; a request in the
 wrong combination can make the driver run data as code and stop, so list only the combinations that work.
 
+## 4c. Sound programs: `<driver>` (Mega Drive)
+
+In a Mega Drive game the music is made by a Z80 program stored in the cartridge. Chipestra does not run the
+game's 68000: it does what the game's 68000 does for the sound program (copies the Z80 program to the Z80's RAM,
+releases the Z80 from reset and writes a request number to the program's request byte) and runs the Z80 with the
+YM2612 and the PSG. A game for `SEGA_MEGADRIVE` needs the cartridge image in `<resources>` (a plain image, or a
+Super Magic Drive file with its 512-byte header; the resource must be named `rom`) and a `<driver>` between
+`<resources>` and `<tracks>`. The layout of the file is recognised from its content (a header with `AA BB` at offsets 8
+and 9 and interleaved 16 KB blocks is a Super Magic Drive copy; anything else, such as `.bin` or `.md`, is a plain
+image), so the `<rom>` lists the names without a size or CRC-32 and the check is `cart_crc32` of `<driver>`, made on
+the plain image. When no file has one of the names, the search by CRC-32 (section 4) finds a plain image by its file
+CRC-32 (`search_crc32`, the CRC-32 of the plain image) and a Super Magic Drive file by its size (`search_size`, the
+plain size plus 512 bytes: the contents of the header differ between tools, so the CRC-32 of such a file is not
+listed); the layout is then recognised and `cart_crc32` decides whether it is the right cartridge:
+
+```xml
+<resources>
+  <rom name="rom" file="SpaceHarrier2.smd|SpaceHarrier2.bin|SpaceHarrier2.md"
+       crc_search="true" search_crc32="edc0fb28" search_size="524800"/>
+</resources>
+<driver music="0x16A6C:5366" request="0x1804" release_cycle="3365294" warmup_frames="104" region="japan" cart_crc32="edc0fb28">
+  <set id="voice1" image="0x15904:4456"/>
+  <set id="voice2" image="0x14724:4576"/>
+</driver>
+```
+
+| Attribute | Required | Meaning |
+|---|---|---|
+| `music` | yes | `offset:size`: where the sound program is in the cartridge (a byte offset in the deinterleaved image) and how long it is (at most `0x2000`). It is copied to Z80 address 0. |
+| `music` (compressed) | - | `offset:lzss` instead of `offset:size`: the program is stored compressed (an LZ77 stream with a 4 KB window: a big-endian 16-bit count, then groups of eight items led by a flag byte whose set bits mean a literal byte and whose clear bits a 16-bit pair of a 12-bit window position and a length of 3-18). Its length comes from the stream. |
+| `music_data` | no | `offset:size@address`, several separated by spaces: bytes of the cartridge that the game's 68000 copies to the Z80's RAM besides the program (constants the program reads). |
+| `song_table` | no | The offset of a table of songs in the cartridge for a game whose 68000 loads the data of each song into the Z80's RAM before it writes the request: big-endian 16-bit offsets from the start of the table, each to a compressed block as above; the first offset is twice the number of songs. A request from `song_first` on loads the block of its song; any other request loads the first block. |
+| `song_first` | no | The request number of the first song of `song_table`. Default `0x81`. |
+| `song_address` | no | The Z80 RAM address the songs are copied to. Default `0x1000`. |
+| `queue` | no | `base:read:write:mask`: the program takes its requests from a ring of two-byte entries (a value, then a command code) in the Z80's RAM instead of from one request byte. `base` is the address of the ring, `read` and `write` the addresses of the bytes that hold the read position (moved by the program) and the write position (moved by whoever writes a request), `mask` wraps both after each entry of two. A request writes its value and `queue_code` at the write position and moves it on. |
+| `queue_code` | no | The command code written with a request. Default `0`. |
+| `queue_init` | no | Entries already in the ring when the Z80 starts, as `value:code` in hexadecimal separated by spaces (the game's 68000 writes them at once). |
+| `stop_request` | no | A request number that means "silence everything": the Machine starts again and writes no request. For a program that has no request of its own for it, and none that is safe to send. |
+| `request` | no | The address in the Z80's RAM (`0`-`0x1FFF`) of the request byte. Default `0x1804`. |
+| `region` | no | The console the game is played on: `japan` (Mega Drive, NTSC; the default), `usa` (Genesis, NTSC) or `europe` (Mega Drive, PAL). It sets the master clock (53,693,175 Hz NTSC, 53,203,424 Hz PAL) and with it the clocks of the Z80 and the PSG (the master clock divided by 15: 3,579,545 or 3,546,894 Hz) and of the YM2612 (divided by 7: 7,670,453 or 7,600,489 Hz), and the length of a frame (262 or 313 scanlines of 228 Z80 cycles: 59,736 or 71,364 cycles, 60 or 50 frames a second), so the Z80's vertical-blank interrupt comes 60 or 50 times a second. The game list shows the system as `Mega Drive (Japan)`, `Genesis (North America)` or `Mega Drive (Europe)`. The region bits of the console's version register (`$A10001`: bit 7 set outside Japan, bit 6 set in a PAL console) are kept for a 68000 that may be run one day; the sound program does not read them. Any other value is an error. The times of `release_cycle` and `warmup_frames` are those of the region's console. The region is always given in the XML: the region field of the cartridge header is not used (many cartridges leave it blank or allow every region). A game that can be played on more than one console lists them separated by `|` (`region="usa|europe"`): see "Games for more than one region" below. |
+| `region` (list) | - | `a|b`: see "Games for more than one region" below. |
+| `release_cycle` | yes | When the Z80 starts running after the game's 68000 has loaded the program, in Z80 cycles of the region's clock (3,579,545 per second in the NTSC consoles) since power-on. Only its position in the video frame (59,736 cycles NTSC, 71,364 PAL) matters: it decides where in a frame the Z80's vertical-blank interrupts fall. |
+| `cart_crc32` | no | CRC-32 (hexadecimal) of the cartridge in plain 68000 order, whichever file layout was found. A file with another CRC-32 is refused, and the message gives both numbers. |
+| `warmup_frames` | yes | How long the sound program runs before the game first writes a request, in frames: the request is written at the start of the frame that is this many frames after the frame the Z80 was released in (0-100000). |
+| `<set id image>` | no | Another Z80 program of the cartridge that the game loads in place of the sound program (for example one that plays a spoken phrase). `image` is `offset:size` as for `music`. |
+
+**Games for more than one region.** When the region of a game is not known, or the game was sold on both kinds of console, list the regions in `region` separated by `|`, for example `region="usa|europe"`. `warmup_frames` and `release_cycle` may then give one value for each region in the same order (`warmup_frames="784|782"`); a single value serves every region. The game list shows one game for each region, with the same tracks (the XML is written once): the id is `<id>@<region>` (`timetrax_proto@usa`), the title has `(60Hz)` added for a game of an NTSC region (`japan`, `usa`) and `(50Hz)` for `europe` (`Time Trax (prototype) (60Hz)`, `Time Trax (prototype) (50Hz)`), and the system is the region's (`Genesis (North America)`, `Mega Drive (Europe)`). Each of them is a Machine of its own with its own warm-up and saved state. A list whose number of values does not match the number of regions is an error of the whole file.
+
+**Warm-up, saved state.** After the Z80 is released the sound program starts itself (it sets up both chips and
+waits for a request). Chipestra runs it for `warmup_frames` once, when the game is loaded, and keeps the whole
+state of that moment: the Z80's registers and RAM, the bank register, the state of both chips and the position of
+the interrupt in the frame. Every track then starts from a copy of that state with its request written, which is
+the same sound as running the warm-up again (the tests compare the two) but takes a few microseconds instead of
+several milliseconds. A track with a `set` does not use it: its program is loaded and started at once.
+
+A track names its program and request with `command` and `set` (section 5): `command` is the request number
+(written to the request byte; a Music Stop that sends no request is a `control` track whose `command` is a number
+the program ignores), and `set` is the `id` of a `<set>`. A track with a `set` takes no request; its `command` is
+not used (write `0x00`). Choosing a track starts everything again from the saved state, so nothing of the previous
+track remains. The sound program has no request that silences everything, which is why a switch starts again.
+When a track with a `set` ends, the Z80 idles and the output is silent: nothing follows it.
+
+**A program that starts afresh at every request.** In some games the 68000 loads the program, writes the request and
+only then releases the Z80 (a program that clears its variables when it starts but keeps a request that is already
+there). For such a game `warmup_frames` is `0` and `release_cycle` is the cycle of the last release of the Z80 before
+the request is played; a switch starts again as above.
+
+Find `release_cycle` and `warmup_frames` by recording the original: the cycle at which the 68000 releases the
+Z80 from reset (the write to the Z80 reset register) and the frame in which it writes the first request. A wrong
+`release_cycle` moves the sound by up to a frame; a wrong `warmup_frames` changes where the song's own timers stand
+when the request arrives.
+
 ## 5. Tracks: `<tracks>` and `<track>`
 
 ```xml
@@ -404,10 +501,10 @@ wrong combination can make the driver run data as code and stop, so list only th
 | `command` | yes | The value sent to the game's sound program. |
 | `type` | no | `control`, `wsg` or `sfx`. Omit it for an ordinary track. |
 | `loops` | no | `false` for a track that ends by itself. |
-| `set` | no | Famicom Disk System only: the `id` of the `<driver><set>` whose files are loaded for this track (section 4b). |
+| `set` | no | Famicom Disk System and Mega Drive: the `id` of the `<driver><set>` used for this track (sections 4b and 4c). |
 | `request` | no | NES and Famicom Disk System: the address, from `<driver requests>`, the `command` is written to (sections 4a and 4b). |
 
-**`set` and `request`.** They are read for every game, but only the NES (`request`) and the Famicom Disk System use them. A `set` that no
+**`set` and `request`.** They are read for every game, but only the NES (`request`), the Famicom Disk System and the Mega Drive (`set`) use them. A `set` that no
 `<driver><set>` declares, or a `request` that is not in `<driver requests>`, is an error and the whole file is not
 loaded.
 
@@ -435,9 +532,10 @@ does not list values; take them from the game's own sound test or from existing 
   sound test (the game's test screen labels it "PSG NUMBER"). Only Dragon Spirit (`NAMCO_SYSTEM1`)
   supports it; the numbers are `0x00` to `0x24`. Numbers `0x02`, `0x06`, `0x10`, `0x11`, `0x12` and
   `0x13` currently produce no sound in Chipestra, so they are not listed in the shipped file.
-- `sfx`: a request for a **sound effect of the game's own sound program** (the NES games). `command` is
+- `sfx`: a request for a **sound effect of the game's own sound program** (the NES games and the Mega Drive). `command` is
   the effect number the game itself uses. It is played like a song (the game starts the effect through its
-  own effect request), and only games that name an `sfx` variable in `<driver>` (section 4a) can play it.
+  own effect request), and only games that can start an effect that way can play it: the NES games that name an `sfx`
+  variable in `<driver>` (section 4a) and the Mega Drive (section 4c, where it is an ordinary request number).
 - Any other value (`Control`, `psg`, an empty value, ...) is an error and the whole file is not loaded.
 
 **`loops`.** Tracks are assumed to loop forever and are never stopped automatically. Write
@@ -507,7 +605,7 @@ duplicate track ids, and misspelled optional attributes.
 
 ## 8. Requests the game does not support
 
-`type="wsg"` and `type="sfx"` are accepted by the XML reader for any game, but only some games can play them (`wsg`: Dragon Spirit; `sfx`: the NES games). In any
+`type="wsg"` and `type="sfx"` are accepted by the XML reader for any game, but only some games can play them (`wsg`: Dragon Spirit; `sfx`: the NES games and the Mega Drive). In any
 other game, selecting such a track shows the message `Cannot play "<title>": this game's sound driver
 does not support this kind of track.` and nothing is played. The same message appears in Dragon Spirit
 for a number above `0x24`.
