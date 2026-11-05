@@ -55,8 +55,24 @@ public:
         bool halted = false;  // STOP instruction, or a double bus fault equivalent
         std::uint64_t interruptServiceCount = 0;
         std::uint64_t illegalInstructionCount = 0;
+        std::uint64_t lineExceptionCount = 0;  // line-A and line-F traps taken
     };
     RegisterSnapshot Snapshot() const;
+
+    // The complete state of the CPU between two instructions (registers, STOP state, interrupt level): lets a Machine
+    // save the state after a start-up run and come back to it.
+    struct SavedState {
+        M68000Registers regs;
+        bool halted = false;
+        std::uint8_t interruptLevel = 0;
+    };
+    // The instruction times. false (the default): the estimate of the first version of this core, which the machines that were
+    // made with it keep. true: the published times of the 68000, which agree with a 68000 emulator that models the bus cycles
+    // for every instruction form tried (601: all the addressing modes of the arithmetic, logic, move, shift, bit,
+    // multiply and divide instructions, the branches and the stack instructions).
+    void SetStandardTimings(bool enabled) { standardTimings_ = enabled; }
+    SavedState SaveState() const;
+    void RestoreState(const SavedState& state);
 
     // Cycles consumed so far by the in-progress Execute() call; lets a Machine sync
     // co-processors mid-block.
@@ -97,6 +113,8 @@ private:
 
     std::uint64_t interruptServiceCount_ = 0;
     std::uint64_t illegalInstructionCount_ = 0;
+    std::uint64_t lineExceptionCount_ = 0;
+    bool standardTimings_ = false;
 
     MemoryReadFn memoryRead_;
     MemoryWriteFn memoryWrite_;
@@ -148,12 +166,15 @@ private:
     // Approximate extra bus cycles an addressing mode costs beyond an instruction's base
     // cost (standard published 68000 timings, not MAME's bus-contention-precise model).
     int EaExtraCycles(std::uint8_t mode, std::uint8_t reg, int size) const;
+    // The published time of the instruction classes whose time follows from the opcode (see the definition).
+    int StandardCycles(std::uint16_t op, int handlerCycles) const;
 
     // --- condition codes / exceptions ---------------------------------------
     bool TestCondition(int cc) const;  // 0..15: T,F,HI,LS,CC,CS,NE,EQ,VC,VS,PL,MI,GE,LT,GT,LE
     void TakeException(std::uint8_t vector, bool isInterruptAutovector = false, std::uint8_t autovectorLevel = 0);
     void CheckPendingInterrupt();
     void RaiseIllegalInstruction();
+    void RaiseLineException(std::uint8_t vector);  // line-A (10) / line-F (11) emulator traps
 
     // --- packed-BCD correction (ABCD/SBCD/NBCD) ---
     // Per-nibble decimal add/subtract with the carry/borrow propagated between the low and

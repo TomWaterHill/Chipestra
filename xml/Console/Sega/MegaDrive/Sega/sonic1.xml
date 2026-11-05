@@ -1,0 +1,49 @@
+<chipestra>
+  <game id="sonic1" title="Sonic the Hedgehog" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="SonicTheHedgehog">
+    <resources>
+      <rom name="rom" file="SonicTheHedgehog.smd|SonicTheHedgehog.bin|SonicTheHedgehog.md" crc_search="true" search_crc32="afe05eee" search_size="524800"/>
+    </resources>
+    <!-- The sound driver runs on the 68000: the game's vertical-blank interrupt calls it once a frame (0x71B4C), it plays the songs
+         and effects and writes the YM2612 and the PSG itself. The Z80 only plays the sampled sounds (drums, the SEGA chime). The Machine
+         runs the 68000 for just that: it calls the game's routine that loads the Z80's program and starts the driver (0x134C), then the
+         driver's routine at every vertical-blank interrupt. The request for a song or an effect is a byte of the 68000's RAM (0xFFF00B)
+         that the driver takes at its next frame. 0x81-0x93 are songs, 0xA0-0xCF effects, 0xE1 the SEGA chime (a sampled sound), 0xE4 stops
+         everything. The game does not say the region it was sold in (JUE): the console is the Japanese one (Mega Drive, 60 Hz). -->
+    <driver m68k_init="0x134C" m68k_frame="0x71B4C" request="0xFFF00B" warmup_frames="4" region="japan" cart_crc32="afe05eee"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0xE4" type="control"/>
+      <track id="BGM_8A" title="Title Screen" command="0x8A" loops="false"/>
+      <track id="BGM_81" title="Green Hill Zone" command="0x81"/>
+      <track id="BGM_82" title="Labyrinth Zone" command="0x82"/>
+      <track id="BGM_83" title="Marble Zone" command="0x83"/>
+      <track id="BGM_84" title="Star Light Zone" command="0x84"/>
+      <track id="BGM_85" title="Spring Yard Zone" command="0x85"/>
+      <track id="BGM_86" title="Scrap Brain Zone" command="0x86"/>
+      <track id="BGM_89" title="Special Stage" command="0x89"/>
+      <track id="BGM_8C" title="Boss" command="0x8C"/>
+      <track id="BGM_8D" title="Final Zone" command="0x8D"/>
+      <track id="BGM_87" title="Invincibility" command="0x87"/>
+      <track id="BGM_88" title="Extra Life" command="0x88" loops="false"/>
+      <track id="BGM_8E" title="Act Clear" command="0x8E" loops="false"/>
+      <track id="BGM_8F" title="Game Over" command="0x8F" loops="false"/>
+      <track id="BGM_90" title="Continue" command="0x90" loops="false"/>
+      <track id="BGM_8B" title="Ending" command="0x8B" loops="false"/>
+      <track id="BGM_91" title="Credits" command="0x91" loops="false"/>
+      <track id="BGM_92" title="Drowning" command="0x92" loops="false"/>
+      <track id="BGM_93" title="Chaos Emerald" command="0x93" loops="false"/>
+      <track id="SFX_E1" title="[SFX] SEGA Voice" command="0xE1" type="sfx" loops="false"/>
+      <track id="SFX_A0" title="[SFX] A0" command="0xA0" type="sfx" loops="false"/>
+      <track id="SFX_A1" title="[SFX] A1" command="0xA1" type="sfx" loops="false"/>
+      <track id="SFX_A2" title="[SFX] A2" command="0xA2" type="sfx" loops="false"/>
+      <track id="SFX_A3" title="[SFX] A3" command="0xA3" type="sfx" loops="false"/>
+      <track id="SFX_A5" title="[SFX] A5" command="0xA5" type="sfx" loops="false"/>
+      <track id="SFX_A9" title="[SFX] A9" command="0xA9" type="sfx" loops="false"/>
+      <track id="SFX_AF" title="[SFX] AF" command="0xAF" type="sfx" loops="false"/>
+      <track id="SFX_B5" title="[SFX] B5" command="0xB5" type="sfx" loops="false"/>
+      <track id="SFX_B6" title="[SFX] B6" command="0xB6" type="sfx" loops="false"/>
+      <track id="SFX_C0" title="[SFX] C0" command="0xC0" type="sfx" loops="false"/>
+      <track id="SFX_C5" title="[SFX] C5" command="0xC5" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

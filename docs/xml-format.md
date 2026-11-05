@@ -485,6 +485,41 @@ Z80 from reset (the write to the Z80 reset register) and the frame in which it w
 `release_cycle` moves the sound by up to a frame; a wrong `warmup_frames` changes where the song's own timers stand
 when the request arrives.
 
+## 4d. Sound drivers on the 68000: `<driver>` (Mega Drive, variant `MEGADRIVE_68K`)
+
+In some Mega Drive games the music is not made by a Z80 program: the game's sound driver is 68000 code that the game
+calls once every frame from its vertical-blank interrupt, and it writes the YM2612 and the PSG itself (the Z80 only plays
+sampled sounds such as drums). Such a game uses `variant="MEGADRIVE_68K"` (the machine is still `SEGA_MEGADRIVE`) and
+the same `<resources>` as in section 4c. Chipestra runs the 68000, the Z80, the YM2612 and the PSG, and the bus between them
+(the Z80's bus request and reset registers, its bank register and its window onto the 68000's bus); the 68000 only runs the
+game's sound code: a few bytes of generated code (placed in an unused part of the bus, in the way the game's reset and
+vertical-blank vectors are replaced) call the game's initialization routines after the reset and the game's sound routine at
+every vertical-blank interrupt. The game's own main loop, its graphics and its controllers do not run; a request for a song or
+an effect is written into the game's RAM by Chipestra, as the game's main loop would.
+
+| Attribute | Meaning |
+|---|---|
+| `m68k_init` | The addresses of the game's subroutines that run once after the reset, in this order, separated by spaces (each ends with `RTS`): the game's routines that load the Z80's program and set up the sound driver. |
+| `m68k_frame` | The address of the subroutine that runs the sound driver, called at every vertical-blank interrupt (it ends with `RTS`). |
+| `request` | The 68000 address (`0xFF0000`-`0xFFFFFF`) of the byte of the game's RAM in which the game puts the number of a song or an effect for the driver to take at its next frame. A track's `command` is written there. |
+| `warmup_frames` | How many frames the sound routine runs before the first request. The state after them is kept and restored at every switch. |
+| `region`, `cart_crc32` | As in section 4c (a list of regions in `region` makes one game for each). |
+
+```xml
+<driver m68k_init="0x134C" m68k_frame="0x71B4C" request="0xFFF00B" warmup_frames="4" region="japan" cart_crc32="afe05eee"/>
+```
+
+A routine must work with only the CPU, the RAM, the cartridge, the Z80's bus, the YM2612 and the PSG: the Machine answers the
+status register of the video chip (the vertical-blank flag and the scanline counter) and the controller ports (no button
+pressed) but shows nothing else of the video chip. A routine that reads the video chip's data or waits for something the
+game's main loop does is not suitable. Find the addresses by tracing the original: the interrupt handler (the vector at
+`0x78`) calls the sound routine; the game's reset code calls the routine that loads the Z80's program.
+
+Time is one counter of the master clock: a 68000 cycle is 7 ticks and a Z80 cycle 15. The CPU that is behind runs one
+instruction at a time. A Z80 that the 68000 has stopped (bus requested, or held in reset) goes on from the time of the
+68000's access to the Z80's bus registers, as in the original. A Z80 that reads the cartridge through its window is not made
+to wait for the 68000's bus (the original delays it by a few cycles).
+
 ## 5. Tracks: `<tracks>` and `<track>`
 
 ```xml
@@ -535,7 +570,7 @@ does not list values; take them from the game's own sound test or from existing 
 - `sfx`: a request for a **sound effect of the game's own sound program** (the NES games and the Mega Drive). `command` is
   the effect number the game itself uses. It is played like a song (the game starts the effect through its
   own effect request), and only games that can start an effect that way can play it: the NES games that name an `sfx`
-  variable in `<driver>` (section 4a) and the Mega Drive (section 4c, where it is an ordinary request number).
+  variable in `<driver>` (section 4a) and the Mega Drive (sections 4c and 4d, where it is an ordinary request number).
 - Any other value (`Control`, `psg`, an empty value, ...) is an error and the whole file is not loaded.
 
 **`loops`.** Tracks are assumed to loop forever and are never stopped automatically. Write

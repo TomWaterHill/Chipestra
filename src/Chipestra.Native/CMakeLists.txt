@@ -114,6 +114,8 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/nintendo/fds/fds_disk.cpp
     src/devices/sega/megadrive/megadrive_machine.h
     src/devices/sega/megadrive/megadrive_machine.cpp
+    src/devices/sega/megadrive/megadrive68k_machine.h
+    src/devices/sega/megadrive/megadrive68k_machine.cpp
     src/devices/nintendo/fds/fds_machine.h
     src/devices/nintendo/fds/fds_machine.cpp
     src/devices/cpu/hd63701/ihd63701_core.h
@@ -400,6 +402,7 @@ add_executable(chipestra_native_tests
     tests/sunsoft_5b_adapter_tests.cpp
     tests/md_sound_adapter_tests.cpp
     tests/megadrive_machine_tests.cpp
+    tests/megadrive68k_machine_tests.cpp
     tests/vrc7_adapter_tests.cpp
     tests/fds_machine_tests.cpp
     tests/nes_machine_tests.cpp

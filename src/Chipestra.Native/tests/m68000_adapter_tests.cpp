@@ -17,6 +17,8 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 namespace {
 
@@ -344,6 +346,110 @@ void M68000MovepTransfersOddBytesOnly() {
     Check(h.memory[0x5001] == 0 && h.memory[0x5003] == 0 && h.memory[0x5005] == 0 && h.memory[0x5007] == 0,
           "movep: the odd (in-between) bytes were never touched - only every other byte is part of the transfer");
     Check(snap.d[2] == 0x12345678, "movep: D2 == D0's original value, round-tripped through memory and back");
+}
+
+void M68000LineAAndLineFTakeTheirOwnVectors() {
+    std::printf("M68000LineAAndLineFTakeTheirOwnVectors\n");
+    struct Case { std::uint16_t opcode; std::uint32_t vectorAddress; const char* name; };
+    for (const Case& c : {Case{0xA007, 0x28, "line-A"}, Case{0xF123, 0x2C, "line-F"}}) {
+        FlatMemoryHarness h;
+        h.SetLong(c.vectorAddress, 0x600);   // handler: MOVEQ #5,D0
+        h.SetWord(0x600, 0x7005);
+        h.SetupReset(0x1000, 0x400, {c.opcode});
+        h.cpu.Execute(1);                    // the trapping opcode
+        auto snap = h.cpu.Snapshot();
+        Check(snap.pc == 0x600, (std::string(c.name) + ": the trap vector (not vector 4) is taken").c_str());
+        Check(snap.lineExceptionCount == 1 && snap.illegalInstructionCount == 0,
+              (std::string(c.name) + ": counted as a line trap, not as an illegal instruction").c_str());
+        Check(h.GetLong(0xFFC) == 0x400,
+              (std::string(c.name) + ": the stacked PC is the address of the trapping opcode itself").c_str());
+        h.cpu.Execute(1);
+        Check(h.cpu.Snapshot().d[0] == 5, (std::string(c.name) + ": the handler runs").c_str());
+    }
+}
+
+void M68000AbcdSbcdMemoryFormsUsePredecrementedBytes() {
+    std::printf("M68000AbcdSbcdMemoryFormsUsePredecrementedBytes\n");
+    {
+        // ABCD -(A0),-(A1): 0xC308.  src byte 0x09 at 0x2001, dest byte 0x01 at 0x2011 -> 0x10.
+        FlatMemoryHarness h;
+        h.memory[0x2001] = 0x09;
+        h.memory[0x2011] = 0x01;
+        h.SetupReset(0x1000, 0x400, {0x207C, 0x0000, 0x2002, 0x227C, 0x0000, 0x2012, 0xC308});
+        for (int i = 0; i < 3; ++i) h.cpu.Execute(1);
+        auto snap = h.cpu.Snapshot();
+        Check(h.memory[0x2011] == 0x10, "abcd -(Ay),-(Ax): BCD 01 + 09 == 10 written back to the destination byte");
+        Check(snap.a[0] == 0x2001 && snap.a[1] == 0x2011, "abcd -(Ay),-(Ax): both address registers are pre-decremented by 1");
+        Check((snap.sr & kCcrC) == 0, "abcd -(Ay),-(Ax): no carry out");
+    }
+    {
+        // SBCD -(A0),-(A1): 0x8308.  src 0x01, dest 0x00 -> 0x99 with a borrow out.
+        FlatMemoryHarness h;
+        h.memory[0x2001] = 0x01;
+        h.memory[0x2011] = 0x00;
+        h.SetupReset(0x1000, 0x400, {0x207C, 0x0000, 0x2002, 0x227C, 0x0000, 0x2012, 0x8308});
+        for (int i = 0; i < 3; ++i) h.cpu.Execute(1);
+        auto snap = h.cpu.Snapshot();
+        Check(h.memory[0x2011] == 0x99, "sbcd -(Ay),-(Ax): BCD 00 - 01 borrows to 99");
+        Check((snap.sr & kCcrC) != 0 && (snap.sr & kCcrX) != 0, "sbcd -(Ay),-(Ax): borrow out set");
+    }
+    {
+        // A byte access through A7 moves the stack pointer by 2: ABCD -(A7),-(A1) reads the byte at A7-2.
+        FlatMemoryHarness h;
+        h.memory[0x0FFE] = 0x15;   // src: byte at A7-2 (SSP = 0x1000)
+        h.memory[0x2011] = 0x27;
+        h.SetupReset(0x1000, 0x400, {0x227C, 0x0000, 0x2012, 0xC30F});
+        for (int i = 0; i < 2; ++i) h.cpu.Execute(1);
+        auto snap = h.cpu.Snapshot();
+        Check(h.memory[0x2011] == 0x42 && snap.a[7] == 0x0FFE, "abcd -(A7),-(Ax): the stack pointer moves by 2 for a byte, 27 + 15 == 42");
+    }
+}
+
+void M68000StandardTimingsMatchThePublishedTimes() {
+    std::printf("M68000StandardTimingsMatchThePublishedTimes\n");
+    // Each program runs from the reset state (all registers 0 except SP); `prefix` instructions are executed first and the
+    // time of the next instruction is checked. The numbers are the published times of the 68000 (the same as a 68000
+    // emulator that models the bus cycles gives).
+    struct Case { const char* name; std::vector<std::uint16_t> program; int prefix; int cycles; };
+    const std::vector<Case> cases = {
+        {"ADD.L D1,D0", {0xD081}, 0, 8},
+        {"ADD.W D0,(A0)", {0xD150}, 0, 12},
+        {"ADD.L D0,-(A0)  (not ADDX: the memory form of ADDX has bit 3 set)", {0xD1A0}, 0, 22},
+        {"ADDQ.L #3,(A0)", {0x5690}, 0, 20},
+        {"ADDQ.W #3,A0", {0x5648}, 0, 8},
+        {"CLR.L D0", {0x4280}, 0, 6},
+        {"CLR.L (A0)", {0x4290}, 0, 20},
+        {"LEA d16(A0),A1", {0x43E8, 0x0010}, 0, 8},
+        {"PEA (A0)", {0x4850}, 0, 12},
+        {"MULU D1,D0 with D1 = 5 (38 + 2 a set bit)", {0x7205, 0xC0C1}, 1, 42},
+        {"MULS D1,D0 with D1 = 5 (38 + 2 a change of bit)", {0x7205, 0xC1C1}, 1, 46},
+        {"ASL.L #1,D0", {0xE380}, 0, 10},
+        {"BCHG D0,D1", {0x0141}, 0, 6},
+        {"BCLR #3,D1", {0x0881, 0x0003}, 0, 12},
+        {"BEQ.W not taken", {0x7001, 0x6700, 0x0002}, 1, 12},
+        {"MOVE.W D0,-(A0)", {0x3100}, 0, 8},
+        {"MOVE.L D0,-(A0)", {0x2100}, 0, 12},
+        {"EOR.W D1,D0", {0xB340}, 0, 4},
+        {"CMPM.L (A1)+,(A0)+", {0xB188}, 0, 20},
+    };
+    for (const Case& c : cases) {
+        FlatMemoryHarness h;
+        h.cpu.SetStandardTimings(true);
+        h.SetLong(0, 0x1000);
+        h.SetLong(4, 0x400);
+        std::uint32_t at = 0x400;
+        for (std::uint16_t w : c.program) { h.SetWord(at, w); at += 2; }
+        h.cpu.Reset();
+        for (int i = 0; i < c.prefix; ++i) h.cpu.Execute(1);
+        const std::uint64_t cycles = h.cpu.Execute(1);
+        Check(cycles == static_cast<std::uint64_t>(c.cycles), (std::string(c.name) + ": " + std::to_string(c.cycles) + " cycles").c_str());
+    }
+    {
+        // ADD.L D1,D0 takes 4 cycles in the first version's times, which the default keeps (the machines made with it depend on them).
+        FlatMemoryHarness h;
+        h.SetupReset(0x1000, 0x400, {0xD081});
+        Check(h.cpu.Execute(1) == 4, "default timings: ADD.L D1,D0 takes 4 cycles (unchanged)");
+    }
 }
 
 void M68000AddqSubqWordToAddressRegisterUsesFull32Bits() {

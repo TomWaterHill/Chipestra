@@ -67,6 +67,7 @@
 #include "sunsoft_5b_adapter_tests.h"
 #include "md_sound_adapter_tests.h"
 #include "megadrive_machine_tests.h"
+#include "megadrive68k_machine_tests.h"
 #include "vrc7_adapter_tests.h"
 #include "fds_machine_tests.h"
 #include "nes_machine_tests.h"
@@ -1391,6 +1392,11 @@ void RunMegaDriveTests() {
     MegaDriveRestoredStateSoundsLikeTheWarmUp();
     MegaDriveVoiceEndsInSilence();
     MegaDriveSongSoundsFromTheRequestOn();
+    MegaDrive68kDriverConfigIsParsedAndChecked();
+    MegaDrive68kSyntheticDriverRunsAndRequestsReachTheChips();
+    MegaDrive68kBusRulesBetweenTheCpus();
+    MegaDrive68kZ80StartsWhenItsResetIsReleased();
+    MegaDrive68kRealCartridgeMatchesTheOriginalsChipWrites();
 }
 
 }  // namespace
@@ -1867,6 +1873,9 @@ int main() {
     M68000AutovectorLevel7InterruptTakesExpectedFrame();
     M68000MaskedInterruptIsNotTakenUntilUnmasked();
     M68000MovemPredecrementAndPostincrementRoundTrip();
+    M68000LineAAndLineFTakeTheirOwnVectors();
+    M68000AbcdSbcdMemoryFormsUsePredecrementedBytes();
+    M68000StandardTimingsMatchThePublishedTimes();
     M68000ShiftAndRotateMatchStandardSemantics();
     M68000ExecuteIsDeterministic();
     M68000MovepTransfersOddBytesOnly();

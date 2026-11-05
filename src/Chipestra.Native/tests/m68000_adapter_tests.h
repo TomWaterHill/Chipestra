@@ -19,4 +19,7 @@ void M68000ShiftAndRotateMatchStandardSemantics();
 void M68000ExecuteIsDeterministic();
 void M68000MovepTransfersOddBytesOnly();
 void M68000AbcdSbcdNbcdPerformDecimalCorrection();
+void M68000LineAAndLineFTakeTheirOwnVectors();
+void M68000AbcdSbcdMemoryFormsUsePredecrementedBytes();
+void M68000StandardTimingsMatchThePublishedTimes();
 void M68000AddqSubqWordToAddressRegisterUsesFull32Bits();

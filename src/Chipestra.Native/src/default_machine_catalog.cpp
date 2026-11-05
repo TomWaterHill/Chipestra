@@ -13,6 +13,7 @@
 #include "devices/namco/dragonspirit/dragon_spirit_machine.h"
 #include "devices/nintendo/fds/fds_machine.h"
 #include "devices/sega/megadrive/megadrive_machine.h"
+#include "devices/sega/megadrive/megadrive68k_machine.h"
 #include "devices/nintendo/nes/nes_cartridge.h"
 #include "devices/nintendo/nes/nes_machine.h"
 #include "devices/namco/dragonspirit/dragon_spirit_rom_layout.h"
@@ -279,8 +280,14 @@ MachineRegistry BuildDefaultRegistry() {
     md_def.Category = MachineCategory::Console;
     md_def.Manufacturer = "Sega";
     md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_BASE"), "Base"});
+    // The games whose sound driver runs on the 68000 (see MegaDrive68kMachine).
+    md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_68K"), "68000 sound driver"});
     // Without resources: a registered-but-not-playable Machine (no cartridge).
-    md_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+    md_def.Factory = [](const VariantId& variant, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        if (variant.Value() == "MEGADRIVE_68K") {
+            MegaDrive68kMachineInputs inputs = AssembleMegaDrive68kMachineInputs(resources);
+            return std::make_unique<MegaDrive68kMachine>(std::move(inputs.cartridge), std::move(inputs.driver));
+        }
         MegaDriveMachineInputs inputs = AssembleMegaDriveMachineInputs(resources);
         return std::make_unique<MegaDriveMachine>(std::move(inputs.cartridge), std::move(inputs.driver));
     };

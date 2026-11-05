@@ -45,6 +45,20 @@ void MameDerivedM68000Adapter::Reset() {
     regs_.pc = Read32(4);
 }
 
+MameDerivedM68000Adapter::SavedState MameDerivedM68000Adapter::SaveState() const {
+    SavedState state;
+    state.regs = regs_;
+    state.halted = halted_;
+    state.interruptLevel = interruptLevel_;
+    return state;
+}
+
+void MameDerivedM68000Adapter::RestoreState(const SavedState& state) {
+    regs_ = state.regs;
+    halted_ = state.halted;
+    interruptLevel_ = state.interruptLevel;
+}
+
 void MameDerivedM68000Adapter::SetInterruptLevel(std::uint8_t level) {
     interruptLevel_ = static_cast<std::uint8_t>(level & 0x07);
 }
@@ -197,6 +211,46 @@ std::uint32_t MameDerivedM68000Adapter::MaskToSize(std::uint32_t value, int size
 // TST/TAS/ILLEGAL, CHK/LEA, TRAP/LINK/UNLK/MOVE-USP/RESET/NOP/STOP/RTE/RTS/TRAPV/RTR/JSR/JMP.
 // ============================================================================
 
+// DIVU/DIVS times follow the way the 68000 divides, bit by bit, so they depend on both operands (see the published
+// analysis of the 68000's division timing); the address time of the divisor is added by the caller.
+static int DivuMachineCycles(std::uint32_t dividend, std::uint16_t divisor) {
+    if ((dividend >> 16) >= divisor) return 10;           // overflow: the division stops after a few cycles
+    std::uint32_t mcycles = 38;
+    const std::uint32_t hdivisor = static_cast<std::uint32_t>(divisor) << 16;
+    for (int i = 0; i < 15; ++i) {
+        const std::uint32_t temp = dividend;
+        dividend <<= 1;
+        if (static_cast<std::int32_t>(temp) < 0) {
+            dividend -= hdivisor;
+        } else {
+            mcycles += 2;
+            if (dividend >= hdivisor) {
+                dividend -= hdivisor;
+                --mcycles;
+            }
+        }
+    }
+    return static_cast<int>(mcycles * 2);
+}
+
+static int DivsMachineCycles(std::int32_t dividend, std::int16_t divisor) {
+    std::uint32_t mcycles = 6;
+    if (dividend < 0) ++mcycles;
+    const std::uint32_t absDividend = dividend < 0 ? 0u - static_cast<std::uint32_t>(dividend) : static_cast<std::uint32_t>(dividend);
+    const std::uint16_t absDivisor = static_cast<std::uint16_t>(divisor < 0 ? -divisor : divisor);
+    if ((absDividend >> 16) >= absDivisor) return static_cast<int>((mcycles + 2) * 2);
+    std::uint32_t aquot = absDividend / absDivisor;
+    mcycles += 55;
+    if (divisor >= 0) {
+        if (dividend >= 0) --mcycles; else ++mcycles;
+    }
+    for (int i = 0; i < 15; ++i) {
+        if (static_cast<std::int16_t>(aquot) >= 0) ++mcycles;
+        aquot <<= 1;
+    }
+    return static_cast<int>(mcycles * 2);
+}
+
 int MameDerivedM68000Adapter::ExecuteMovem(std::uint16_t op) {
     const bool memToReg = (op & 0x0400) != 0;  // bit10
     const bool isLong = (op & 0x0040) != 0;    // bit6
@@ -256,7 +310,16 @@ int MameDerivedM68000Adapter::ExecuteMovem(std::uint16_t op) {
             ++count;
         }
     }
-    return 8 + count * (isLong ? 8 : 4);
+    // 8 (register to memory) or 12 (memory to register) plus 4 or 8 a register, plus the address time of the modes that have one
+    int addressTime = 0;
+    switch (mode) {
+        case 5: addressTime = 4; break;
+        case 6: addressTime = 6; break;
+        case 7: addressTime = reg == 1 ? 8 : (reg == 3 ? 6 : 4); break;
+        default: break;
+    }
+    if (!standardTimings_) return 8 + count * (isLong ? 8 : 4);
+    return (memToReg ? 12 : 8) + addressTime + count * (isLong ? 8 : 4);
 }
 
 int MameDerivedM68000Adapter::Group4(std::uint16_t op) {
@@ -573,7 +636,7 @@ int MameDerivedM68000Adapter::Group6(std::uint16_t op) {
         regs_.pc = target;
         return 10;
     }
-    return 8;
+    return (standardTimings_ && (op & 0xFF) == 0) ? 12 : 8;   // a word displacement costs an extra fetch when not taken
 }
 
 // ============================================================================
@@ -633,13 +696,27 @@ int MameDerivedM68000Adapter::Group8(std::uint16_t op) {
                 regs_.sr.z = (quotient == 0);
             }
         }
-        return 140;  // DIVU/DIVS are slow; a flat approximation is fine
+        if (!standardTimings_) return 140;
+        const int divide = (opmode == 3) ? DivuMachineCycles(dividend, divisorRaw)
+                                         : DivsMachineCycles(static_cast<std::int32_t>(dividend), static_cast<std::int16_t>(divisorRaw));
+        return divide + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), 2);
     }
 
     if (opmode >= 4) {
-        if (mode == 0) {
-            // SBCD Dy,Dx (register-direct form only; the -(Ay),-(Ax) form is not implemented
-            // and falls through to the generic OR handling below).
+        if (opmode == 4 && mode == 1) {
+            // SBCD -(Ay),-(Ax): both operands are bytes in memory, each address register is
+            // pre-decremented first (a byte access through A7 moves it by 2).
+            Operand src = ResolveEa(4, static_cast<std::uint8_t>(reg), 1);
+            Operand dst = ResolveEa(4, static_cast<std::uint8_t>(reg9), 1);
+            bool carry = false;
+            const std::uint8_t result = BcdSub(static_cast<std::uint8_t>(ReadOperand(dst, 1)),
+                                               static_cast<std::uint8_t>(ReadOperand(src, 1)), regs_.sr.x, carry);
+            WriteOperand(dst, 1, result);
+            ApplyBcdFlags(result, carry);
+            return 18;
+        }
+        if (opmode == 4 && mode == 0) {
+            // SBCD Dy,Dx.
             // reg9 = Dx (destination), reg = Dy (source): result = Dx - Dy - X -> Dx.
             const std::uint8_t dstByte = static_cast<std::uint8_t>(GetDataReg(reg9, 1));
             const std::uint8_t srcByte = static_cast<std::uint8_t>(GetDataReg(reg, 1));
@@ -685,7 +762,7 @@ int MameDerivedM68000Adapter::Group9(std::uint16_t op) {
     }
 
     if (opmode >= 4) {
-        if (mode == 0 || mode == 4) {
+        if (mode == 0 || mode == 1) {
             const int size = (opmode == 4) ? 1 : (opmode == 5) ? 2 : 4;
             if (mode == 0) {
                 const std::uint32_t a = GetDataReg(reg9, size);
@@ -741,7 +818,7 @@ int MameDerivedM68000Adapter::GroupB(std::uint16_t op) {
             Operand srcOp = ResolveEa(3, static_cast<std::uint8_t>(reg), size);
             Operand dstOp = ResolveEa(3, static_cast<std::uint8_t>(reg9), size);
             OpCmp(ReadOperand(dstOp, size), ReadOperand(srcOp, size), size);
-            return 12;
+            return (standardTimings_ && size == 4) ? 20 : 12;
         }
         Operand dst = ResolveEa(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), size);
         const std::uint32_t a = ReadOperand(dst, size);
@@ -780,12 +857,32 @@ int MameDerivedM68000Adapter::GroupC(std::uint16_t op) {
         }
         regs_.d[reg9] = result;
         SetNzForResult(result, 4);
-        return 70 + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), 2);
+        // MULU: 38 + 2 a set bit of the source; MULS: 38 + 2 a change between two neighbouring bits of the source (with a 0 below it)
+        int variable = 0;
+        if (opmode == 3) {
+            for (int bit = 0; bit < 16; ++bit) variable += (raw >> bit) & 1;
+        } else {
+            const std::uint32_t x = static_cast<std::uint32_t>(raw) << 1;
+            for (int bit = 0; bit < 16; ++bit) variable += ((x >> bit) ^ (x >> (bit + 1))) & 1;
+        }
+        if (!standardTimings_) return 70 + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), 2);
+        return 38 + 2 * variable + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), 2);
     }
 
     if (opmode >= 4) {
+        if (opmode == 4 && mode == 1) {
+            // ABCD -(Ay),-(Ax): see SBCD above.
+            Operand src = ResolveEa(4, static_cast<std::uint8_t>(reg), 1);
+            Operand dst = ResolveEa(4, static_cast<std::uint8_t>(reg9), 1);
+            bool carry = false;
+            const std::uint8_t result = BcdAdd(static_cast<std::uint8_t>(ReadOperand(dst, 1)),
+                                               static_cast<std::uint8_t>(ReadOperand(src, 1)), regs_.sr.x, carry);
+            WriteOperand(dst, 1, result);
+            ApplyBcdFlags(result, carry);
+            return 18;
+        }
         if (opmode == 4 && mode == 0) {
-            // ABCD Dy,Dx (register-direct form only; the -(Ay),-(Ax) form is not implemented).
+            // ABCD Dy,Dx.
             // reg9 = Dx (destination), reg = Dy (source): result = Dx + Dy + X -> Dx.
             const std::uint8_t dstByte = static_cast<std::uint8_t>(GetDataReg(reg9, 1));
             const std::uint8_t srcByte = static_cast<std::uint8_t>(GetDataReg(reg, 1));
@@ -843,7 +940,7 @@ int MameDerivedM68000Adapter::GroupD(std::uint16_t op) {
     }
 
     if (opmode >= 4) {
-        if (mode == 0 || mode == 4) {
+        if (mode == 0 || mode == 1) {
             const int size = (opmode == 4) ? 1 : (opmode == 5) ? 2 : 4;
             if (mode == 0) {
                 const std::uint32_t a = GetDataReg(reg9, size);
@@ -975,7 +1072,7 @@ int MameDerivedM68000Adapter::GroupE(std::uint16_t op) {
     }
     if (type == 0 && count > 0) regs_.sr.v = anyOverflow;
     SetDataReg(reg, size, value);
-    return 6 + 2 * count;
+    return ((standardTimings_ && size == 4) ? 8 : 6) + 2 * count;
 }
 
 MameDerivedM68000Adapter::RegisterSnapshot MameDerivedM68000Adapter::Snapshot() const {
@@ -989,6 +1086,7 @@ MameDerivedM68000Adapter::RegisterSnapshot MameDerivedM68000Adapter::Snapshot() 
     snap.halted = halted_;
     snap.interruptServiceCount = interruptServiceCount_;
     snap.illegalInstructionCount = illegalInstructionCount_;
+    snap.lineExceptionCount = lineExceptionCount_;
     return snap;
 }
 
@@ -1184,6 +1282,7 @@ std::uint64_t MameDerivedM68000Adapter::Execute(std::uint64_t cycleBudget) {
 
 void MameDerivedM68000Adapter::ExecuteOneInstruction() {
     const std::uint16_t op = FetchOpcodeWord();
+    const std::uint64_t illegalBefore = illegalInstructionCount_, lineBefore = lineExceptionCount_;
     int cycles = 4;
     switch ((op >> 12) & 0xF) {
         case 0x0: cycles = Group0(op); break;
@@ -1196,21 +1295,109 @@ void MameDerivedM68000Adapter::ExecuteOneInstruction() {
         case 0x7: cycles = Group7(op); break;
         case 0x8: cycles = Group8(op); break;
         case 0x9: cycles = Group9(op); break;
-        case 0xA:
-            RaiseIllegalInstruction();
+        case 0xA:  // line-A emulator trap (vector 10); not an illegal instruction
+            RaiseLineException(10);
             cycles = 4;
             break;
         case 0xB: cycles = GroupB(op); break;
         case 0xC: cycles = GroupC(op); break;
         case 0xD: cycles = GroupD(op); break;
         case 0xE: cycles = GroupE(op); break;
-        default:  // 0xF: line-F, coprocessor/FPU escape - illegal on a bare 68000
-            RaiseIllegalInstruction();
+        default:  // 0xF: line-F emulator trap (vector 11); a bare 68000 has no coprocessor
+            RaiseLineException(11);
             cycles = 4;
             break;
     }
+    if (standardTimings_ && illegalInstructionCount_ == illegalBefore && lineExceptionCount_ == lineBefore) cycles = StandardCycles(op, cycles);
     cyclesConsumedThisCall_ += static_cast<std::uint64_t>(cycles);
 }
+
+// ----------------------------------------------------------------------------------------------------------------
+// Instruction times. The handlers above return a first estimate; this gives the published times of the instruction
+// classes whose time follows from the opcode alone (checked against the times a 68000 emulator that models the bus
+// cycles measures). Times that depend on data (MULU/MULS, DIVU/DIVS, shifts, MOVEM, the bit instructions, branches)
+// are worked out in their handlers.
+// ----------------------------------------------------------------------------------------------------------------
+int MameDerivedM68000Adapter::StandardCycles(std::uint16_t op, int handlerCycles) const {
+    const int mode = (op >> 3) & 7;
+    const int reg = op & 7;
+    const int opmode = (op >> 6) & 7;
+    auto ea = [&](int size) { return EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), size); };
+    const bool regOrImm = mode <= 1 || (mode == 7 && reg == 4);
+    auto sizeOf = [](int field) { return field == 0 ? 1 : field == 1 ? 2 : 4; };
+    switch (op >> 12) {
+        case 0x0: {
+            if (op & 0x0100) return handlerCycles;                          // dynamic bit instructions, MOVEP
+            const int kind = (op >> 8) & 0xF;                               // 0 ORI, 2 ANDI, 4 SUBI, 6 ADDI, A EORI, C CMPI, 8 static bit
+            if (kind == 8 || ((op >> 6) & 3) == 3) return handlerCycles;
+            if (mode == 7 && reg == 4) return handlerCycles;                // to CCR / SR
+            if (kind != 0 && kind != 2 && kind != 4 && kind != 6 && kind != 0xA && kind != 0xC) return handlerCycles;
+            const int size = sizeOf((op >> 6) & 3);
+            const bool cmp = kind == 0xC;
+            if (mode == 0) return size == 4 ? (cmp ? 14 : 16) : 8;
+            return (size == 4 ? (cmp ? 12 : 20) : (cmp ? 8 : 12)) + ea(size);
+        }
+        case 0x4: {
+            if ((op & 0xFFC0) == 0x40C0) return mode == 0 ? 6 : 8 + ea(2);                         // MOVE from SR
+            const int top = op & 0xFF00;
+            if ((top == 0x4000 || top == 0x4200 || top == 0x4400 || top == 0x4600) && ((op >> 6) & 3) != 3) {
+                const int size = sizeOf((op >> 6) & 3);                                              // NEGX CLR NEG NOT
+                if (mode == 0) return size == 4 ? 6 : 4;
+                return (size == 4 ? 12 : 8) + ea(size);
+            }
+            if ((op & 0xF1C0) == 0x41C0) {                                                           // LEA
+                return ea(2) + ((mode == 6 || (mode == 7 && reg == 3)) ? 2 : 0);
+            }
+            if ((op & 0xFFC0) == 0x4840 && mode >= 2) return ea(2) + ((mode == 6 || (mode == 7 && reg == 3)) ? 2 : 0) + 8;   // PEA
+            if ((op & 0xFFC0) == 0x4AC0) return mode == 0 ? 4 : 10 + ea(1);                          // TAS
+            return handlerCycles;
+        }
+        case 0x5: {
+            if (((op >> 6) & 3) == 3) {
+                if (mode == 1) return handlerCycles;                                                 // DBcc
+                if (mode == 0) return TestCondition((op >> 8) & 0xF) ? 6 : 4;                        // Scc Dn
+                return 8 + ea(1);
+            }
+            const int size = sizeOf((op >> 6) & 3);                                                  // ADDQ / SUBQ
+            if (mode == 0) return size == 4 ? 8 : 4;
+            if (mode == 1) return 8;
+            return (size == 4 ? 12 : 8) + ea(size);
+        }
+        case 0x8: case 0xC: {
+            if (opmode == 3 || opmode == 7) return handlerCycles;                                    // DIVU DIVS MULU MULS
+            if (opmode >= 4 && mode <= 1) return handlerCycles;                                      // SBCD ABCD EXG
+            [[fallthrough]];
+        }
+        case 0x9: case 0xD: {
+            const bool addSub = (op >> 12) == 0x9 || (op >> 12) == 0xD;
+            if (opmode < 3) {                                                                        // <ea>,Dn
+                const int size = sizeOf(opmode);
+                return size == 4 ? 6 + ea(4) + (regOrImm ? 2 : 0) : 4 + ea(size);
+            }
+            if (addSub && (opmode == 3 || opmode == 7)) {                                           // ADDA / SUBA
+                if (opmode == 3) return 8 + ea(2);
+                return 6 + ea(4) + (regOrImm ? 2 : 0);
+            }
+            const int size = sizeOf(opmode - 4);
+            if (addSub && mode <= 1) {                                                               // ADDX / SUBX
+                if (mode == 0) return size == 4 ? 8 : 4;
+                return size == 4 ? 30 : 18;
+            }
+            return (size == 4 ? 12 : 8) + ea(size);                                                  // Dn,<ea>
+        }
+        case 0xB: {
+            if (opmode < 3) { const int size = sizeOf(opmode); return (size == 4 ? 6 : 4) + ea(size); }      // CMP
+            if (opmode == 3) return 6 + ea(2);                                                       // CMPA.W
+            if (opmode == 7) return 6 + ea(4);                                                       // CMPA.L
+            const int size = sizeOf(opmode - 4);
+            if (mode == 1) return size == 4 ? 20 : 12;                                               // CMPM
+            if (mode == 0) return size == 4 ? 8 : 4;                                                 // EOR Dn,Dn
+            return (size == 4 ? 12 : 8) + ea(size);                                                  // EOR Dn,<ea>
+        }
+        default: return handlerCycles;
+    }
+}
+
 
 // ============================================================================
 // Condition codes
@@ -1379,8 +1566,8 @@ int MameDerivedM68000Adapter::ExecuteMove(std::uint16_t op, int size) {
         SetNzForResult(value, size);
         WriteOperand(dst, size, value);
     }
-    return 4 + EaExtraCycles(static_cast<std::uint8_t>(srcMode), static_cast<std::uint8_t>(srcReg), size) +
-           EaExtraCycles(static_cast<std::uint8_t>(destMode), static_cast<std::uint8_t>(destReg), size);
+    const int destCost = (standardTimings_ && destMode == 4) ? (size == 4 ? 8 : 4) : EaExtraCycles(static_cast<std::uint8_t>(destMode), static_cast<std::uint8_t>(destReg), size);
+    return 4 + EaExtraCycles(static_cast<std::uint8_t>(srcMode), static_cast<std::uint8_t>(srcReg), size) + destCost;
 }
 
 int MameDerivedM68000Adapter::Group1(std::uint16_t op) { return ExecuteMove(op, 1); }
@@ -1392,7 +1579,7 @@ int MameDerivedM68000Adapter::Group3(std::uint16_t op) { return ExecuteMove(op, 
 // static/dynamic BTST/BCHG/BCLR/BSET, MOVEP.
 // ============================================================================
 
-int MameDerivedM68000Adapter::ExecuteBitOp(std::uint16_t op, int bitNumber, bool /*dynamicBitNumber*/) {
+int MameDerivedM68000Adapter::ExecuteBitOp(std::uint16_t op, int bitNumber, bool dynamicBitNumber) {
     const int opSel = (op >> 6) & 3;  // 00=BTST,01=BCHG,10=BCLR,11=BSET
     const int mode = (op >> 3) & 7;
     const int reg = op & 7;
@@ -1415,7 +1602,14 @@ int MameDerivedM68000Adapter::ExecuteBitOp(std::uint16_t op, int bitNumber, bool
         case 3: value |= mask; WriteOperand(dst, size, value); break;  // BSET
         default: break;
     }
-    return 4 + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), size);
+    // Times: a register destination 6 (BCLR 8; dynamic BCHG/BCLR/BSET +2 when the bit number is above 15), 10 (BCLR 12) with
+    // an immediate bit number; a memory destination 8 + the address time (BTST 4), 4 more with an immediate bit number.
+    if (!standardTimings_) return 4 + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), size);
+    if (isDataReg) {
+        if (dynamicBitNumber) return (opSel == 2 ? 8 : 6) + ((opSel != 0 && bitNumber >= 16) ? 2 : 0);
+        return opSel == 2 ? 12 : 10;
+    }
+    return (opSel == 0 ? 4 : 8) + (dynamicBitNumber ? 0 : 4) + EaExtraCycles(static_cast<std::uint8_t>(mode), static_cast<std::uint8_t>(reg), size);
 }
 
 int MameDerivedM68000Adapter::Group0(std::uint16_t op) {
@@ -1530,6 +1724,13 @@ void MameDerivedM68000Adapter::RaiseIllegalInstruction() {
     regs_.pc -= 2;
     if (illegalInstructionObserver_) illegalInstructionObserver_(regs_.pc, lastFetchedOpcodeForTest_);
     TakeException(4);  // vector 4: illegal instruction
+}
+
+void MameDerivedM68000Adapter::RaiseLineException(std::uint8_t vector) {
+    ++lineExceptionCount_;
+    // Like an illegal instruction, the stacked PC is the address of the opcode word itself.
+    regs_.pc -= 2;
+    TakeException(vector);
 }
 
 std::uint8_t MameDerivedM68000Adapter::BcdAdd(std::uint8_t dst, std::uint8_t src, bool extend,
