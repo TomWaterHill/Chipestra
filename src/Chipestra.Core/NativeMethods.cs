@@ -164,5 +164,8 @@ namespace Chipestra.Core
 
         [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern ChipestraResult chipestra_set_master_muted(IntPtr handle, byte muted);
+
+        [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ChipestraResult chipestra_set_analog_filter_mode(IntPtr handle, uint mode);
     }
 }

@@ -4,7 +4,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Chipestra - Settings"
-        Height="380" Width="500"
+        Height="500" Width="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -58,6 +58,17 @@
                  request, not a command. The per-session "actual vs requested" text is the
                  Output field in the main window's INFORMATION row. -->
             <TextBlock Text="{Binding OutputRateNote}" TextWrapping="Wrap" Margin="0,8,0,0" Opacity="0.7" />
+
+            <TextBlock Text="Mega Drive / Genesis" FontWeight="Bold" Margin="0,16,0,8" />
+            <ComboBox x:Name="AnalogFilterComboBox"
+                      Width="320"
+                      Padding="4,4"
+                      HorizontalAlignment="Left"
+                      ItemsSource="{Binding AvailableAnalogFilters}"
+                      DisplayMemberPath="Label"
+                      SelectedValuePath="Mode"
+                      SelectedValue="{Binding MegaDriveAnalogFilter, Mode=TwoWay}" />
+            <TextBlock Text="{Binding AnalogFilterNote}" TextWrapping="Wrap" Margin="0,8,0,0" Opacity="0.7" />
         </StackPanel>
 
         <!-- License is on the opposite side from OK/Cancel so it does not read as a third commit action. -->

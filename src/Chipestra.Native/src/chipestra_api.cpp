@@ -57,6 +57,8 @@ struct ChipestraInstanceOpaque {
 
     // Master section state - independent atomics rather than channels_mutex, since these apply
     // to the final mixed StereoFrame block (after MixBlock), not to any LogicalChannel element.
+    // Analog output-stage filter mode (ChipestraAnalogFilterMode), read by the PlaybackPump thread.
+    std::atomic<std::uint32_t> analog_filter_mode{0};
     std::atomic<float> master_gain{1.0f};
     std::atomic<bool> master_muted{false};
     std::atomic<float> master_peak_left{0.0f};
@@ -466,6 +468,7 @@ extern "C" ChipestraResult chipestra_start_playback(ChipestraHandle handle) noex
             // kBlockSizeFrames ticks. The Machine writes each channel at its own native rate;
             // the resampler brings every channel up to the canonical rate before the Mixer.
             handle->sink.ClearAll();
+            handle->resampler.SetAnalogFilterMode(handle->analog_filter_mode.load(std::memory_order_relaxed));
             handle->machine->Render(EmuDuration(Mixer::kBlockSizeFrames), &handle->sink);
 
             const LogicalChannelSink& canonical = handle->resampler.Resample(
@@ -766,6 +769,17 @@ extern "C" ChipestraResult chipestra_set_master_gain(ChipestraHandle handle, flo
     }
 
     handle->master_gain.store(gain, std::memory_order_relaxed);
+    return CHIPESTRA_OK;
+}
+
+extern "C" ChipestraResult chipestra_set_analog_filter_mode(ChipestraHandle handle, uint32_t mode) noexcept {
+    if (handle == nullptr || mode > CHIPESTRA_ANALOG_FILTER_MODEL2) {
+        return CHIPESTRA_E_INVALID_ARGUMENT;
+    }
+    if (!IsLiveInstance(handle)) {
+        return CHIPESTRA_E_INVALID_STATE;
+    }
+    handle->analog_filter_mode.store(mode, std::memory_order_relaxed);
     return CHIPESTRA_OK;
 }
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 Tom Water Hill
+using System.Text.Json.Serialization;
 using Chipestra.Core;
 
 namespace Chipestra.App.Settings
@@ -26,6 +27,13 @@ namespace Chipestra.App.Settings
         /// without this field gets). Advisory in shared mode - see <see cref="OutputRateOptions"/>.
         /// </summary>
         public uint OutputRateHz { get; set; }
+
+        /// <summary>
+        /// The console analog-stage filter for Mega Drive sound. Off (also what a settings.json without this field,
+        /// or with an unusable value, gets) leaves the sound unchanged.
+        /// </summary>
+        [JsonConverter(typeof(AnalogFilterModeJsonConverter))]
+        public AnalogFilterMode MegaDriveAnalogFilter { get; set; } = AnalogFilterMode.Off;
 
         /// <summary>
         /// Last-used main window bounds, saved on close and restored on the next launch (see

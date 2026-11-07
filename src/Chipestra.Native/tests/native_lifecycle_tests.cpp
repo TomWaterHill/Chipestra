@@ -35,6 +35,7 @@
 #include "vlm5030_adapter_tests.h"
 #include "resource_resolver_tests.h"
 #include "rom_crc_search_tests.h"
+#include "analog_filter_tests.h"
 #include "sample_rate_converter_tests.h"
 #include "segapcm_adapter_tests.h"
 #include "outrun_machine_tests.h"
@@ -1394,9 +1395,18 @@ void RunMegaDriveTests() {
     MegaDriveSongSoundsFromTheRequestOn();
     MegaDrive68kDriverConfigIsParsedAndChecked();
     MegaDrive68kSyntheticDriverRunsAndRequestsReachTheChips();
+    MegaDrive68kCallRequestsReachTheGamesRoutines();
+    MegaDrive68kRequestCanNameAByteOfTheGamesRam();
+    MegaDrive68kZ80ResetCanBeReleasedAtTheStart();
     MegaDrive68kBusRulesBetweenTheCpus();
     MegaDrive68kZ80StartsWhenItsResetIsReleased();
     MegaDrive68kRealCartridgeMatchesTheOriginalsChipWrites();
+    MegaDrive68kBattleManiaReplayMatchesTheOriginalsChipWrites();
+    MegaDrive68kBattleMania2ReplayMatchesTheOriginalsChipWrites();
+    MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites();
+    MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites();
+    MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests();
+    MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites();
 }
 
 }  // namespace
@@ -1407,6 +1417,11 @@ int main() {
     // instead of being lost in a stale buffer.
     std::setvbuf(stdout, nullptr, _IONBF, 0);
     // CHIPESTRA_TEST_GROUP=megadrive runs only the Mega Drive tests (a shorter run while working on them).
+    if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "starcruiser") {
+        MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites();
+        std::printf(g_failures == 0 ? "native lifecycle tests (Star Cruiser only): all checks passed\n" : "native lifecycle tests (Star Cruiser only): %d check(s) FAILED\n", g_failures);
+        return g_failures == 0 ? 0 : 1;
+    }
     if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "megadrive") {
         RunMegaDriveTests();
         std::printf(g_failures == 0 ? "native lifecycle tests (Mega Drive only): all checks passed\n" : "native lifecycle tests (Mega Drive only): %d check(s) FAILED\n", g_failures);
@@ -2017,6 +2032,13 @@ int main() {
     ResamplingMixerFeedPassthroughAndResample();
     XBoardMachineYm2151ReachesMixerThroughResampler();
     ResamplingMixerFeedCompensatesGroupDelayAcrossDifferentNativeRates();
+    AnalogFilterOffIsAnExactPassThrough();
+    AnalogFilterModel1FrequencyResponseMatchesTheFirstOrderDesign();
+    AnalogFilterModel2FrequencyResponseMatchesTheTwoStageDesign();
+    AnalogFilterOnlyTouchesMarkedChannels();
+    AnalogFilterModeChangeCrossfadesWithoutAStep();
+    AnalogFilterAbiValidatesArguments();
+    MegaDriveMachinesMarkTheirFmAndPsgChannelsForTheAnalogFilter();
 
     AfterBurner2DefinitionXmlIsValid();
     AfterBurner2ReferenceBringUp();

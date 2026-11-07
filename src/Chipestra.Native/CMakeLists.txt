@@ -28,6 +28,8 @@ set(CHIPESTRA_CORE_SOURCES
     src/sample_rate_converter.cpp
     src/soxr_sample_rate_converter.h
     src/soxr_sample_rate_converter.cpp
+    src/analog_filter.h
+    src/analog_filter.cpp
     src/resampling_mixer_feed.h
     src/resampling_mixer_feed.cpp
     src/mixer.h
@@ -433,6 +435,7 @@ add_executable(chipestra_native_tests
     tests/vlm5030_adapter_tests.cpp
     tests/gradius_reference_tests.cpp
     tests/sample_rate_converter_tests.cpp
+    tests/analog_filter_tests.cpp
     tests/afterburner2_reference_tests.cpp
     tests/ym2203_adapter_tests.cpp
     tests/msm5205_adapter_tests.cpp

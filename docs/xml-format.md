@@ -500,14 +500,62 @@ an effect is written into the game's RAM by Chipestra, as the game's main loop w
 | Attribute | Meaning |
 |---|---|
 | `m68k_init` | The addresses of the game's subroutines that run once after the reset, in this order, separated by spaces (each ends with `RTS`): the game's routines that load the Z80's program and set up the sound driver. |
-| `m68k_frame` | The address of the subroutine that runs the sound driver, called at every vertical-blank interrupt (it ends with `RTS`). |
+| `m68k_frame` | The address of the subroutine that runs the sound driver, called at every vertical-blank interrupt (it ends with `RTS`). A driver that has several routines to run every frame (one for the FM channels, one for the PSG) lists their addresses separated by spaces; they are called in this order. Not needed with `vblank_handler="game"`. |
+| `vblank_handler` | `game`: the game's own vertical-blank handler (the level 6 vector of the cartridge) runs as it is, instead of a generated one that calls the `m68k_frame` routines. For a game whose sound code is part of its interrupt handlers. The handler does its other work too, with no video chip and a RAM that holds only what the sound code and `m68k_ram_words` put there; the controller ports read as ports with no button pressed. |
+| `hblank_lines` | `1`-`256`: the horizontal-blank interrupt (level 4) is raised every this many scanlines, which is the value of the video chip's register 10 plus one, and runs the game's own handler (the level 4 vector of the cartridge). The first one comes after that many lines of the frame, and the last one before line 224 (with 53, on the lines 52, 105, 158 and 211 of every frame). Without it the interrupt is never raised. |
+| `m68k_a6` | The address (`0xE00000`-`0xFFFFFF`) that register A6 holds from the start. For a game whose handlers and routines take it for granted that A6 is the base of the variables of the game. |
+| `m68k_ram_words` | Words that Chipestra writes into the game's RAM before it calls the initialization routines, as `address=value` pairs separated by spaces (an even address in `0xE00000`-`0xFFFFFF`, a value up to `0xFFFF`): settings that the game's own start-up code leaves for the sound driver. |
 | `request` | The 68000 address (`0xFF0000`-`0xFFFFFF`) of the byte of the game's RAM in which the game puts the number of a song or an effect for the driver to take at its next frame. A track's `command` is written there. |
+| `requests` | For a driver that the game does not hand its requests in a byte of RAM but by calling a subroutine with the number in a register: the addresses of these subroutines (1 to 7, separated by spaces; each ends with `RTS`). It replaces `request`. A track names the subroutine that takes its number with `request="0x..."` (the same address as in this list); the number (`command`) is given to it in both `D0` and `D1` (or, with `request_arg="pointer"`, in a word on the stack that `A0` points at), and the subroutine is called as soon as possible, as the game's main program would. An entry may also be the address of a byte of the game's RAM (`0xE00000`-`0xFFFFFF`) instead of a subroutine: the number is then written into that byte, for a request that the game makes through a variable of its own. |
+| `request_arg` | `pointer`: the subroutines of `requests` get the number in a word that register `A0` points at (on the stack) and not in `D0` and `D1`. |
+| `z80_bus` | `instruction_end`: a change of the Z80's bus request takes effect at the end of the 68000 instruction that makes it. The Z80 runs on to that time before it stops, and takes up again from that time when the bus is given back; a driver that asks for the bus for every write it makes to the sound chip has its Z80 play the sampled sounds at the pace of the original only this way. Without it the change takes effect at the start of that instruction. |
+| `z80_reset` | `released`: the Z80 is already running (not held in reset) when the initialization begins, as the game's own start-up code leaves it; the initialization of such a game asks for the Z80's bus and waits for it, which a Z80 held in reset never grants. Without it the reset is held until the game releases it. |
 | `warmup_frames` | How many frames the sound routine runs before the first request. The state after them is kept and restored at every switch. |
 | `region`, `cart_crc32` | As in section 4c (a list of regions in `region` makes one game for each). |
 
 ```xml
 <driver m68k_init="0x134C" m68k_frame="0x71B4C" request="0xFFF00B" warmup_frames="4" region="japan" cart_crc32="afe05eee"/>
 ```
+
+A game that starts its sounds by calling subroutines, with two frame routines:
+
+```xml
+<driver m68k_init="0x61E4 0x6C000 0x6CBC2" m68k_frame="0x6C0AA 0x6CC16" requests="0x6C064 0x6C08E 0x6CBDA" warmup_frames="4" region="japan" cart_crc32="1ab9a5de"/>
+...
+<track id="BGM_16" title="BGM 16" command="0x16" request="0x6C064"/>
+<track id="SFX_35" title="[SFX] 35" command="0x35" type="sfx" request="0x6C08E" loops="false"/>
+```
+
+A game whose sound setup is part of a larger routine (one that also loads the Z80's program), with a song started by a call and an
+effect by a variable:
+
+```xml
+<driver m68k_init="0x1DBD8" m68k_frame="0x39E04 0x39E0C" requests="0x39E10 0xFFF012" warmup_frames="4" region="japan" cart_crc32="f9872055"/>
+...
+<track id="BGM_01" title="BGM 01" command="0x01" request="0x39E10"/>
+<track id="SFX_06" title="[SFX] 06" command="0x06" type="sfx" request="0xFFF012" loops="false"/>
+```
+
+A game whose own start-up code releases the Z80 reset, with the request in one byte of the RAM (a Z80 program that waits a moment
+after its start before it takes commands needs a longer `warmup_frames`):
+
+```xml
+<driver m68k_init="0xD0004" m68k_frame="0xD0000" request="0xFF500A" z80_reset="released" warmup_frames="24" region="japan" cart_crc32="f0bfad42"/>
+```
+
+A game whose sound driver is driven by both interrupts of its own (the horizontal one advances the music, the vertical one does the rest),
+with the routines taking their number through a pointer and the game's variables addressed through A6:
+
+```xml
+<driver m68k_init="0x9592 0x9610" vblank_handler="game" hblank_lines="53" m68k_a6="0xFF0000" m68k_ram_words="0xFF0470=5" requests="0x9622 0x963C" request_arg="pointer" z80_bus="instruction_end" warmup_frames="4" region="japan" cart_crc32="2b75b52f"/>
+...
+<track id="BGM_12" title="BGM 12" command="0x12" request="0x9622"/>
+<track id="SFX_1F" title="[SFX] 1F" command="0x1F" type="sfx" request="0x963C"/>
+```
+
+Time inside the Machine: the 68000 and the Z80 run side by side, the one that is behind running an instruction at a time. A change
+of the Z80's bus request takes effect at the start of the 68000 instruction that makes it, or, with `z80_bus="instruction_end"`, at
+the end of it.
 
 A routine must work with only the CPU, the RAM, the cartridge, the Z80's bus, the YM2612 and the PSG: the Machine answers the
 status register of the video chip (the vertical-blank flag and the scanline counter) and the controller ports (no button

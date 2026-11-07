@@ -103,8 +103,14 @@ const LogicalChannelSink& ResamplingMixerFeed::Resample(const LogicalChannelSink
                 .Process(input, inputCount, scratch_.data(), canonicalFrameCount);
         }
 
+        if (channel.AnalogFilterGroup != AnalogFilterGroupId::None) {
+            ApplyAnalogFilter(channel, scratch_.data(), scratch_.size());
+        }
+
         canonical_.WriteSamples(channel.Id, scratch_.data(), scratch_.size());
     }
+
+    AdvanceAnalogFilterFade(canonicalFrameCount);
 
     return canonical_;
 }
@@ -115,4 +121,70 @@ void ResamplingMixerFeed::Reset() {
     // re-seeded. The delay cache is kept: a rate's measured delay doesn't change
     // across a Reset(), and re-measuring on every track switch would be costly.
     converters_.clear();
+    filter_states_.clear();
+}
+
+void ResamplingMixerFeed::SetAnalogFilterMode(std::uint32_t mode) {
+    if (mode > CHIPESTRA_ANALOG_FILTER_MODEL2) mode = CHIPESTRA_ANALOG_FILTER_OFF;
+    if (mode == analog_target_) return;
+    // Start the crossfade from the weights the previous fade has reached so far.
+    double current[3];
+    const double t = analog_fade_pos_ >= kAnalogFilterFadeFrames
+                         ? 1.0
+                         : static_cast<double>(analog_fade_pos_) / static_cast<double>(kAnalogFilterFadeFrames);
+    for (std::uint32_t m = 0; m < 3; ++m) {
+        const double target = (m == analog_target_) ? 1.0 : 0.0;
+        current[m] = analog_start_weights_[m] + (target - analog_start_weights_[m]) * t;
+    }
+    for (std::uint32_t m = 0; m < 3; ++m) analog_start_weights_[m] = current[m];
+    analog_target_ = mode;
+    analog_fade_pos_ = 0;
+}
+
+void ResamplingMixerFeed::AdvanceAnalogFilterFade(std::size_t count) {
+    if (analog_fade_pos_ >= kAnalogFilterFadeFrames) return;
+    analog_fade_pos_ += count;
+    if (analog_fade_pos_ >= kAnalogFilterFadeFrames) {
+        analog_fade_pos_ = kAnalogFilterFadeFrames;
+        for (std::uint32_t m = 0; m < 3; ++m) analog_start_weights_[m] = (m == analog_target_) ? 1.0 : 0.0;
+    }
+}
+
+void ResamplingMixerFeed::ApplyAnalogFilter(const LogicalChannel& channel, float* data, std::size_t count) {
+    const bool fading = analog_fade_pos_ < kAnalogFilterFadeFrames;
+    if (!fading && analog_target_ == CHIPESTRA_ANALOG_FILTER_OFF) return;  // exact pass-through
+
+    if (!analog_stages_ready_) {
+        for (std::uint32_t m = 0; m < 3; ++m) {
+            analog_stages_[m] = analog_filter::StagesFor(m, static_cast<double>(Mixer::kCanonicalSampleRateHz));
+        }
+        analog_stages_ready_ = true;
+    }
+    ChannelFilterState& state = filter_states_[channel.Id];
+
+    // Modes that can contribute during this block (weight > 0 at its start, or the target).
+    bool needed[3];
+    for (std::uint32_t m = 0; m < 3; ++m) needed[m] = analog_start_weights_[m] > 0.0 || m == analog_target_;
+
+    for (std::size_t i = 0; i < count; ++i) {
+        const double x = data[i];
+        double y[3] = {x, 0.0, 0.0};
+        for (std::uint32_t m = 1; m < 3; ++m) {
+            if (needed[m]) y[m] = state.model[m].Process(analog_stages_[m], channel.AnalogFilterGroup, x);
+        }
+        double out;
+        const std::size_t pos = analog_fade_pos_ + i;
+        if (!fading || pos >= kAnalogFilterFadeFrames) {
+            out = y[analog_target_];
+        } else {
+            const double t = static_cast<double>(pos) / static_cast<double>(kAnalogFilterFadeFrames);
+            out = 0.0;
+            for (std::uint32_t m = 0; m < 3; ++m) {
+                const double target = (m == analog_target_) ? 1.0 : 0.0;
+                const double w = analog_start_weights_[m] + (target - analog_start_weights_[m]) * t;
+                if (w != 0.0) out += w * y[m];
+            }
+        }
+        data[i] = static_cast<float>(out);
+    }
 }

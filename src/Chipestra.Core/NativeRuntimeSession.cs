@@ -374,6 +374,17 @@ namespace Chipestra.Core
             return NativeMethods.chipestra_set_master_gain(_handle, gain);
         }
 
+        /// <summary>Selects the console analog-stage filter (takes effect immediately, also while playing).</summary>
+        public ChipestraResult SetAnalogFilterMode(AnalogFilterMode mode)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(NativeRuntimeSession));
+            }
+
+            return NativeMethods.chipestra_set_analog_filter_mode(_handle, (uint)mode);
+        }
+
         /// <summary>Sets the master MUTE flag.</summary>
         public ChipestraResult SetMasterMuted(bool muted)
         {

@@ -63,12 +63,81 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
         }
     }
     std::uint64_t value = 0;
-    if (!ParseNumber(node.attribute("m68k_frame").as_string(""), value) || value > 0x3FFFFF || (value & 1))
-        return Fail(error, "<driver m68k_frame>: expected the address of the game's sound routine (even, below 0x400000)");
-    out.frame = static_cast<std::uint32_t>(value);
-    if (!ParseNumber(node.attribute("request").as_string(""), value) || value < 0xE00000 || value > 0xFFFFFF)
-        return Fail(error, "<driver request>: expected the 68000 address of the request byte in the game's RAM (0xE00000-0xFFFFFF)");
-    out.requestAddress = static_cast<std::uint32_t>(value);
+    if (const pugi::xml_attribute vh = node.attribute("vblank_handler")) {
+        if (std::string_view(vh.value()) != "game") return Fail(error, "<driver vblank_handler>: expected \"game\"");
+        out.vblankHandlerIsGame = true;
+    }
+    if (const pugi::xml_attribute hb = node.attribute("hblank_lines")) {
+        if (!ParseNumber(hb.value(), value) || value < 1 || value > 256)
+            return Fail(error, "<driver hblank_lines>: expected a number of scanlines (1-256)");
+        out.hblankLines = static_cast<std::uint32_t>(value);
+    }
+    if (const pugi::xml_attribute a6 = node.attribute("m68k_a6")) {
+        if (!ParseNumber(a6.value(), value) || value < 0xE00000 || value > 0xFFFFFF)
+            return Fail(error, "<driver m68k_a6>: expected an address in the game's RAM (0xE00000-0xFFFFFF)");
+        out.a6 = static_cast<std::uint32_t>(value);
+    }
+    if (const pugi::xml_attribute rw = node.attribute("m68k_ram_words")) {
+        std::string_view list = rw.value();
+        std::size_t i = 0;
+        while (i < list.size()) {
+            while (i < list.size() && list[i] == ' ') ++i;
+            const std::size_t start = i;
+            while (i < list.size() && list[i] != ' ') ++i;
+            if (i == start) break;
+            const std::string_view pair = list.substr(start, i - start);
+            const std::size_t eq = pair.find('=');
+            std::uint64_t address = 0, word = 0;
+            if (eq == std::string_view::npos || !ParseNumber(pair.substr(0, eq), address) || !ParseNumber(pair.substr(eq + 1), word) ||
+                address < 0xE00000 || address > 0xFFFFFF || (address & 1) || word > 0xFFFF)
+                return Fail(error, "<driver m68k_ram_words>: expected \"address=value\" pairs (an even address in the game's RAM, 0xE00000-0xFFFFFF, and a 16-bit value) separated by spaces");
+            out.ramWords.emplace_back(static_cast<std::uint32_t>(address), static_cast<std::uint16_t>(word));
+        }
+    }
+    if (const pugi::xml_attribute zb = node.attribute("z80_bus")) {
+        if (std::string_view(zb.value()) != "instruction_end") return Fail(error, "<driver z80_bus>: expected \"instruction_end\"");
+        out.z80BusAtInstructionEnd = true;
+    }
+    if (const pugi::xml_attribute ra = node.attribute("request_arg")) {
+        if (std::string_view(ra.value()) != "pointer") return Fail(error, "<driver request_arg>: expected \"pointer\"");
+        out.requestByPointer = true;
+    }
+    if (!out.vblankHandlerIsGame) {
+        std::string_view list = node.attribute("m68k_frame").as_string("");
+        std::size_t i = 0;
+        while (i < list.size()) {
+            while (i < list.size() && list[i] == ' ') ++i;
+            const std::size_t start = i;
+            while (i < list.size() && list[i] != ' ') ++i;
+            if (i == start) break;
+            if (!ParseNumber(list.substr(start, i - start), value) || value > 0x3FFFFF || (value & 1))
+                return Fail(error, "<driver m68k_frame>: expected the address of the game's sound routine (even, below 0x400000)");
+            out.frames.push_back(static_cast<std::uint32_t>(value));
+        }
+        if (out.frames.empty())
+            return Fail(error, "<driver m68k_frame>: expected the address of the game's sound routine (even, below 0x400000)");
+    }
+    if (const pugi::xml_attribute requests = node.attribute("requests")) {
+        std::string_view list = requests.value();
+        std::size_t i = 0;
+        while (i < list.size()) {
+            while (i < list.size() && (list[i] == ' ' || list[i] == ',')) ++i;
+            const std::size_t start = i;
+            while (i < list.size() && list[i] != ' ' && list[i] != ',') ++i;
+            if (i == start) break;
+            std::uint64_t address = 0;
+            const bool inRam = ParseNumber(list.substr(start, i - start), address) && address >= 0xE00000 && address <= 0xFFFFFF;
+            if (!inRam && (!ParseNumber(list.substr(start, i - start), address) || address > 0x3FFFFF || (address & 1)))
+                return Fail(error, "<driver requests>: expected addresses of subroutines in the cartridge (even, below 0x400000) or of bytes in the game's RAM (0xE00000-0xFFFFFF) separated by spaces");
+            out.requestRoutines.push_back(static_cast<std::uint32_t>(address));
+        }
+        if (out.requestRoutines.empty() || out.requestRoutines.size() > 7)
+            return Fail(error, "<driver requests>: expected 1 to 7 addresses");
+    } else {
+        if (!ParseNumber(node.attribute("request").as_string(""), value) || value < 0xE00000 || value > 0xFFFFFF)
+            return Fail(error, "<driver request>: expected the 68000 address of the request byte in the game's RAM (0xE00000-0xFFFFFF)");
+        out.requestAddress = static_cast<std::uint32_t>(value);
+    }
     if (!ParseNumber(node.attribute("warmup_frames").as_string(""), value) || value > 100000)
         return Fail(error, "<driver warmup_frames>: expected a number of frames (0-100000)");
     out.warmupFrames = static_cast<std::uint32_t>(value);
@@ -78,6 +147,10 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
         else if (text == "usa") out.region = MegaDriveRegion::Usa;
         else if (text == "europe") out.region = MegaDriveRegion::Europe;
         else return Fail(error, "<driver region>: expected \"japan\", \"usa\" or \"europe\"");
+    }
+    if (const pugi::xml_attribute z80 = node.attribute("z80_reset")) {
+        if (std::string_view(z80.value()) != "released") return Fail(error, "<driver z80_reset>: expected \"released\"");
+        out.z80ResetReleased = true;
     }
     if (const pugi::xml_attribute crc = node.attribute("cart_crc32")) {
         std::string_view text = crc.value();
@@ -113,7 +186,10 @@ MegaDrive68kMachineInputs AssembleMegaDrive68kMachineInputs(const MachineResourc
     }
     for (std::uint32_t address : inputs.driver.init)
         if (address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: a <driver m68k_init> routine is not inside the cartridge");
-    if (inputs.driver.frame + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: the <driver m68k_frame> routine is not inside the cartridge");
+    for (std::uint32_t address : inputs.driver.requestRoutines)
+        if (address < 0xE00000 && address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: a <driver requests> routine is not inside the cartridge");
+    for (std::uint32_t address : inputs.driver.frames)
+        if (address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: the <driver m68k_frame> routine is not inside the cartridge");
     return inputs;
 }
 
@@ -138,6 +214,8 @@ MegaDrive68kMachine::MegaDrive68kMachine(std::vector<std::uint8_t> cartridge, Me
     for (const char* name : {"Tone 1", "Tone 2", "Tone 3", "Noise"}) add("SN76489", name, timing_.psgStreamRateHz);
     for (std::uint32_t c = 0; c < kYmChannelCount; ++c) channels_[c].RoutingGain = kYmRoutingGain * 2.0f;
     for (std::uint32_t c = kPsgFirstChannel; c < channels_.size(); ++c) channels_[c].RoutingGain = kPsgRoutingGain;
+    for (std::uint32_t c = 0; c < kYmChannelCount; ++c) channels_[c].AnalogFilterGroup = AnalogFilterGroupId::Fm;
+    for (std::uint32_t c = kPsgFirstChannel; c < channels_.size(); ++c) channels_[c].AnalogFilterGroup = AnalogFilterGroupId::Psg;
 }
 
 void MegaDrive68kMachine::Initialize() {
@@ -150,10 +228,11 @@ void MegaDrive68kMachine::Initialize() {
                               [this](std::uint32_t address, std::uint8_t value) { Write68k(address, value); });
     // The vertical-blank interrupt (level 6) is held until the 68000 takes it.
     m68k_->SetAutovectorAcknowledgeCallback([this](std::uint8_t level) {
-        if (level == 6) {
-            vint_pending_ = false;
-            m68k_->SetInterruptLevel(0);
-        }
+        if (level == 6) vint_pending_ = false;
+        else if (level == 4) hint_pending_ = false;
+        else if (level == 2) call_pending_ = false;
+        else return;
+        UpdateIrqLevel();
     });
     z80_->SetMemoryCallbacks([this](std::uint16_t address) { return ReadZ80Bus(address); },
                              [this](std::uint16_t address, std::uint8_t value) { WriteZ80Bus(address, value); });
@@ -164,19 +243,44 @@ void MegaDrive68kMachine::Initialize() {
 
 void MegaDrive68kMachine::Reset() { ColdStart(); }
 
+void MegaDrive68kMachine::UpdateIrqLevel() {
+    m68k_->SetInterruptLevel(vint_pending_ ? 6 : hint_pending_ ? 4 : call_pending_ ? 2 : 0);
+}
+
+// The time of the next horizontal-blank interrupt after `afterTicks` (kNever: the first one). The VDP's counter is loaded
+// with register 10 at the top of the frame and counts a line at a time, so the interrupts come at lines N-1, 2N-1, ...
+// (N = register 10 + 1) while the line is in the picture (above kVblankLine).
+void MegaDrive68kMachine::SetNextHint(std::uint64_t afterTicks) {
+    if (driver_.hblankLines == 0) { next_hint_ = kNever; return; }
+    const std::uint64_t n = driver_.hblankLines;
+    const std::uint64_t frame = frame_ticks_;
+    std::uint64_t base = afterTicks == kNever ? 0 : afterTicks + 1;
+    for (;;) {
+        const std::uint64_t k = base / frame;
+        for (std::uint64_t line = n - 1; line < kVblankLine; line += n) {
+            const std::uint64_t t = k * frame + line * kScanlineTicks + 10 * 15;
+            if (t >= base) { next_hint_ = t; return; }
+        }
+        base = (k + 1) * frame;
+    }
+}
+
 void MegaDrive68kMachine::Shutdown() {}
 
 void MegaDrive68kMachine::BuildStub() {
     vectors_.fill(0xFF);
     for (std::size_t i = 0; i < vectors_.size() && i < cartridge_.size(); ++i) vectors_[i] = cartridge_[i];
     Put32(&vectors_[4], kStubResetAddress);          // reset PC
-    Put32(&vectors_[28 * 4], kStubReturnAddress);    // level 4 (the horizontal interrupt): never raised
-    Put32(&vectors_[30 * 4], kStubInterruptAddress); // level 6 (the vertical-blank interrupt)
+    if (driver_.hblankLines == 0) Put32(&vectors_[28 * 4], kStubReturnAddress);    // level 4 (the horizontal interrupt): never raised
+    if (!driver_.vblankHandlerIsGame) Put32(&vectors_[30 * 4], kStubInterruptAddress); // level 6 (the vertical-blank interrupt)
+    Put32(&vectors_[26 * 4], kStubCallAddress);      // level 2 (a request that the game would make from its main program)
     stub_.fill(0x4E);
     std::size_t at = 0;
     auto word = [&](std::uint16_t w) { Put16(&stub_[at], w); at += 2; };
     auto jsr = [&](std::uint32_t target) { word(0x4EB9); word(static_cast<std::uint16_t>(target >> 16)); word(static_cast<std::uint16_t>(target)); };
     // reset: call the game's initialization routines, enable interrupts, wait for them
+    if (driver_.a6.has_value()) { word(0x2C7C); word(static_cast<std::uint16_t>(*driver_.a6 >> 16)); word(static_cast<std::uint16_t>(*driver_.a6)); }   // MOVEA.L #a6,A6
+    for (const auto& w : driver_.ramWords) { word(0x33FC); word(w.second); word(static_cast<std::uint16_t>(w.first >> 16)); word(static_cast<std::uint16_t>(w.first)); }   // MOVE.W #value,address
     for (std::uint32_t routine : driver_.init) jsr(routine);
     word(0x46FC); word(0x2000);       // MOVE #$2000,SR
     word(0x4E72); word(0x2000);       // loop: STOP #$2000
@@ -184,9 +288,29 @@ void MegaDrive68kMachine::BuildStub() {
     // vertical-blank interrupt: save everything, call the game's sound routine, restore
     at = kStubInterruptAddress - kStubBase;
     word(0x48E7); word(0xFFFE);       // MOVEM.L D0-D7/A0-A6,-(A7)
-    jsr(driver_.frame);
+    for (std::uint32_t routine : driver_.frames) jsr(routine);
     word(0x4CDF); word(0x7FFF);       // MOVEM.L (A7)+,D0-D7/A0-A6
     word(0x4E73);                     // RTE
+    if (!driver_.requestRoutines.empty()) {
+        // a request (level 2): call the game's routine with the number in D0 and D1, as the game does from its main program
+        at = kStubCallAddress - kStubBase;
+        word(0x48E7); word(0xFFFE);       // MOVEM.L D0-D7/A0-A6,-(A7)
+        if (driver_.requestByPointer) {
+            word(0x2279); word(static_cast<std::uint16_t>(kStubRequestRoutine >> 16)); word(static_cast<std::uint16_t>(kStubRequestRoutine));   // MOVEA.L routine,A1
+            word(0x3F39); word(static_cast<std::uint16_t>(kStubRequestValue >> 16)); word(static_cast<std::uint16_t>(kStubRequestValue));         // MOVE.W value,-(A7)
+            word(0x204F);                                                                                        // MOVEA.L A7,A0
+            word(0x4E91);                                                                                        // JSR (A1)
+            word(0x548F);                                                                                        // ADDQ.L #2,A7
+        } else {
+            word(0x2079); word(static_cast<std::uint16_t>(kStubRequestRoutine >> 16)); word(static_cast<std::uint16_t>(kStubRequestRoutine));   // MOVEA.L routine,A0
+            word(0x7000);                                                                                        // MOVEQ #0,D0
+            word(0x3039); word(static_cast<std::uint16_t>(kStubRequestValue >> 16)); word(static_cast<std::uint16_t>(kStubRequestValue));         // MOVE.W value,D0
+            word(0x2200);                                                                                        // MOVE.L D0,D1
+            word(0x4E90);                                                                                        // JSR (A0)
+        }
+        word(0x4CDF); word(0x7FFF);       // MOVEM.L (A7)+,D0-D7/A0-A6
+        word(0x4E73);                     // RTE
+    }
     at = kStubReturnAddress - kStubBase;
     word(0x4E73);                     // RTE
 }
@@ -201,10 +325,13 @@ std::uint8_t MegaDrive68kMachine::RomByte(std::uint32_t address) const {
 void MegaDrive68kMachine::ResetMachineState() {
     ram_.fill(0);
     z80_ram_.fill(0);
+    Put32(&stub_[kStubRequestRoutine - kStubBase], 0);
     bank_ = 0;
+    z80_stop_pending_ = false;
+    z80_resume_pending_ = false;
     bus_requested_ = false;
-    z80_reset_ = true;
-    z80_stopped_ = true;
+    z80_reset_ = !driver_.z80ResetReleased;
+    z80_stopped_ = bus_requested_ || z80_reset_;
     z80_->Reset();
     z80_->SetInputLine(Z80InputLine::Irq, Z80InputLineState::Clear);
     ym_->Reset();
@@ -220,6 +347,10 @@ void MegaDrive68kMachine::ResetMachineState() {
     cumulative_ticks_ = 0;
     z80_irq_high_ = false;
     vint_pending_ = false;
+    hint_pending_ = false;
+    call_pending_ = false;
+    call_queue_.clear();
+    SetNextHint(kNever);
     next_vblank_ = (kVblankLine * 228 + 10) * 15;
     next_z80_irq_edge_ = kNever;
     command_sent_since_reset_ = false;
@@ -237,7 +368,10 @@ void MegaDrive68kMachine::ColdStart() {
         target += chunk;
         RunTo(target, true);   // the chips run: a driver that polls the YM2612's busy flag needs it
         const auto snap = m68k_->Snapshot();
-        if (snap.halted && snap.interruptServiceCount >= driver_.warmupFrames && !vint_pending_) break;
+        if (driver_.hblankLines != 0) {
+            // the horizontal interrupts are counted in the service count too: wait for the time instead
+            if (snap.halted && std::min(t68_, TimeZ80()) >= static_cast<std::uint64_t>(driver_.warmupFrames) * frame_ticks_ && !vint_pending_ && !hint_pending_) break;
+        } else if (snap.halted && snap.interruptServiceCount >= driver_.warmupFrames && !vint_pending_) break;
     }
     const std::uint64_t now = std::min(t68_, TimeZ80());
     // The chips have not been touched since the drivers' last access; bring them to this time with the sound discarded.
@@ -255,9 +389,13 @@ void MegaDrive68kMachine::ColdStart() {
     warm_.psg = psg_->SaveState();
     warm_.bank = bank_;
     warm_.busRequested = bus_requested_;
+    warm_.stopPending = z80_stop_pending_;
+    warm_.resumePending = z80_resume_pending_;
     warm_.z80Reset = z80_reset_;
     warm_.irqHigh = z80_irq_high_;
     warm_.vintPending = vint_pending_;
+    warm_.hintPending = hint_pending_;
+    warm_.nextHint = next_hint_;
     warm_.t68 = t68_;
     warm_.tz80 = tz80_;
     warm_.nextVblank = next_vblank_;
@@ -265,6 +403,20 @@ void MegaDrive68kMachine::ColdStart() {
     warm_.ymSamplesMade = ym_samples_made_;
     warm_.psgSamplesMade = psg_samples_made_;
     warm_.valid = true;
+}
+
+void MegaDrive68kMachine::QueueCall(std::uint32_t routineNumber, std::uint8_t value) {
+    if (driver_.requestRoutines.empty()) return;
+    const std::size_t index = routineNumber == 0 ? 0 : std::min<std::size_t>(routineNumber - 1, driver_.requestRoutines.size() - 1);
+    if (driver_.requestRoutines[index] >= 0xE00000) {
+        // an entry that names a byte of the game's RAM: the number is written there, as the game's main program does
+        ram_[driver_.requestRoutines[index] & 0xFFFF] = value;
+        return;
+    }
+    Put32(&stub_[kStubRequestRoutine - kStubBase], driver_.requestRoutines[index]);
+    Put16(&stub_[kStubRequestValue - kStubBase], value);
+    call_pending_ = true;
+    UpdateIrqLevel();
 }
 
 void MegaDrive68kMachine::BeginSoundForTest(std::uint64_t ticks) {
@@ -284,6 +436,7 @@ void MegaDrive68kMachine::SendCommand(const MusicCommand& command) {
     auto restore = [this]() {
         if (!restore_warm_state_ || !warm_.valid) { ColdStart(); }
         // (ColdStart leaves the Machine in the same state as the restore below.)
+        Put32(&stub_[kStubRequestRoutine - kStubBase], 0);
         ram_ = warm_.ram;
         z80_ram_ = warm_.z80Ram;
         m68k_->RestoreState(warm_.m68k);
@@ -292,17 +445,23 @@ void MegaDrive68kMachine::SendCommand(const MusicCommand& command) {
         psg_->RestoreState(warm_.psg);
         bank_ = warm_.bank;
         bus_requested_ = warm_.busRequested;
+        z80_stop_pending_ = warm_.stopPending;
+        z80_resume_pending_ = warm_.resumePending;
         z80_reset_ = warm_.z80Reset;
-        z80_stopped_ = bus_requested_ || z80_reset_;
+        z80_stopped_ = (bus_requested_ && !z80_stop_pending_) || z80_reset_;
         z80_irq_high_ = warm_.irqHigh;
         vint_pending_ = warm_.vintPending;
+        hint_pending_ = warm_.hintPending;
+        next_hint_ = warm_.nextHint;
+        call_pending_ = false;
+        call_queue_.clear();
         t68_ = warm_.t68;
         tz80_ = warm_.tz80;
         next_vblank_ = warm_.nextVblank;
         next_z80_irq_edge_ = warm_.nextZ80IrqEdge;
         ym_samples_made_ = warm_.ymSamplesMade;
         psg_samples_made_ = warm_.psgSamplesMade;
-        m68k_->SetInterruptLevel(vint_pending_ ? 6 : 0);
+        UpdateIrqLevel();
         z80_->SetInputLine(Z80InputLine::Irq, z80_irq_high_ ? Z80InputLineState::Assert : Z80InputLineState::Clear);
         for (auto& channel : pending_ym_) channel.clear();
         for (auto& channel : pending_psg_) channel.clear();
@@ -318,6 +477,10 @@ void MegaDrive68kMachine::SendCommand(const MusicCommand& command) {
     // The drivers have no request that silences everything: start again from the saved state.
     if (command_sent_since_reset_) restore();
     command_sent_since_reset_ = true;
+    if (!driver_.requestRoutines.empty()) {
+        QueueCall((command.Auxiliary >> 4) & 7u, command.Value);      // 1.. names an entry of `requests`; 0 the first
+        return;
+    }
     const std::uint32_t at = driver_.requestAddress & 0xFFFF;
     ram_[at] = command.Value;
 }
@@ -383,6 +546,7 @@ void MegaDrive68kMachine::WriteZ80Area(std::uint32_t offset, std::uint8_t value)
     if (!bus_requested_) return;
     if (offset < 0x4000) {
         z80_ram_[offset & 0x1FFF] = value;
+        if (z80_ram_observer_) z80_ram_observer_(AccessTime68k(), offset & 0x1FFF, value);
     } else if (offset < 0x6000) {
         YmWrite(AccessTime68k(), '6', offset & 3u, value);
     } else if (offset < 0x6100) {
@@ -396,9 +560,23 @@ void MegaDrive68kMachine::WriteZ80Area(std::uint32_t offset, std::uint8_t value)
 void MegaDrive68kMachine::SetBusRequest(bool requested) {
     if (requested == bus_requested_) return;
     bus_requested_ = requested;
-    z80_stopped_ = bus_requested_ || z80_reset_;
     if (bus_observer_) bus_observer_(t68_, requested);
-    if (!requested && !z80_stopped_) tz80_ = std::max(tz80_, t68_);   // the Z80 goes on from now
+    if (!driver_.z80BusAtInstructionEnd) {
+        z80_stopped_ = bus_requested_ || z80_reset_;
+        if (!requested && !z80_stopped_) tz80_ = std::max(tz80_, t68_);   // the Z80 goes on from now
+        return;
+    }
+    if (requested) {
+        // The Z80 stops when the 68000's instruction has ended (RunTo), after having run up to that time.
+        if (z80_stopped_) z80_stop_pending_ = false;
+        else z80_stop_pending_ = true;
+        z80_resume_pending_ = false;
+    } else {
+        z80_stop_pending_ = false;
+        const bool wasStopped = z80_stopped_;
+        z80_stopped_ = z80_reset_;
+        if (wasStopped && !z80_stopped_) z80_resume_pending_ = true;   // RunTo lets it go on from the end of the instruction
+    }
 }
 
 void MegaDrive68kMachine::SetZ80Reset(bool reset) {
@@ -411,7 +589,7 @@ void MegaDrive68kMachine::SetZ80Reset(bool reset) {
         ym_->SoftReset();                // the reset line clears the sound chip's registers
     }
     z80_reset_ = reset;
-    z80_stopped_ = bus_requested_ || z80_reset_;
+    z80_stopped_ = (bus_requested_ && !z80_stop_pending_) || z80_reset_;
     if (!reset) {
         if (z80_irq_high_) z80_->SetInputLine(Z80InputLine::Irq, Z80InputLineState::Assert);
         if (!z80_stopped_) tz80_ = std::max(tz80_, t68_);
@@ -492,11 +670,26 @@ void MegaDrive68kMachine::PsgWrite(std::uint64_t ticks, char cpu, std::uint8_t v
 
 void MegaDrive68kMachine::ProcessEvents(std::uint64_t ticks) {
     while (true) {
-        const std::uint64_t next = std::min(next_vblank_, next_z80_irq_edge_);
+        const std::uint64_t scheduledVint = vint_schedule_active_ ? (vint_schedule_index_ < vint_schedule_.size() ? vint_schedule_[vint_schedule_index_] : kNever) : kNever;
+        const std::uint64_t next = std::min(std::min(std::min(next_vblank_, next_z80_irq_edge_), scheduledVint), next_hint_);
         if (next > ticks) return;
-        if (next == next_vblank_) {
+        if (next == next_hint_ && next != next_vblank_ && next != next_z80_irq_edge_ && next != scheduledVint) {
+            hint_pending_ = true;
+            UpdateIrqLevel();
+            SetNextHint(next);
+        } else if (next == scheduledVint && next != next_vblank_) {
+            ++vint_schedule_index_;
             vint_pending_ = true;
-            m68k_->SetInterruptLevel(6);
+            UpdateIrqLevel();
+        } else if (next == next_vblank_) {
+            if (!vint_schedule_active_) {
+                vint_pending_ = true;
+                UpdateIrqLevel();
+            } else if (next == scheduledVint) {
+                ++vint_schedule_index_;
+                vint_pending_ = true;
+                UpdateIrqLevel();
+            }
             z80_->SetInputLine(Z80InputLine::Irq, Z80InputLineState::Assert);
             z80_irq_high_ = true;
             next_z80_irq_edge_ = next_vblank_ + kZ80IrqPulseTicks;
@@ -512,12 +705,25 @@ void MegaDrive68kMachine::ProcessEvents(std::uint64_t ticks) {
 void MegaDrive68kMachine::RunTo(std::uint64_t targetTicks, bool keepSound) {
     keep_sound_ = keepSound;
     for (;;) {
+        if (z80_stop_pending_ && tz80_ >= t68_) {
+            z80_stop_pending_ = false;
+            z80_stopped_ = true;
+        }
         const std::uint64_t tz = TimeZ80();
         const std::uint64_t now = std::min(t68_, tz);
         if (now >= targetTicks) break;
         ProcessEvents(now);
+        if (!call_queue_.empty() && !call_pending_ && t68_ <= tz && m68k_->Snapshot().halted) {
+            const auto next = call_queue_.front();
+            call_queue_.erase(call_queue_.begin());
+            QueueCall(next.first, next.second);
+        }
         if (t68_ <= tz) {
             t68_ += 7ull * m68k_->Execute(1);
+            if (z80_resume_pending_) {
+                z80_resume_pending_ = false;
+                tz80_ = std::max(tz80_, t68_);
+            }
         } else {
             // The Z80 is behind: run it up to the 68000's time (but not past the next interrupt edge).
             const std::uint64_t horizon = std::min(t68_, std::min(next_vblank_, next_z80_irq_edge_));

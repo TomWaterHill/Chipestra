@@ -13,7 +13,7 @@ It also plays the music of some Famicom / NES, Famicom Disk System and Mega Driv
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.004.00
+Version: Ver 1.005.00
 
 ### Support history
 
@@ -75,10 +75,19 @@ routines on an emulated CPU and sound hardware (including the cartridge chips
 of the Konami VRC6 and VRC7, Namco 163 and Sunsoft 5B). The track titles of
 these games are given by the XML files.
 
+#### Ver 1.005.00
+
+| System | Verified titles |
+|---|---|
+| Mega Drive (Japan) | Battle Mania, Battle Mania Daiginjou, Gauntlet IV, Phantasy Star IV, Star Cruiser (music and sound effects, including the sampled sounds) |
+
+A new setting, Settings > Mega Drive / Genesis, selects the low-pass filter of the console's analog output stage for Mega Drive sound: Off (the default; the sound is unchanged), Model 1 (Mega Drive / Genesis; a first-order filter at 3.38 kHz) or Model 2 (Mega Drive 2 / Genesis Model 2; a second-order filter at 6.7 kHz on the FM sound plus a first-order filter at 3.8 kHz on everything). The Model 2 values are approximations based on the default settings of the jgenesis emulator (https://github.com/jsgroth/jgenesis), not measurements of the original circuit. The change takes effect immediately, also during playback.
+
 ### Features
 
 - Per-channel level meters, pan, mute and solo
 - Master volume and level meter
+- Optional console analog-stage low-pass filter for Mega Drive sound (Off, Model 1, Model 2)
 - Selectable output sample rate (automatic by default; in shared mode the
   Windows sound settings take priority)
 - WASAPI shared-mode output
@@ -98,7 +107,7 @@ these games are given by the XML files.
   point Chipestra at the folder that contains them (Settings > ROM Root).
   For the NES, a .nes image of the game is used; for the Famicom Disk System,
   a .fds disk image (no BIOS is needed); for the Mega Drive, the cartridge image
-  (SpaceHarrier2.smd, SpaceHarrier2.bin or SpaceHarrier2.md; the layout is recognised) in SpaceHarrier2.zip, likewise Sorcerian.smd, Sorcerian.bin or Sorcerian.md in Sorcerian.zip, and TimeTrax.bin, TimeTrax.md or TimeTrax.smd for Time Trax, and SonicTheHedgehog.smd, SonicTheHedgehog.bin or SonicTheHedgehog.md in SonicTheHedgehog.zip for Sonic. Lagrange Point additionally needs
+  (SpaceHarrier2.smd, SpaceHarrier2.bin or SpaceHarrier2.md; the layout is recognised) in SpaceHarrier2.zip, likewise Sorcerian.smd, Sorcerian.bin or Sorcerian.md in Sorcerian.zip, and TimeTrax.bin, TimeTrax.md or TimeTrax.smd for Time Trax, and SonicTheHedgehog.smd, SonicTheHedgehog.bin or SonicTheHedgehog.md in SonicTheHedgehog.zip for Sonic, and likewise a .smd, .bin or .md file in a .zip of the same name (BattleMania, battleManiaDaiginjyo, GauntletIV, "Phantasy Star The end of the millennium" and StarCruiser) for Battle Mania, Battle Mania Daiginjou, Gauntlet IV, Phantasy Star IV and Star Cruiser. Lagrange Point additionally needs
   the ROM set "ds1001" (ds1001.zip), which holds the instrument table of the
   VRC7 sound chip.
 - The names of the NES, Famicom Disk System and Mega Drive files and of their
@@ -199,7 +208,7 @@ Chipestra（チップエストラ。「チップ」と「オーケストラ」�
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.004.00
+バージョン: Ver 1.005.00
 
 ### 対応の履歴
 
@@ -254,10 +263,19 @@ Chipestra は、対応している基板上のゲームを、XML 定義ファイ
 
 NES とファミコン ディスクシステムでは、エミュレートした CPU と音源（Konami の VRC6・VRC7、Namco 163、Sunsoft 5B のカートリッジ内の音源を含む）の上で、ゲーム自身のサウンドのルーチンを動かします。これらのゲームの曲名は、XML ファイルで与えています。
 
+#### Ver 1.005.00
+
+| システム | 確認したタイトル |
+|---|---|
+| Mega Drive（日本） | Battle Mania（バトルマニア）、Battle Mania Daiginjou（バトルマニア大吟醸）、Gauntlet IV（ガントレットIV）、Phantasy Star IV（ファンタシースターIV）、Star Cruiser（スタークルーザー）。BGM と効果音（サンプリング音を含む）を再生できます |
+
+設定に「Mega Drive / Genesis」の項目を追加しました。メガドライブの音に、本体のアナログ出力段のローパスフィルタを掛けるかどうかを選べます: Off（既定。音は変わりません）、Model 1（Mega Drive / Genesis。3.38kHz の1次）、Model 2（Mega Drive 2 / Genesis Model 2。FM の音に 6.7kHz の2次、全体に 3.8kHz の1次）。Model 2 の値は、エミュレータ jgenesis（https://github.com/jsgroth/jgenesis）の既定の設定値をもとにした近似で、元の回路の実測ではありません。切り替えは、再生中でもすぐに反映されます。
+
 ### 機能
 
 - チャンネルごとのレベルメーター、パン、ミュート、ソロ
 - マスター音量とレベルメーター
+- メガドライブの音に、本体のアナログ出力段のローパスフィルタを掛ける設定（Off、Model 1、Model 2）
 - 出力サンプルレートの選択（既定は自動。共有モードでは、Windows のサウンド設定が優先されます）
 - WASAPI 共有モードでの出力
 - 自然に終わる曲は、終わると自動で停止
@@ -267,7 +285,7 @@ NES とファミコン ディスクシステムでは、エミュレートした
 
 - Windows 11（64bit）。Windows 11 でのみ動作を確認しています。
 - .NET 10 Desktop Runtime（x64）。[Microsoft のサイト](https://dotnet.microsoft.com/download/dotnet/10.0) から入手できます。入っていない場合は、Chipestra の起動時に、Windows がダウンロード先の案内を表示します。
-- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージ（BIOS は要りません）、メガドライブはカートリッジのイメージ（SpaceHarrier2.smd、SpaceHarrier2.bin、SpaceHarrier2.md のいずれか。並びは中身から判定します）を SpaceHarrier2.zip に入れたものを使います（Sorcerian も同様に、Sorcerian.smd、Sorcerian.bin、Sorcerian.md のいずれかを Sorcerian.zip に入れます。Time Trax は TimeTrax.bin、TimeTrax.md、TimeTrax.smd のいずれかです。Sonic は SonicTheHedgehog.smd、SonicTheHedgehog.bin、SonicTheHedgehog.md のいずれかを SonicTheHedgehog.zip に入れます）。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
+- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージ（BIOS は要りません）、メガドライブはカートリッジのイメージ（SpaceHarrier2.smd、SpaceHarrier2.bin、SpaceHarrier2.md のいずれか。並びは中身から判定します）を SpaceHarrier2.zip に入れたものを使います（Sorcerian も同様に、Sorcerian.smd、Sorcerian.bin、Sorcerian.md のいずれかを Sorcerian.zip に入れます。Time Trax は TimeTrax.bin、TimeTrax.md、TimeTrax.smd のいずれかです。Sonic は SonicTheHedgehog.smd、SonicTheHedgehog.bin、SonicTheHedgehog.md のいずれかを SonicTheHedgehog.zip に入れます。Battle Mania、Battle Mania Daiginjou、Gauntlet IV、Phantasy Star IV、Star Cruiser も同様に、.smd、.bin、.md のいずれかを、同じ名前の .zip（BattleMania、battleManiaDaiginjyo、GauntletIV、"Phantasy Star The end of the millennium"、StarCruiser）に入れます）。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
 - NES、ファミコン ディスクシステム、メガドライブのファイル名や、それを入れた .zip の名前は、上の名前と同じでなくても構いません（たとえば「Space Harrier II (Japan, USA).md」をどんな名前の .zip に入れてもよい）。期待する名前のファイルが無いときは、ROM Root の下の .zip の中から CRC-32 でファイルを探します（Super Magic Drive 形式のメガドライブのファイルは、サイズで探します）。この方法で見つかったファイルは、候補が 1 つだけのときにだけ使い、どのファイルを使ったかをウィンドウに表示します。.zip に入っていないファイルは、名前だけで探します。
 
 ### ダウンロードと起動

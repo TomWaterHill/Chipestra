@@ -1,0 +1,110 @@
+<chipestra>
+  <game id="battlemania" title="Battle Mania" manufacturer="Vic Tokai"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="BattleMania">
+    <resources>
+      <rom name="rom" file="BattleMania.smd|BattleMania.bin|BattleMania.md" crc_search="true" search_crc32="1ab9a5de" search_size="524800"/>
+    </resources>
+    <!-- The sound driver runs on the 68000 (as in sonic1.xml): the vertical-blank interrupt calls two routines once a frame (0x6C0AA for the
+         FM channels, 0x6CC16 for the PSG) and the driver writes the YM2612 and the PSG itself. The Z80 only plays sampled sounds, with a
+         small program that the game copies into the Z80 RAM when it starts (0x61E4). The game starts a song (0x6C064), an effect (0x6C08E)
+         or a sequence of the PSG (0x6CBDA) by calling a subroutine with the number in D0 (D1 for the PSG): <driver requests> lists them, a
+         track says which one takes its number with request="...". The header of the game says Japan. -->
+    <driver m68k_init="0x61E4 0x6C000 0x6CBC2" m68k_frame="0x6C0AA 0x6CC16" requests="0x6C064 0x6C08E 0x6CBDA" warmup_frames="4" region="japan" cart_crc32="1ab9a5de"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x00" type="control"/>
+      <track id="BGM_01" title="BGM 01" command="0x01" request="0x6C064"/>
+      <track id="BGM_02" title="BGM 02" command="0x02" request="0x6C064"/>
+      <track id="BGM_03" title="BGM 03" command="0x03" request="0x6C064"/>
+      <track id="BGM_04" title="BGM 04" command="0x04" request="0x6C064"/>
+      <track id="BGM_05" title="BGM 05" command="0x05" request="0x6C064"/>
+      <track id="BGM_06" title="BGM 06" command="0x06" request="0x6C064"/>
+      <track id="BGM_07" title="BGM 07" command="0x07" request="0x6C064"/>
+      <track id="BGM_08" title="BGM 08" command="0x08" request="0x6C064"/>
+      <track id="BGM_09" title="BGM 09" command="0x09" request="0x6C064"/>
+      <track id="BGM_0A" title="BGM 0A" command="0x0A" request="0x6C064"/>
+      <track id="BGM_0B" title="BGM 0B" command="0x0B" request="0x6C064"/>
+      <track id="BGM_0C" title="BGM 0C" command="0x0C" request="0x6C064"/>
+      <track id="BGM_0D" title="BGM 0D" command="0x0D" request="0x6C064"/>
+      <track id="BGM_0E" title="BGM 0E" command="0x0E" request="0x6C064"/>
+      <track id="BGM_0F" title="BGM 0F" command="0x0F" request="0x6C064"/>
+      <track id="BGM_10" title="BGM 10" command="0x10" request="0x6C064"/>
+      <track id="BGM_11" title="BGM 11" command="0x11" request="0x6C064"/>
+      <track id="BGM_12" title="BGM 12" command="0x12" request="0x6C064"/>
+      <track id="BGM_13" title="BGM 13" command="0x13" request="0x6C064"/>
+      <track id="BGM_14" title="BGM 14" command="0x14" request="0x6C064"/>
+      <track id="BGM_15" title="BGM 15" command="0x15" request="0x6C064"/>
+      <track id="BGM_16" title="BGM 16" command="0x16" request="0x6C064"/>
+      <track id="BGM_17" title="BGM 17" command="0x17" request="0x6C064"/>
+      <track id="SFX_19" title="[SFX] 19" command="0x19" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_1A" title="[SFX] 1A" command="0x1A" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_1B" title="[SFX] 1B" command="0x1B" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_1C" title="[SFX] 1C" command="0x1C" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_1D" title="[SFX] 1D" command="0x1D" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_1E" title="[SFX] 1E" command="0x1E" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_1F" title="[SFX] 1F" command="0x1F" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_20" title="[SFX] 20" command="0x20" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_21" title="[SFX] 21" command="0x21" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_22" title="[SFX] 22" command="0x22" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_23" title="[SFX] 23" command="0x23" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_24" title="[SFX] 24" command="0x24" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_25" title="[SFX] 25" command="0x25" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_26" title="[SFX] 26" command="0x26" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_27" title="[SFX] 27" command="0x27" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_28" title="[SFX] 28" command="0x28" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_29" title="[SFX] 29" command="0x29" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_2A" title="[SFX] 2A" command="0x2A" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_2B" title="[SFX] 2B" command="0x2B" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_2C" title="[SFX] 2C" command="0x2C" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_2D" title="[SFX] 2D" command="0x2D" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_2E" title="[SFX] 2E" command="0x2E" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_2F" title="[SFX] 2F" command="0x2F" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_30" title="[SFX] 30" command="0x30" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_31" title="[SFX] 31" command="0x31" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_32" title="[SFX] 32" command="0x32" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_33" title="[SFX] 33" command="0x33" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_34" title="[SFX] 34" command="0x34" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_35" title="[SFX] 35" command="0x35" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_36" title="[SFX] 36" command="0x36" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_37" title="[SFX] 37" command="0x37" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_38" title="[SFX] 38" command="0x38" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_39" title="[SFX] 39" command="0x39" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_3A" title="[SFX] 3A" command="0x3A" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_3B" title="[SFX] 3B" command="0x3B" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_3C" title="[SFX] 3C" command="0x3C" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_3D" title="[SFX] 3D" command="0x3D" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_3E" title="[SFX] 3E" command="0x3E" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_3F" title="[SFX] 3F" command="0x3F" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_40" title="[SFX] 40" command="0x40" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_41" title="[SFX] 41" command="0x41" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_42" title="[SFX] 42" command="0x42" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_43" title="[SFX] 43" command="0x43" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_44" title="[SFX] 44" command="0x44" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_45" title="[SFX] 45" command="0x45" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_46" title="[SFX] 46" command="0x46" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_47" title="[SFX] 47" command="0x47" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_48" title="[SFX] 48" command="0x48" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_49" title="[SFX] 49" command="0x49" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_4A" title="[SFX] 4A" command="0x4A" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_4B" title="[SFX] 4B" command="0x4B" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_4C" title="[SFX] 4C" command="0x4C" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_4D" title="[SFX] 4D" command="0x4D" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_4E" title="[SFX] 4E" command="0x4E" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_4F" title="[SFX] 4F" command="0x4F" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_50" title="[SFX] 50" command="0x50" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_51" title="[SFX] 51" command="0x51" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="SFX_52" title="[SFX] 52" command="0x52" type="sfx" request="0x6C08E" loops="false"/>
+      <track id="PSG_01" title="[SFX] PSG 01" command="0x01" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_02" title="[SFX] PSG 02" command="0x02" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_03" title="[SFX] PSG 03" command="0x03" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_04" title="[SFX] PSG 04" command="0x04" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_05" title="[SFX] PSG 05" command="0x05" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_06" title="[SFX] PSG 06" command="0x06" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_07" title="[SFX] PSG 07" command="0x07" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_08" title="[SFX] PSG 08" command="0x08" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_09" title="[SFX] PSG 09" command="0x09" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_0A" title="[SFX] PSG 0A" command="0x0A" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_0B" title="[SFX] PSG 0B" command="0x0B" type="sfx" request="0x6CBDA" loops="false"/>
+      <track id="PSG_0C" title="[SFX] PSG 0C" command="0x0C" type="sfx" request="0x6CBDA" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

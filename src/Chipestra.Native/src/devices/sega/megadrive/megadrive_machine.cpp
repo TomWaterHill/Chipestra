@@ -427,6 +427,8 @@ MegaDriveMachine::MegaDriveMachine(std::vector<std::uint8_t> cartridge, MegaDriv
     for (const char* name : {"Tone 1", "Tone 2", "Tone 3", "Noise"}) add("SN76489", name, timing_.psgStreamRateHz);
     for (std::uint32_t c = 0; c < kYmChannelCount; ++c) channels_[c].RoutingGain = kYmRoutingGain * 2.0f;
     for (std::uint32_t c = kPsgFirstChannel; c < channels_.size(); ++c) channels_[c].RoutingGain = kPsgRoutingGain;
+    for (std::uint32_t c = 0; c < kYmChannelCount; ++c) channels_[c].AnalogFilterGroup = AnalogFilterGroupId::Fm;
+    for (std::uint32_t c = kPsgFirstChannel; c < channels_.size(); ++c) channels_[c].AnalogFilterGroup = AnalogFilterGroupId::Psg;
 }
 
 void MegaDriveMachine::Initialize() {

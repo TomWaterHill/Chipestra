@@ -8,6 +8,15 @@
 
 void MegaDrive68kDriverConfigIsParsedAndChecked();
 void MegaDrive68kSyntheticDriverRunsAndRequestsReachTheChips();
+void MegaDrive68kCallRequestsReachTheGamesRoutines();
+void MegaDrive68kRequestCanNameAByteOfTheGamesRam();
+void MegaDrive68kZ80ResetCanBeReleasedAtTheStart();
 void MegaDrive68kBusRulesBetweenTheCpus();
 void MegaDrive68kZ80StartsWhenItsResetIsReleased();
 void MegaDrive68kRealCartridgeMatchesTheOriginalsChipWrites();
+void MegaDrive68kBattleManiaReplayMatchesTheOriginalsChipWrites();
+void MegaDrive68kBattleMania2ReplayMatchesTheOriginalsChipWrites();
+void MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites();
+void MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites();
+void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests();
+void MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites();

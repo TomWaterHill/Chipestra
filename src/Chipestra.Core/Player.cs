@@ -162,6 +162,9 @@ namespace Chipestra.Core
         /// <summary>Sets the master VOLUME slider's gain.</summary>
         public ChipestraResult SetMasterGain(float gain) => _session.SetMasterGain(gain);
 
+        /// <summary>Selects the console analog-stage low-pass filter; applies immediately, also while playing.</summary>
+        public ChipestraResult SetAnalogFilterMode(AnalogFilterMode mode) => _session.SetAnalogFilterMode(mode);
+
         /// <summary>Sets the master MUTE button.</summary>
         public ChipestraResult SetMasterMuted(bool muted) => _session.SetMasterMuted(muted);
 

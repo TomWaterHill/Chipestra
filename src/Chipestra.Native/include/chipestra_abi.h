@@ -478,6 +478,23 @@ CHIPESTRA_API ChipestraResult chipestra_set_master_gain(ChipestraHandle handle, 
 // Machine currently loaded (Created state).
 CHIPESTRA_API ChipestraResult chipestra_set_master_muted(ChipestraHandle handle, uint8_t muted) CHIPESTRA_NOEXCEPT;
 
+// Analog output-stage filter modes (chipestra_set_analog_filter_mode). Off leaves the signal
+// untouched.
+typedef enum ChipestraAnalogFilterMode {
+    CHIPESTRA_ANALOG_FILTER_OFF = 0,
+    CHIPESTRA_ANALOG_FILTER_MODEL1 = 1,
+    CHIPESTRA_ANALOG_FILTER_MODEL2 = 2,
+} ChipestraAnalogFilterMode;
+
+// Selects the console analog-stage low-pass filter that is applied to the channels a Machine has
+// marked as filtered (the Mega Drive's FM and PSG channels). Takes effect immediately, with a short
+// crossfade, also while playing. Valid in every state of a live instance (the mode is remembered
+// across Machine loads).
+//
+// Returns CHIPESTRA_E_INVALID_ARGUMENT if handle is null or `mode` is not a ChipestraAnalogFilterMode.
+// Returns CHIPESTRA_E_INVALID_STATE if handle is not a live instance.
+CHIPESTRA_API ChipestraResult chipestra_set_analog_filter_mode(ChipestraHandle handle, uint32_t mode) CHIPESTRA_NOEXCEPT;
+
 // Metadata for one registered MachineDefinition. Fixed-size, null-terminated,
 // UTF-8 buffers; a name longer than its buffer is truncated (still
 // null-terminated) rather than overflowing.
@@ -844,6 +861,13 @@ private:
     std::unordered_map<ChannelId, LogicalChannelBuffer> buffers_;
 };
 
+// Filter group of a LogicalChannel: the stage of a board's analog output circuit the channel passes through.
+enum class AnalogFilterGroupId : std::uint8_t {
+    None = 0,
+    Fm = 1,   // a frequency-modulation synthesis channel
+    Psg = 2,  // a programmable sound generator channel
+};
+
 // LogicalChannel - per-channel metadata: identity, mixer controls (Mute/Pan/Gain),
 // and meter readouts (Peak/RMS) for the UI's Channel Strip. Distinct from
 // LogicalChannelBuffer/LogicalChannelSink above, which carry the samples.
@@ -875,6 +899,10 @@ struct LogicalChannel {
     // RoutingGain); set when the UI sets Pan, cleared by
     // chipestra_clear_logical_channel_pan_override.
     bool PanOverridden{false};
+    // Which analog output-stage filter group this channel belongs to (see
+    // chipestra_set_analog_filter_mode). Set by a Machine whose board has such a stage; None = the
+    // channel is never filtered.
+    AnalogFilterGroupId AnalogFilterGroup{AnalogFilterGroupId::None};
 };
 
 // MusicCommandKind - what a MusicCommand asks the Machine to do. Raw is for command

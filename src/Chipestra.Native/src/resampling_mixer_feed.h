@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tom Water Hill
 #pragma once
 
+#include "analog_filter.h"
 #include "sample_rate_converter.h"
 #include "chipestra_abi.h"
 
@@ -51,7 +52,17 @@ public:
     // must go back through the factory to have it re-applied.
     void Reset();
 
+    // Selects the console analog-stage filter (a ChipestraAnalogFilterMode value) applied, after
+    // resampling, to the channels whose AnalogFilterGroup is not None. A change crossfades over
+    // kAnalogFilterFadeFrames canonical frames; Off is an exact pass-through. Not thread-safe: call
+    // from the thread that calls Resample().
+    void SetAnalogFilterMode(std::uint32_t mode);
+    static constexpr std::size_t kAnalogFilterFadeFrames = 3840;  // 20 ms at the canonical rate
+
 private:
+    void ApplyAnalogFilter(const LogicalChannel& channel, float* data, std::size_t count);
+    void AdvanceAnalogFilterFade(std::size_t count);
+
     SampleRateConverter& ConverterFor(ChannelId id, std::uint32_t nativeRate, std::size_t leadingSilenceSamples);
 
     // Per-native-rate steady-state group delay, memoized because measuring it
@@ -64,4 +75,16 @@ private:
     std::unordered_map<ChannelId, std::unique_ptr<SampleRateConverter>> converters_;
     std::unordered_map<std::uint32_t, std::size_t> delay_samples_by_native_rate_;
     std::vector<float> scratch_;
+
+    // Analog filter: weights of {Off, Model 1, Model 2} at the start of the current fade and the
+    // target mode; analog_fade_pos_ counts the canonical frames already faded.
+    struct ChannelFilterState {
+        analog_filter::ChannelState model[3];
+    };
+    std::uint32_t analog_target_ = 0;
+    double analog_start_weights_[3] = {1.0, 0.0, 0.0};
+    std::size_t analog_fade_pos_ = kAnalogFilterFadeFrames;
+    analog_filter::Stages analog_stages_[3];
+    bool analog_stages_ready_ = false;
+    std::unordered_map<ChannelId, ChannelFilterState> filter_states_;
 };

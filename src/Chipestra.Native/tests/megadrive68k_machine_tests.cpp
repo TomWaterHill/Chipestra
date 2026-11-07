@@ -83,7 +83,7 @@ struct SyntheticCartridge {
 MegaDrive68kDriverConfig SyntheticConfig() {
     MegaDrive68kDriverConfig config;
     config.init = {0x1000};
-    config.frame = 0x2000;
+    config.frames = {0x2000};
     config.requestAddress = 0xFF0002;
     config.warmupFrames = 3;
     return config;
@@ -116,7 +116,7 @@ void MegaDrive68kDriverConfigIsParsedAndChecked() {
     std::string error;
     Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_init=\"0x134C 0x200\" m68k_frame=\"0x71B4C\" request=\"0xFFF00B\" warmup_frames=\"4\" region=\"usa\" cart_crc32=\"afe05eee\""), config, &error),
           "a complete <driver> parses");
-    Check(config.init.size() == 2 && config.init[0] == 0x134C && config.init[1] == 0x200 && config.frame == 0x71B4C && config.requestAddress == 0xFFF00B &&
+    Check(config.init.size() == 2 && config.init[0] == 0x134C && config.init[1] == 0x200 && config.frames.size() == 1 && config.frames[0] == 0x71B4C && config.requestAddress == 0xFFF00B &&
               config.warmupFrames == 4 && config.region == MegaDriveRegion::Usa && config.cartridgeCrc32 == 0xAFE05EEEu,
           "the numbers are read as written");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_init=\"0x134C\" request=\"0xFFF00B\" warmup_frames=\"4\""), config, &error) && error.find("m68k_frame") != std::string::npos,
@@ -180,6 +180,110 @@ void MegaDrive68kSyntheticDriverRunsAndRequestsReachTheChips() {
     other.RunToTicksForTest(t2 + 3 * kTicksPerFrame);
     Check(!a.empty() && a.size() == b.size() && a[0].t - t1 == b[0].t - t2 && a[0].kind == b[0].kind,
           "a switch gives the same sound (the same writes at the same times from the request on) as the first request after the start");
+}
+
+void MegaDrive68kZ80ResetCanBeReleasedAtTheStart() {
+    std::printf("MegaDrive68kZ80ResetCanBeReleasedAtTheStart\n");
+    MegaDrive68kDriverConfig config;
+    std::string error;
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFFF00B\" z80_reset=\"released\" warmup_frames=\"3\""), config, &error) && config.z80ResetReleased,
+          "z80_reset=\"released\" is read");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFFF00B\" z80_reset=\"held\" warmup_frames=\"3\""), config, &error) && error.find("z80_reset") != std::string::npos,
+          "any other value is refused");
+    SyntheticCartridge cartridge;
+    MegaDrive68kDriverConfig held = SyntheticConfig();
+    held.init.clear();         // (nothing in the cartridge releases the Z80 reset)
+    MegaDrive68kMachine heldMachine(cartridge.bytes, held);
+    heldMachine.Initialize();
+    MegaDrive68kDriverConfig released = SyntheticConfig();
+    released.init.clear();
+    released.z80ResetReleased = true;
+    MegaDrive68kMachine releasedMachine(cartridge.bytes, released);
+    releasedMachine.Initialize();
+    Check(heldMachine.Z80ForTest().Snapshot().pc == 0, "by default the Z80 stays at its reset address until the game releases the reset");
+    Check(releasedMachine.Z80ForTest().Snapshot().pc != 0, "released at the start, the Z80 runs without the game");
+}
+
+void MegaDrive68kRequestCanNameAByteOfTheGamesRam() {
+    std::printf("MegaDrive68kRequestCanNameAByteOfTheGamesRam\n");
+    MegaDrive68kDriverConfig config;
+    std::string error;
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_init=\"0x1000\" m68k_frame=\"0x2000\" requests=\"0x2100 0xFFF012\" warmup_frames=\"3\""), config, &error) &&
+              config.requestRoutines.size() == 2 && config.requestRoutines[1] == 0xFFF012,
+          "an entry of requests may be a byte of the game's RAM");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" requests=\"0xA00000\" warmup_frames=\"3\""), config, &error) && error.find("requests") != std::string::npos,
+          "an address that is neither in the cartridge nor in the RAM is refused");
+
+    SyntheticCartridge cartridge;
+    cartridge.at = 0x2100;
+    cartridge.Word(0x13C0); cartridge.Long(0x00FF0200);      // MOVE.B D0,$FF0200
+    cartridge.Word(0x4E75);
+    MegaDrive68kDriverConfig game = SyntheticConfig();
+    game.requestRoutines = {0x2100, 0xFF0210};
+    MegaDrive68kMachine machine(cartridge.bytes, game);
+    machine.Initialize();
+    MusicCommand command;
+    command.Kind = MusicCommandKind::Raw;
+    command.Value = 0x2B;
+    command.Auxiliary = 2 << 4;       // the byte of the RAM
+    machine.SendCommand(command);
+    Check(machine.RamForTest(0x0210) == 0x2B, "the number is written into the byte, as the game's main program does");
+    machine.RunToTicksForTest(machine.TicksForTest() + kTicksPerFrame / 8);
+    Check(machine.RamForTest(0x0200) == 0, "no routine was called for it");
+}
+
+void MegaDrive68kCallRequestsReachTheGamesRoutines() {
+    std::printf("MegaDrive68kCallRequestsReachTheGamesRoutines\n");
+    MegaDrive68kDriverConfig config;
+    std::string error;
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_init=\"0x1000\" m68k_frame=\"0x2000 0x2020\" requests=\"0x2100 0x2110\" warmup_frames=\"3\""), config, &error),
+          "requests and several frame routines parse");
+    Check(config.requestRoutines.size() == 2 && config.requestRoutines[0] == 0x2100 && config.requestRoutines[1] == 0x2110 && config.frames.size() == 2 && config.frames[1] == 0x2020,
+          "the addresses are read in the order written");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" requests=\"0x2101\" warmup_frames=\"3\""), config, &error) && error.find("requests") != std::string::npos,
+          "a request routine at an odd address is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" requests=\"\" warmup_frames=\"3\""), config, &error) && error.find("requests") != std::string::npos,
+          "an empty list of request routines is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000 0x2001\" request=\"0xFFF00B\" warmup_frames=\"3\""), config, &error) && error.find("m68k_frame") != std::string::npos,
+          "a frame routine at an odd address is refused");
+
+    // Two routines of the game: the first stores D0 (a byte) at 0xFF0200, the second stores D1 (a word) at 0xFF0202;
+    // a second frame routine counts the frames at 0xFF0204.
+    SyntheticCartridge cartridge;
+    cartridge.at = 0x2100;
+    cartridge.Word(0x13C0); cartridge.Long(0x00FF0200);      // MOVE.B D0,$FF0200
+    cartridge.Word(0x4E75);                                  // RTS
+    cartridge.at = 0x2110;
+    cartridge.Word(0x33C1); cartridge.Long(0x00FF0202);      // MOVE.W D1,$FF0202
+    cartridge.Word(0x4E75);
+    cartridge.at = 0x2020;
+    cartridge.Word(0x5239); cartridge.Long(0x00FF0204);      // ADDQ.B #1,$FF0204
+    cartridge.Word(0x4E75);
+    MegaDrive68kDriverConfig game = SyntheticConfig();
+    game.frames = {0x2000, 0x2020};
+    game.requestRoutines = {0x2100, 0x2110};
+    MegaDrive68kMachine machine(cartridge.bytes, game);
+    machine.Initialize();
+    Check(machine.RamForTest(0x0204) == 3 && machine.RamForTest(0x0100) == 3, "both frame routines run at every frame, in order");
+
+    MusicCommand command;
+    command.Kind = MusicCommandKind::Raw;
+    command.Value = 0x5A;
+    command.Auxiliary = 1 << 4;       // the first routine
+    machine.SendCommand(command);
+    machine.RunToTicksForTest(machine.TicksForTest() + kTicksPerFrame / 8);
+    Check(machine.RamForTest(0x0200) == 0x5A, "the first routine was called with the number in D0, within a fraction of a frame (as the game's main program would)");
+    command.Value = 0x6C;
+    command.Auxiliary = 2 << 4;       // the second routine
+    machine.SendCommand(command);      // after another request: starts again from the saved state
+    machine.RunToTicksForTest(machine.TicksForTest() + kTicksPerFrame / 8);
+    Check(machine.RamForTest(0x0200) == 0 && machine.RamForTest(0x0202) == 0 && machine.RamForTest(0x0203) == 0x6C, "the second routine was called with the number in D1 and the first request was undone");
+
+    // Requests made one after the other (for the tests) are called in this order, each when the 68000 is idle again.
+    machine.CallRequestForTest(1, 0x11);
+    machine.CallRequestForTest(2, 0x22);
+    machine.RunToTicksForTest(machine.TicksForTest() + kTicksPerFrame / 2);
+    Check(machine.RamForTest(0x0200) == 0x11 && machine.RamForTest(0x0203) == 0x22, "queued requests are all called");
 }
 
 void MegaDrive68kBusRulesBetweenTheCpus() {
@@ -360,4 +464,490 @@ void MegaDrive68kRealCartridgeMatchesTheOriginalsChipWrites() {
             Check(outside * 1000 <= n, (label + ": 99.9% of the writes are within " + std::to_string(static_cast<int>(tolerance)) + " us of the median offset").c_str());
         }
     }
+}
+
+namespace {
+
+struct Stimulus { std::uint64_t t; std::string kind; int value; };
+
+// Loads the stimuli file of a recording: "<ticks> <SONG|SFX|PSG> <number>" per line, the calls the original's game made to
+// the routines of the sound driver (see <driver requests>, in this order).
+std::vector<Stimulus> LoadStimuli(const std::filesystem::path& path) {
+    std::vector<Stimulus> list;
+    std::ifstream in(path);
+    Stimulus s;
+    while (in >> s.t >> s.kind >> s.value) list.push_back(s);
+    return list;
+}
+
+
+using TimedValues = std::vector<std::pair<std::uint64_t, std::string>>;
+
+// The Z80 plays a sampled sound by writing the YM2612's DAC (register 0x2A) at the pace its program sets; the 68000 starts
+// and restarts it by writing the number to the Z80's RAM. Where a restart comes within a frame differs a little from the
+// original (the original's game does its own work before it calls the driver), so the DAC writes of a whole recording
+// cannot be compared one for one. They are compared between two restarts: the sound must begin with the same values and
+// run for about the same time.
+std::vector<std::string> DacValues(const TimedValues& all, std::uint64_t from, std::uint64_t to) {
+    std::vector<std::string> out;
+    for (std::size_t i = 0; i + 1 < all.size(); ++i) {
+        if (all[i].first < from || all[i].first >= to) continue;
+        if (all[i].second == "0 42" && all[i + 1].second.rfind("1 ", 0) == 0) out.push_back(all[i + 1].second);
+    }
+    // the sound begins at the Z80's first write of the DAC's rest value; what comes before it is the end of the sound it replaced
+    std::size_t first = 0;
+    for (std::size_t i = 0; i < out.size() && i < 3; ++i) if (out[i] == "1 128") first = i;
+    out.erase(out.begin(), out.begin() + static_cast<std::ptrdiff_t>(first));
+    // a Z80 program that writes the rest value while it has nothing to play (some do) leaves runs of it around the sound
+    while (!out.empty() && out.front() == "1 128") out.erase(out.begin());
+    while (!out.empty() && out.back() == "1 128") out.pop_back();
+    return out;
+}
+
+// For a game whose sounds start at times that depend on a race between the 68000's request and the Z80's polling: the sounds that start
+// in both (within `windowTicks` of each other) are compared as in CompareDacBetweenRestarts; at most 5% of the starts may have no partner.
+void CompareDacPairedByStart(const std::string& label, const TimedValues& startsTheirs, const TimedValues& startsMine, const TimedValues& dacTheirs,
+                             const TimedValues& dacMine, std::uint64_t windowTicks, std::size_t compareFirst, std::size_t lengthTolerance) {
+    std::size_t unpaired = 0, badStart = 0, badLength = 0, paired = 0, j = 0;
+    for (std::size_t i = 0; i < startsTheirs.size(); ++i) {
+        while (j < startsMine.size() && startsMine[j].first + windowTicks < startsTheirs[i].first) ++j;
+        if (j >= startsMine.size() || startsMine[j].first > startsTheirs[i].first + windowTicks) { ++unpaired; continue; }
+        // (a start that has another start of the other list nearby on both sides cannot be told apart: both are compared only when alone)
+        ++paired;
+        const std::uint64_t endTheirs = i + 1 < startsTheirs.size() ? startsTheirs[i + 1].first : ~0ull;
+        const std::uint64_t endMine = j + 1 < startsMine.size() ? startsMine[j + 1].first : ~0ull;
+        const std::vector<std::string> a = DacValues(dacTheirs, startsTheirs[i].first, endTheirs);
+        const std::vector<std::string> b = DacValues(dacMine, startsMine[j].first, endMine);
+        const std::size_t from = 10;
+        const std::size_t count = std::min<std::size_t>(compareFirst - from, a.size() > from ? a.size() - from : 0);
+        bool same = a.size() <= from + 20 || b.size() <= from + 20;
+        for (std::size_t shift = 0; !same && shift + count <= b.size() && shift <= 40; ++shift) {
+            bool equal = true;
+            for (std::size_t k = 0; k < count; ++k) if (a[from + k] != b[shift + k]) { equal = false; break; }
+            same = equal;
+        }
+        if (!same) ++badStart;
+        const std::size_t diff = a.size() > b.size() ? a.size() - b.size() : b.size() - a.size();
+        if (startsTheirs.size() > i + 1 && startsMine.size() > j + 1 && std::llabs(static_cast<std::int64_t>(startsTheirs[i + 1].first) - static_cast<std::int64_t>(startsMine[j + 1].first)) <= static_cast<std::int64_t>(windowTicks) &&
+            diff > lengthTolerance + a.size() / 50)
+            ++badLength;
+        ++j;
+    }
+    Check(unpaired * 20 <= startsTheirs.size(), (label + ": " + std::to_string(unpaired) + " of " + std::to_string(startsTheirs.size()) + " sampled sounds have no partner (5% allowed)").c_str());
+    Check(paired > 0 && badStart == 0, (label + ": every paired sampled sound has the same " + std::to_string(compareFirst - 10) + " values from its 11th on").c_str());
+    Check(badLength == 0, (label + ": every paired sampled sound runs for the same number of writes (within " + std::to_string(lengthTolerance) + " and 2%)").c_str());
+}
+
+void CompareDacBetweenRestarts(const std::string& label, const TimedValues& restartsTheirs, const TimedValues& restartsMine,
+                               const TimedValues& dacTheirs, const TimedValues& dacMine, std::size_t compareFirst, std::size_t lengthTolerance,
+                               std::size_t badStartsAllowedPerThousand = 0) {
+    auto values = [](const TimedValues& all, std::uint64_t from, std::uint64_t to) { return DacValues(all, from, to); };
+    Check(restartsTheirs.size() == restartsMine.size(), (label + ": the same number of restarts of the sampled sound").c_str());
+    const std::size_t n = std::min(restartsTheirs.size(), restartsMine.size());
+    std::size_t badStart = 0, badLength = 0;
+    for (std::size_t i = 0; i < n; ++i) {
+        const std::uint64_t endTheirs = i + 1 < restartsTheirs.size() ? restartsTheirs[i + 1].first : ~0ull;
+        const std::uint64_t endMine = i + 1 < restartsMine.size() ? restartsMine[i + 1].first : ~0ull;
+        const std::vector<std::string> a = values(dacTheirs, restartsTheirs[i].first, endTheirs);
+        const std::vector<std::string> b = values(dacMine, restartsMine[i].first, endMine);
+        // The first values are those of the sound it replaced (how many depends on when the Z80 looks at the request), so the
+        // values from the 10th on must be found in ours a few values earlier or later.
+        const std::size_t from = 10;
+        const std::size_t count = std::min<std::size_t>(compareFirst - from, a.size() > from ? a.size() - from : 0);
+        bool same = a.size() <= from + 20 || b.size() <= from + 20;   // a very short sound: only its length is compared
+        for (std::size_t shift = 0; !same && shift + count <= b.size() && shift <= 40; ++shift) {
+            bool equal = true;
+            for (std::size_t j = 0; j < count; ++j) if (a[from + j] != b[shift + j]) { equal = false; break; }
+            same = equal;
+        }
+        if (!same && GetEnvVar("CHIPESTRA_REPLAY_DEBUG") != nullptr) { std::printf("  dac segment %zu: %zu / %zu values; theirs:", i, a.size(), b.size()); for (std::size_t j = 0; j < 14 && j < a.size(); ++j) std::printf(" %s", a[j].c_str() + 2); std::printf(" ours:"); for (std::size_t j = 0; j < 14 && j < b.size(); ++j) std::printf(" %s", b[j].c_str() + 2); std::printf("\n"); }
+        if (!same) ++badStart;
+        // The Z80 of the original is held a little longer by the 68000 than here (about one write in 180), so a sound that is
+        // cut by the next request ends a little earlier there.
+        const std::size_t diff = a.size() > b.size() ? a.size() - b.size() : b.size() - a.size();
+        if (i + 1 < n && diff > lengthTolerance + a.size() / 50) ++badLength;
+    }
+    Check(badStart * 1000 <= n * badStartsAllowedPerThousand,
+          (label + ": the sampled sounds have the same " + std::to_string(compareFirst - 10) + " values from the 11th on" + (badStartsAllowedPerThousand != 0 ? " (all but " + std::to_string(badStartsAllowedPerThousand / 10) + "%: sounds that begin while another one is mixed depend on the Z80's phase)" : std::string())).c_str());
+    Check(badLength == 0, (label + ": every sampled sound runs for the same number of writes (within " + std::to_string(lengthTolerance) + " and 2%)").c_str());
+}
+
+// A game whose recording is replayed: its definition, the recording and the list of the calls the original's game made (one
+// "<ticks> <kind> <number>" per line; kind POKE is a write into the driver's RAM, number = address * 256 + value), and what a
+// kind of call is here: the entry of <driver requests> that takes the number (kinds); the kind INIT is a restart of the
+// driver by the routines `initRoutines` (called one after the other).
+struct ReplayGame {
+    const char* xml;
+    const char* log;
+    const char* stimuli;
+    std::vector<std::pair<std::string, std::uint32_t>> kinds;
+    std::vector<std::uint32_t> initRoutines;
+    // The recording has the times at which the original's vertical-blank handler began (kind VBL): the 68000 gets its
+    // vertical-blank interrupts at these times (a game that keeps interrupts off while it loads misses some).
+    bool vblankSchedule = false;
+    // The parts of the Z80's RAM (besides 0x1FF0-0x1FFF) where the 68000 leaves the Z80 program its commands: the writes there are compared.
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> z80TriggerRanges;
+    // Routines of the game, called by kinds of calls that are not requests of the definition: after the restarts of the driver,
+    // the n-th of them is the routine number (definition's requests + restart routines + n).
+    std::vector<std::uint32_t> extraRoutines;
+    // The sampled sound is played by a Z80 program that is not restarted by a request that can be told apart: its writes to the
+    // DAC are compared like the other chip writes (the same values in the same order).
+    bool exactDac = false;
+    // The sampled sounds are told apart by the Z80 program's own writes that switch the DAC on (register 0x2B), not by the
+    // 68000's writes into the Z80's RAM: each such write begins a sound, compared as in the other games.
+    bool dacRestartsFromStream = false;
+    // The driver's sound part of the vertical-blank interrupt is skipped when the horizontal interrupt's work is still going on
+    // (a flag the game's handlers set), so whether a frame is skipped depends on the lengths of the long frames, which differ a
+    // little from the original's (the Z80's phase builds up from every time it is stopped): the writes are compared by
+    // lining the two lists up again after each difference (a few writes that one has and the other has not).
+    bool resyncCompare = false;
+};
+
+struct AlignedWrites {
+    std::vector<std::pair<std::size_t, std::size_t>> pairs;   // (index in theirs, index in mine) of the writes found in both
+    std::size_t differences = 0;                              // places where the lists were lined up again
+};
+
+// Walks both lists; at a difference it looks for the nearest place (up to `maxSkip` writes on either side) where the next
+// `confirm` writes agree again.
+AlignedWrites AlignWithResync(const std::vector<std::pair<std::uint64_t, std::string>>& a, const std::vector<std::pair<std::uint64_t, std::string>>& b) {
+    constexpr std::size_t kMaxSkip = 200, kConfirm = 6;
+    AlignedWrites result;
+    std::size_t i = 0, j = 0;
+    auto agree = [&](std::size_t x, std::size_t y) {
+        if (x + kConfirm > a.size() || y + kConfirm > b.size()) return false;
+        for (std::size_t k = 0; k < kConfirm; ++k) if (a[x + k].second != b[y + k].second) return false;
+        return true;
+    };
+    while (i < a.size() && j < b.size()) {
+        if (a[i].second == b[j].second) { result.pairs.emplace_back(i, j); ++i; ++j; continue; }
+        ++result.differences;
+        bool found = false;
+        for (std::size_t d = 1; d <= kMaxSkip * 2 && !found; ++d) {
+            for (std::size_t di = 0; di <= d && !found; ++di) {
+                const std::size_t dj = d - di;
+                if (di > kMaxSkip || dj > kMaxSkip) continue;
+                if (agree(i + di, j + dj)) { i += di; j += dj; found = true; }
+            }
+        }
+        if (!found) { ++i; ++j; }
+    }
+    return result;
+}
+
+// Plays the calls the original's game made, from `fromSeconds` to `toSeconds` of its recording, at the same times and
+// compares the writes to the YM2612 and the PSG with the recording: the same number, the same values in the same order,
+// and the times within the tolerance of the median offset.
+void CompareReplayWithRecording(const ReplayGame& game, double fromSeconds, double toSeconds, double dacToleranceUs, double writeToleranceUs) {
+    const char* xmlName = game.xml;
+    const char* logRelativePath = game.log;
+    const char* stimuliRelativePath = game.stimuli;
+    const char* romRoot = GetEnvVar("CHIPESTRA_ROM_ROOT");
+    const char* referenceRoot = GetEnvVar("CHIPESTRA_REFERENCE_DIR");
+    if (romRoot == nullptr || referenceRoot == nullptr) {
+        std::printf("  SKIP: CHIPESTRA_ROM_ROOT and CHIPESTRA_REFERENCE_DIR are needed for the real-cartridge comparison\n");
+        return;
+    }
+    const char* flavorEnv = GetEnvVar("CHIPESTRA_REFERENCE_FLAVOR");
+    const std::string flavor = flavorEnv != nullptr ? flavorEnv : "fine";
+    auto resolve = [&](std::string relative) {
+        const std::size_t at = relative.find("<flavor>");
+        if (at != std::string::npos) relative.replace(at, 8, flavor);
+        return std::filesystem::path(referenceRoot) / relative;
+    };
+    const std::filesystem::path logPath = resolve(logRelativePath);
+    const std::filesystem::path stimuliPath = resolve(stimuliRelativePath);
+    if (!std::filesystem::exists(logPath) || !std::filesystem::exists(stimuliPath)) {
+        std::printf("  SKIP: %s or %s is not there\n", logPath.string().c_str(), stimuliPath.string().c_str());
+        return;
+    }
+    const auto xmlPath = FindDefinitionXml(xmlName);
+    Check(xmlPath.has_value(), (std::string(xmlName) + " is present (run from the repo root)").c_str());
+    if (!xmlPath) return;
+    std::ifstream xmlFile(*xmlPath, std::ios::binary);
+    std::ostringstream xmlText;
+    xmlText << xmlFile.rdbuf();
+    const XmlParseResult parsed = ParseGameDefinition(xmlText.str());
+    Check(parsed.Status == XmlParseStatus::Ok, (std::string(xmlName) + " parses").c_str());
+    if (parsed.Status != XmlParseStatus::Ok) return;
+    const ResourceResolver resolver{std::filesystem::path(romRoot)};
+    ResourceResolutionResult res = resolver.Resolve(parsed.Definition.BuildRequiredResources());
+    Check(res.Ok, "the cartridge is found under CHIPESTRA_ROM_ROOT");
+    if (!res.Ok) return;
+    std::string selectError;
+    const std::string driverXml = SelectMegaDriveDriverRegion(ExtractDriverElementXml(xmlText.str()), 0, &selectError);
+    Check(!driverXml.empty(), "the first region of the list is selected");
+    if (driverXml.empty()) return;
+    res.Resources.Add(ResolvedResource("driver_xml", std::vector<std::uint8_t>(driverXml.begin(), driverXml.end())));
+    MegaDrive68kMachineInputs inputs = AssembleMegaDrive68kMachineInputs(res.Resources);
+
+    const double mclk = 53693175.0;
+    const std::vector<Event> reference = LoadMameLog(logPath);
+    // the calls in the window
+    std::vector<Stimulus> calls;
+    std::vector<std::uint64_t> vblanks;
+    for (const Stimulus& s : LoadStimuli(stimuliPath)) {
+        if (s.kind == "VBL") { vblanks.push_back(s.t); continue; }
+        if (s.t < static_cast<std::uint64_t>(fromSeconds * mclk) || s.t >= static_cast<std::uint64_t>(toSeconds * mclk)) continue;
+        bool known = s.kind == "POKE" || s.kind == "INIT";
+        for (const auto& kind : game.kinds) known = known || kind.first == s.kind;
+        if (known) calls.push_back(s);
+    }
+    Check(!calls.empty(), "the recording has calls in the window");
+    if (calls.empty()) return;
+    const std::uint64_t t0 = calls.front().t;
+    const std::uint64_t window = static_cast<std::uint64_t>(toSeconds * mclk) - t0;
+
+    // The calls the game makes to restart the driver are routines of the game that are not requests: they are added here.
+    const std::size_t routinesInXml = inputs.driver.requestRoutines.size();
+    for (const std::uint32_t routine : game.initRoutines) inputs.driver.requestRoutines.push_back(routine);
+    for (const std::uint32_t routine : game.extraRoutines) inputs.driver.requestRoutines.push_back(routine);
+    Check(routinesInXml + game.initRoutines.size() + game.extraRoutines.size() <= 7, "the game has no more than seven routines to call");
+    MegaDrive68kMachine machine(inputs.cartridge, inputs.driver);
+    machine.Initialize();
+    std::vector<Event> ours;
+    std::uint64_t base = 0;
+    bool logging = false;
+    machine.SetChipWriteObserverForTest([&](std::uint64_t ticks, char cpu, char kind, std::uint32_t port, std::uint8_t value) {
+        if (!logging) return;
+        ours.push_back({ticks - base, std::string("CHIP") + std::string(1, cpu) + kind, std::to_string(port) + " " + std::to_string(value)});
+    });
+    machine.SetZ80RamWriteObserverForTest([&](std::uint64_t ticks, std::uint32_t offset, std::uint8_t value) {
+        bool wanted = offset >= 0x1FF0;
+        for (const auto& range : game.z80TriggerRanges) wanted = wanted || (offset >= range.first && offset < range.second);
+        if (!logging || !wanted) return;
+        char text[32];
+        std::snprintf(text, sizeof(text), "%04X %02X", offset, value);
+        ours.push_back({ticks - base, "CHIP6W", text});
+    });
+    std::uint64_t start = (machine.TicksForTest() / kTicksPerFrame) * kTicksPerFrame + t0 % kTicksPerFrame;
+    if (start < machine.TicksForTest()) start += kTicksPerFrame;
+    base = start;
+    if (game.vblankSchedule) {
+        // (the handler's first read of the game's RAM comes about 1500 ticks after the interrupt is taken)
+        std::vector<std::uint64_t> schedule;
+        for (const std::uint64_t v : vblanks) {
+            if (v < t0 + 1500 || v > t0 + window) continue;
+            schedule.push_back(start + (v - 1500 - t0));
+        }
+        machine.SetVblankScheduleForTest(schedule);
+        if (GetEnvVar("CHIPESTRA_REPLAY_DEBUG") != nullptr) std::printf("  schedule: %zu interrupts, first %llu start %llu t0 %llu window %llu\n", schedule.size(), schedule.empty() ? 0ull : static_cast<unsigned long long>(schedule.front()), static_cast<unsigned long long>(start), static_cast<unsigned long long>(t0), static_cast<unsigned long long>(window));
+    }
+    machine.RunToTicksForTest(start);
+    logging = true;
+    for (const Stimulus& call : calls) {
+        std::uint64_t at = call.t;
+        if (call.kind == "POKE") {
+            // The original's vertical-blank handler first does its video work (up to about 3 ms) and then calls the driver; a
+            // write the game's main program makes in that time is seen by the driver in the same frame. Ours calls the driver
+            // at the start of the interrupt, so such a write is made just before it.
+            if (game.vblankSchedule) {
+                // the handler's start nearest before the write
+                std::uint64_t entry = 0;
+                for (const std::uint64_t v : vblanks) if (v <= call.t) entry = v;
+                if (entry != 0 && call.t - entry <= 0) at = entry - 1500 - 4000;
+            } else {
+                const std::uint64_t vblank = (224 * 228 + 10) * 15;
+                const std::uint64_t phase = call.t % kTicksPerFrame;
+                if (phase > vblank && phase <= vblank + 160000) at = call.t - (phase - vblank) - 4000;
+            }
+        }
+        machine.RunToTicksForTest(start + (at - t0));
+        if (call.kind == "POKE") {
+            // a write of the original's game into the driver's RAM (its fade-out speed): the number is address * 256 + value
+            machine.PokeRamForTest(0xFF0000u + static_cast<std::uint32_t>(call.value >> 8), static_cast<std::uint8_t>(call.value & 0xFF));
+        } else if (call.kind == "INIT") {
+            // the game's restart of the sound driver: its initialization routines one after the other
+            for (std::size_t i = 0; i < game.initRoutines.size(); ++i) machine.CallRequestForTest(static_cast<std::uint32_t>(routinesInXml + i + 1), 0);
+        } else {
+            // a kind the game's definition does not name (for instance the loading of the Z80's program) is not a request
+            for (const auto& kind : game.kinds) {
+                if (kind.first == call.kind) machine.CallRequestForTest(kind.second, static_cast<std::uint8_t>(call.value));
+            }
+        }
+    }
+    machine.RunToTicksForTest(start + window);
+
+    struct Stream { const char* original; const char* ourKind; };
+    TimedValues restartsTheirs, restartsMine;
+    for (const Stream& stream : {Stream{"YM68", "CHIP6Y"}, Stream{"PSG68", "CHIP6P"}, Stream{"ZW", "CHIP6W"}, Stream{"YMZ", "CHIPZY"}}) {
+        std::vector<std::pair<std::uint64_t, std::string>> theirs, mine;
+        for (const Event& e : reference) {
+            if (e.kind != stream.original || e.t < t0 || e.t > t0 + window) continue;
+            std::string a = e.a;
+            while (!a.empty() && a[0] == ' ') a.erase(a.begin());
+            if (const std::size_t pc = a.find(" PC "); pc != std::string::npos) a.erase(pc);      // (the recording names the instruction that wrote)
+            theirs.emplace_back(e.t - t0, a);
+        }
+        for (const Event& e : ours) {
+            if (e.kind != stream.ourKind) continue;
+            std::string a = e.a;
+            if (std::string(stream.original) == "PSG68") a = a.substr(a.find(' ') + 1);     // the PSG has no port
+            mine.emplace_back(e.t, a);
+        }
+        const std::string label = std::string("replay ") + stream.original;
+        if (std::string(stream.original) == "PSG68") {
+            // The PSG part of the driver runs its first frame at the first vertical-blank interrupt after the start-up; in the
+            // original's start-up that is later than in ours, so its first writes are left out (the first 37 ms of the window).
+            auto trim = [](TimedValues& list) {
+                list.erase(std::remove_if(list.begin(), list.end(), [](const auto& e) { return e.first < 2000000; }), list.end());
+            };
+            trim(theirs);
+            trim(mine);
+        }
+        if (const char* dump = GetEnvVar("CHIPESTRA_DUMP_DIR"); dump != nullptr) {
+            std::ofstream a(std::filesystem::path(dump) / (label + "_" + std::to_string(static_cast<int>(fromSeconds)) + "_theirs.txt"));
+            std::ofstream b(std::filesystem::path(dump) / (label + "_" + std::to_string(static_cast<int>(fromSeconds)) + "_mine.txt"));
+            for (const auto& e : theirs) a << e.first << ' ' << e.second << '\n';
+            for (const auto& e : mine) b << e.first << ' ' << e.second << '\n';
+        }
+        if (std::string(stream.original) == "ZW") { restartsTheirs = theirs; restartsMine = mine; }
+        if (std::string(stream.original) == "YMZ" && game.dacRestartsFromStream) {
+            restartsTheirs.clear();
+            restartsMine.clear();
+            for (const auto& e : theirs) if (e.second == "0 43") restartsTheirs.push_back(e);
+            for (const auto& e : mine) if (e.second == "0 43") restartsMine.push_back(e);
+            CompareDacPairedByStart(label, restartsTheirs, restartsMine, theirs, mine, 1500000, 150, 12);
+            continue;
+        }
+        if (std::string(stream.original) == "YMZ" && !game.exactDac) {
+            CompareDacBetweenRestarts(label, restartsTheirs, restartsMine, theirs, mine, 150, 12, game.resyncCompare ? 20 : 0);
+            continue;
+        }
+        std::vector<std::int64_t> d;
+        if (game.resyncCompare) {
+            const std::size_t larger = std::max(theirs.size(), mine.size());
+            Check(theirs.size() + larger / 200 >= mine.size() && mine.size() + larger / 200 >= theirs.size(), (label + ": the number of writes is within 0.5% (" + std::to_string(theirs.size()) + " in the recording, " + std::to_string(mine.size()) + " here)").c_str());
+            const AlignedWrites aligned = AlignWithResync(theirs, mine);
+            Check(aligned.pairs.size() * 1000 >= larger * 995, (label + ": 99.5% of the writes have the same value in the same order (" + std::to_string(aligned.pairs.size()) + " of " + std::to_string(larger) + ", " + std::to_string(aligned.differences) + " places lined up again)").c_str());
+            for (const auto& pair : aligned.pairs) d.push_back(static_cast<std::int64_t>(mine[pair.second].first) - static_cast<std::int64_t>(theirs[pair.first].first));
+        } else {
+            Check(theirs.size() == mine.size(), (label + ": the same number of writes (" + std::to_string(theirs.size()) + " in the recording, " + std::to_string(mine.size()) + " here)").c_str());
+            const std::size_t n = std::min(theirs.size(), mine.size());
+            std::size_t different = 0;
+            for (std::size_t i = 0; i < n; ++i) if (theirs[i].second != mine[i].second) ++different;
+            Check(different == 0, (label + ": the same values in the same order").c_str());
+            for (std::size_t i = 0; i < n; ++i) d.push_back(static_cast<std::int64_t>(mine[i].first) - static_cast<std::int64_t>(theirs[i].first));
+        }
+        const std::size_t n = d.size();
+        if (d.empty()) continue;
+        std::vector<std::int64_t> sorted = d;
+        std::sort(sorted.begin(), sorted.end());
+        const std::int64_t median = sorted[sorted.size() / 2];
+        const double tolerance = std::string(stream.original) == "YMZ" ? dacToleranceUs : writeToleranceUs;
+        std::size_t outside = 0;
+        for (std::int64_t v : d) if (static_cast<double>(std::llabs(v - median)) / mclk * 1e6 > tolerance) ++outside;
+        Check(outside * (game.resyncCompare ? 100 : 1000) <= n, (label + (game.resyncCompare ? ": 99% of the writes are within " : ": 99.9% of the writes are within ") + std::to_string(static_cast<int>(tolerance)) + " us of the median offset").c_str());
+    }
+}
+
+}  // namespace
+
+void MegaDrive68kBattleManiaReplayMatchesTheOriginalsChipWrites() {
+    std::printf("MegaDrive68kBattleManiaReplayMatchesTheOriginalsChipWrites\n");
+    const ReplayGame game{"battlemania.xml", "md/battlemania/real_game/<flavor>/boot_70s.txt", "md/battlemania/real_game/<flavor>/stimuli_70s.txt",
+                          {{"SONG", 1}, {"SFX", 2}, {"PSG", 3}}, {0x6C000, 0x6CBC2}};
+    CompareReplayWithRecording(game, 1.0, 46.0, 17000.0, 17000.0);
+    // after the game restarted the driver (its first call in this window) the sounds of the rest of the recording
+    CompareReplayWithRecording(game, 46.5, 69.0, 17000.0, 17000.0);
+}
+
+void MegaDrive68kBattleMania2ReplayMatchesTheOriginalsChipWrites() {
+    std::printf("MegaDrive68kBattleMania2ReplayMatchesTheOriginalsChipWrites\n");
+    const ReplayGame game{"battlemania2.xml", "md/battlemania2/real_game/<flavor>/boot_90s.txt", "md/battlemania2/real_game/<flavor>/stimuli_90s.txt",
+                          {{"SONG", 1}, {"SFX", 2}}, {}, true};
+    // The window ends where the game starts over (it clears its RAM at 85.54 s and starts a song). The fade-out that begins at 84.4 s
+    // is the game's own request: it writes the fade speed into the driver's variable at 84.36 s (a POKE of the recording), and the
+    // driver fades by itself from then on.
+    CompareReplayWithRecording(game, 1.3, 85.5, 17000.0, 17000.0);
+}
+
+void MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites() {
+    std::printf("MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites\n");
+    const ReplayGame game{"gauntlet4.xml", "md/gauntlet4/real_game/<flavor>/play_120s.txt", "md/gauntlet4/real_game/<flavor>/stimuli_120s.txt",
+                          {{"SONG", 1}, {"ZCMD", 3}, {"SEQ", 4}}, {}, true, {{0x100, 0x120}}, {0x39E14, 0x39E08}, true};
+    CompareReplayWithRecording(game, 15.0, 118.0, 17000.0, 17000.0);
+}
+
+void MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites() {
+    std::printf("MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites\n");
+    const ReplayGame game{"pstar4.xml", "md/pstar4/real_game/<flavor>/play3_150s.txt", "md/pstar4/real_game/<flavor>/stimuli3_150s.txt",
+                          {}, {}, true, {{0x1F00, 0x1F10}}, {}, false, true};
+    CompareReplayWithRecording(game, 0.4, 147.0, 17000.0, 17000.0);
+}
+
+void MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites() {
+    std::printf("MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites\n");
+    const ReplayGame game{"starcruiser.xml", "md/starcruiser/real_game/<flavor>/play_125s.txt", "md/starcruiser/real_game/<flavor>/stimuli_125s.txt",
+                          {{"SONG", 1}, {"SFX", 2}, {"FADE", 4}}, {0x9610}, false, {{0x3B, 0x3D}}, {0x95F8}, false, false, true};
+    CompareReplayWithRecording(game, 1.0, 120.0, 17000.0, 17000.0);
+}
+
+void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
+    std::printf("MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests\n");
+    MegaDrive68kDriverConfig config;
+    std::string error;
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_init=\"0x2A00\" vblank_handler=\"game\" hblank_lines=\"53\" m68k_a6=\"0xFF0000\" m68k_ram_words=\"0xFF0110=0x1234 0xFF0112=5\" requests=\"0x2B00\" request_arg=\"pointer\" warmup_frames=\"3\""), config, &error),
+          "the settings of a game that keeps its own handlers parse (m68k_frame is not needed then)");
+    Check(config.vblankHandlerIsGame && config.hblankLines == 53 && config.a6 == 0xFF0000u && config.requestByPointer && config.ramWords.size() == 2 &&
+              config.ramWords[0].first == 0xFF0110u && config.ramWords[0].second == 0x1234 && config.ramWords[1].second == 5,
+          "the numbers are read as written");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" hblank_lines=\"0\" warmup_frames=\"3\""), config, &error) && error.find("hblank_lines") != std::string::npos, "hblank_lines 0 is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" hblank_lines=\"257\" warmup_frames=\"3\""), config, &error) && error.find("hblank_lines") != std::string::npos, "hblank_lines above 256 is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_a6=\"0x1000\" warmup_frames=\"3\""), config, &error) && error.find("m68k_a6") != std::string::npos, "A6 must point into the RAM");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_ram_words=\"0xFF0111=1\" warmup_frames=\"3\""), config, &error) && error.find("m68k_ram_words") != std::string::npos, "a word at an odd address is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_ram_words=\"0xFF0110=0x12345\" warmup_frames=\"3\""), config, &error) && error.find("m68k_ram_words") != std::string::npos, "a value above 16 bits is refused");
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" z80_bus=\"instruction_end\" warmup_frames=\"3\""), config, &error) && config.z80BusAtInstructionEnd, "z80_bus=\"instruction_end\" parses");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" z80_bus=\"late\" warmup_frames=\"3\""), config, &error) && error.find("z80_bus") != std::string::npos, "an unknown z80_bus is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" request_arg=\"word\" warmup_frames=\"3\""), config, &error) && error.find("request_arg") != std::string::npos, "an unknown request_arg is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("vblank_handler=\"own\" request=\"0xFF0002\" warmup_frames=\"3\""), config, &error) && error.find("vblank_handler") != std::string::npos, "an unknown vblank_handler is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("request=\"0xFF0002\" warmup_frames=\"3\""), config, &error) && error.find("m68k_frame") != std::string::npos, "without vblank_handler=\"game\" m68k_frame is still required");
+
+    SyntheticCartridge cartridge;
+    auto put32 = [&](std::uint32_t at, std::uint32_t value) {
+        cartridge.bytes[at] = static_cast<std::uint8_t>(value >> 24); cartridge.bytes[at + 1] = static_cast<std::uint8_t>(value >> 16);
+        cartridge.bytes[at + 2] = static_cast<std::uint8_t>(value >> 8); cartridge.bytes[at + 3] = static_cast<std::uint8_t>(value);
+    };
+    put32(0x70, 0x2800);    // the horizontal-blank interrupt (level 4)
+    put32(0x78, 0x2900);    // the vertical-blank interrupt (level 6)
+    cartridge.at = 0x2800;
+    cartridge.Word(0x5279); cartridge.Long(0x00FF0100);      // ADDQ.W #1,$FF0100
+    cartridge.Word(0x4E73);                                  // RTE
+    cartridge.at = 0x2900;
+    cartridge.Word(0x5279); cartridge.Long(0x00FF0102);      // ADDQ.W #1,$FF0102
+    cartridge.Word(0x4E73);                                  // RTE
+    cartridge.at = 0x2A00;
+    cartridge.Word(0x23CE); cartridge.Long(0x00FF0108);      // MOVE.L A6,$FF0108
+    cartridge.Word(0x13F9); cartridge.Long(0x00A10003); cartridge.Long(0x00FF0106);   // MOVE.B $A10003,$FF0106   (the first controller)
+    cartridge.Word(0x4E75);                                  // RTS
+    cartridge.at = 0x2B00;
+    cartridge.Word(0x33D0); cartridge.Long(0x00FF0104);      // MOVE.W (A0),$FF0104
+    cartridge.Word(0x4E75);                                  // RTS
+    MegaDrive68kDriverConfig game;
+    game.init = {0x2A00};
+    game.vblankHandlerIsGame = true;
+    game.hblankLines = 53;
+    game.a6 = 0xFF0000u;
+    game.ramWords = {{0xFF0110u, 0x1234}};
+    game.requestRoutines = {0x2B00};
+    game.requestByPointer = true;
+    game.warmupFrames = 3;
+    MegaDrive68kMachine machine(cartridge.bytes, game);
+    machine.Initialize();
+    Check(machine.RamForTest(0x108) == 0x00 && machine.RamForTest(0x109) == 0xFF && machine.RamForTest(0x10A) == 0x00 && machine.RamForTest(0x10B) == 0x00, "A6 holds the base the definition names when the routines run");
+    Check(machine.RamForTest(0x110) == 0x12 && machine.RamForTest(0x111) == 0x34, "the words of m68k_ram_words are there before the routines run");
+    Check(machine.RamForTest(0x106) == 0x7F, "the controller reads as one with no button pressed");
+    auto word = [&](std::uint32_t at) { return static_cast<std::uint32_t>(machine.RamForTest(at) << 8 | machine.RamForTest(at + 1)); };
+    const std::uint32_t hint0 = word(0x100), vint0 = word(0x102);
+    machine.RunToTicksForTest(machine.TicksForTest() + 10 * kTicksPerFrame);
+    const std::uint32_t hints = (word(0x100) - hint0) & 0xFFFF, vints = (word(0x102) - vint0) & 0xFFFF;
+    Check(hints >= 39 && hints <= 41, "the game's own horizontal-blank handler runs 4 times a frame (lines 52, 105, 158, 211)");
+    Check(vints >= 9 && vints <= 11, "the game's own vertical-blank handler runs once a frame");
+    MusicCommand command;
+    command.Kind = MusicCommandKind::Raw;
+    command.Value = 0x2B;
+    command.Auxiliary = 1 << 4;
+    machine.SendCommand(command);
+    machine.RunToTicksForTest(machine.TicksForTest() + kTicksPerFrame / 2);
+    Check(word(0x104) == 0x002B, "the routine of a pointer request finds the number in the word A0 points at");
 }

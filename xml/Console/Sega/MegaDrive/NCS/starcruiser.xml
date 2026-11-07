@@ -1,0 +1,129 @@
+<chipestra>
+  <game id="starcruiser" title="Star Cruiser" manufacturer="NCS"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="StarCruiser">
+    <resources>
+      <rom name="rom" file="StarCruiser.smd|StarCruiser.bin|StarCruiser.md" crc_search="true" search_crc32="2b75b52f" search_size="524800"/>
+    </resources>
+    <!-- The sound driver runs on the 68000 and is driven by two interrupts of the game, which run as they are: the horizontal-blank
+         interrupt (0x9432), four times a frame (the game sets the VDP's register 10 to 52), advances the music with a tempo accumulator, and
+         the vertical-blank interrupt (0x8F26) does the rest of the sound (volume and pitch changes, fades, the effect parts) after its own
+         work, which only reads the controllers when the game's RAM is clear. The Z80 mixes three sampled voices. The game keeps its
+         variables in a block addressed by A6 (0xFF0000). 0x9592 loads the Z80's program and 0x9610 sets the sound parts up; the game starts a
+         song (0x9622) or an effect (0x963C) by calling a subroutine with A0 pointing at a word that holds the number. The header of the
+         game says Japan. -->
+    <driver m68k_init="0x9592 0x9610" vblank_handler="game" hblank_lines="53" m68k_a6="0xFF0000" m68k_ram_words="0xFF0470=5" requests="0x9622 0x963C" request_arg="pointer" z80_bus="instruction_end" warmup_frames="4" region="japan" cart_crc32="2b75b52f"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x00" type="control"/>
+      <track id="BGM_00" title="BGM 00" command="0x00" request="0x9622"/>
+      <track id="BGM_01" title="BGM 01" command="0x01" request="0x9622"/>
+      <track id="BGM_02" title="BGM 02" command="0x02" request="0x9622"/>
+      <track id="BGM_03" title="BGM 03" command="0x03" request="0x9622"/>
+      <track id="BGM_04" title="BGM 04" command="0x04" request="0x9622"/>
+      <track id="BGM_05" title="BGM 05" command="0x05" request="0x9622"/>
+      <track id="BGM_06" title="BGM 06" command="0x06" request="0x9622"/>
+      <track id="BGM_07" title="BGM 07" command="0x07" request="0x9622"/>
+      <track id="BGM_08" title="BGM 08" command="0x08" request="0x9622"/>
+      <track id="BGM_09" title="BGM 09" command="0x09" request="0x9622"/>
+      <track id="BGM_0A" title="BGM 0A" command="0x0A" request="0x9622"/>
+      <track id="BGM_0B" title="BGM 0B" command="0x0B" request="0x9622"/>
+      <track id="BGM_0C" title="BGM 0C" command="0x0C" request="0x9622"/>
+      <track id="BGM_0D" title="BGM 0D" command="0x0D" request="0x9622"/>
+      <track id="BGM_0E" title="BGM 0E" command="0x0E" request="0x9622"/>
+      <track id="BGM_0F" title="BGM 0F" command="0x0F" request="0x9622"/>
+      <track id="BGM_10" title="BGM 10" command="0x10" request="0x9622"/>
+      <track id="BGM_11" title="BGM 11" command="0x11" request="0x9622"/>
+      <track id="BGM_12" title="BGM 12" command="0x12" request="0x9622"/>
+      <track id="BGM_13" title="BGM 13" command="0x13" request="0x9622"/>
+      <track id="BGM_14" title="BGM 14" command="0x14" request="0x9622"/>
+      <track id="SFX_01" title="[SFX] 01" command="0x01" type="sfx" request="0x963C"/>
+      <track id="SFX_02" title="[SFX] 02" command="0x02" type="sfx" request="0x963C"/>
+      <track id="SFX_03" title="[SFX] 03" command="0x03" type="sfx" request="0x963C"/>
+      <track id="SFX_04" title="[SFX] 04" command="0x04" type="sfx" request="0x963C"/>
+      <track id="SFX_05" title="[SFX] 05" command="0x05" type="sfx" request="0x963C"/>
+      <track id="SFX_06" title="[SFX] 06" command="0x06" type="sfx" request="0x963C"/>
+      <track id="SFX_07" title="[SFX] 07" command="0x07" type="sfx" request="0x963C"/>
+      <track id="SFX_08" title="[SFX] 08" command="0x08" type="sfx" request="0x963C"/>
+      <track id="SFX_09" title="[SFX] 09" command="0x09" type="sfx" request="0x963C"/>
+      <track id="SFX_0A" title="[SFX] 0A" command="0x0A" type="sfx" request="0x963C"/>
+      <track id="SFX_0B" title="[SFX] 0B" command="0x0B" type="sfx" request="0x963C"/>
+      <track id="SFX_0C" title="[SFX] 0C" command="0x0C" type="sfx" request="0x963C"/>
+      <track id="SFX_0D" title="[SFX] 0D" command="0x0D" type="sfx" request="0x963C"/>
+      <track id="SFX_0E" title="[SFX] 0E" command="0x0E" type="sfx" request="0x963C"/>
+      <track id="SFX_0F" title="[SFX] 0F" command="0x0F" type="sfx" request="0x963C"/>
+      <track id="SFX_10" title="[SFX] 10" command="0x10" type="sfx" request="0x963C"/>
+      <track id="SFX_11" title="[SFX] 11" command="0x11" type="sfx" request="0x963C"/>
+      <track id="SFX_12" title="[SFX] 12" command="0x12" type="sfx" request="0x963C"/>
+      <track id="SFX_13" title="[SFX] 13" command="0x13" type="sfx" request="0x963C"/>
+      <track id="SFX_14" title="[SFX] 14" command="0x14" type="sfx" request="0x963C"/>
+      <track id="SFX_15" title="[SFX] 15" command="0x15" type="sfx" request="0x963C"/>
+      <track id="SFX_16" title="[SFX] 16" command="0x16" type="sfx" request="0x963C"/>
+      <track id="SFX_17" title="[SFX] 17" command="0x17" type="sfx" request="0x963C"/>
+      <track id="SFX_18" title="[SFX] 18" command="0x18" type="sfx" request="0x963C"/>
+      <track id="SFX_19" title="[SFX] 19" command="0x19" type="sfx" request="0x963C"/>
+      <track id="SFX_1A" title="[SFX] 1A" command="0x1A" type="sfx" request="0x963C"/>
+      <track id="SFX_1B" title="[SFX] 1B" command="0x1B" type="sfx" request="0x963C"/>
+      <track id="SFX_1C" title="[SFX] 1C" command="0x1C" type="sfx" request="0x963C"/>
+      <track id="SFX_1D" title="[SFX] 1D" command="0x1D" type="sfx" request="0x963C"/>
+      <track id="SFX_1E" title="[SFX] 1E" command="0x1E" type="sfx" request="0x963C"/>
+      <track id="SFX_1F" title="[SFX] 1F" command="0x1F" type="sfx" request="0x963C"/>
+      <track id="SFX_20" title="[SFX] 20" command="0x20" type="sfx" request="0x963C"/>
+      <track id="SFX_21" title="[SFX] 21" command="0x21" type="sfx" request="0x963C"/>
+      <track id="SFX_22" title="[SFX] 22" command="0x22" type="sfx" request="0x963C"/>
+      <track id="SFX_23" title="[SFX] 23" command="0x23" type="sfx" request="0x963C"/>
+      <track id="SFX_24" title="[SFX] 24" command="0x24" type="sfx" request="0x963C"/>
+      <track id="SFX_25" title="[SFX] 25" command="0x25" type="sfx" request="0x963C"/>
+      <track id="SFX_26" title="[SFX] 26" command="0x26" type="sfx" request="0x963C"/>
+      <track id="SFX_27" title="[SFX] 27" command="0x27" type="sfx" request="0x963C"/>
+      <track id="SFX_28" title="[SFX] 28" command="0x28" type="sfx" request="0x963C"/>
+      <track id="SFX_29" title="[SFX] 29" command="0x29" type="sfx" request="0x963C"/>
+      <track id="SFX_2A" title="[SFX] 2A" command="0x2A" type="sfx" request="0x963C"/>
+      <track id="SFX_2B" title="[SFX] 2B" command="0x2B" type="sfx" request="0x963C"/>
+      <track id="SFX_2C" title="[SFX] 2C" command="0x2C" type="sfx" request="0x963C"/>
+      <track id="SFX_2D" title="[SFX] 2D" command="0x2D" type="sfx" request="0x963C"/>
+      <track id="SFX_2E" title="[SFX] 2E" command="0x2E" type="sfx" request="0x963C"/>
+      <track id="SFX_2F" title="[SFX] 2F" command="0x2F" type="sfx" request="0x963C"/>
+      <track id="SFX_30" title="[SFX] 30" command="0x30" type="sfx" request="0x963C"/>
+      <track id="SFX_31" title="[SFX] 31" command="0x31" type="sfx" request="0x963C"/>
+      <track id="SFX_32" title="[SFX] 32" command="0x32" type="sfx" request="0x963C"/>
+      <track id="SFX_33" title="[SFX] 33" command="0x33" type="sfx" request="0x963C"/>
+      <track id="SFX_34" title="[SFX] 34" command="0x34" type="sfx" request="0x963C"/>
+      <track id="SFX_35" title="[SFX] 35" command="0x35" type="sfx" request="0x963C"/>
+      <track id="SFX_36" title="[SFX] 36" command="0x36" type="sfx" request="0x963C"/>
+      <track id="SFX_37" title="[SFX] 37" command="0x37" type="sfx" request="0x963C"/>
+      <track id="SFX_38" title="[SFX] 38" command="0x38" type="sfx" request="0x963C"/>
+      <track id="SFX_39" title="[SFX] 39" command="0x39" type="sfx" request="0x963C"/>
+      <track id="SFX_40" title="[SFX] 40" command="0x40" type="sfx" request="0x963C"/>
+      <track id="SFX_41" title="[SFX] 41" command="0x41" type="sfx" request="0x963C"/>
+      <track id="SFX_42" title="[SFX] 42" command="0x42" type="sfx" request="0x963C"/>
+      <track id="SFX_43" title="[SFX] 43" command="0x43" type="sfx" request="0x963C"/>
+      <track id="SFX_44" title="[SFX] 44" command="0x44" type="sfx" request="0x963C"/>
+      <track id="SFX_45" title="[SFX] 45" command="0x45" type="sfx" request="0x963C"/>
+      <track id="SFX_46" title="[SFX] 46" command="0x46" type="sfx" request="0x963C"/>
+      <track id="SFX_47" title="[SFX] 47" command="0x47" type="sfx" request="0x963C"/>
+      <track id="SFX_48" title="[SFX] 48" command="0x48" type="sfx" request="0x963C"/>
+      <track id="SFX_49" title="[SFX] 49" command="0x49" type="sfx" request="0x963C"/>
+      <track id="SFX_4A" title="[SFX] 4A" command="0x4A" type="sfx" request="0x963C"/>
+      <track id="SFX_4B" title="[SFX] 4B" command="0x4B" type="sfx" request="0x963C"/>
+      <track id="SFX_4C" title="[SFX] 4C" command="0x4C" type="sfx" request="0x963C"/>
+      <track id="SFX_4D" title="[SFX] 4D" command="0x4D" type="sfx" request="0x963C"/>
+      <track id="SFX_4E" title="[SFX] 4E" command="0x4E" type="sfx" request="0x963C"/>
+      <track id="SFX_4F" title="[SFX] 4F" command="0x4F" type="sfx" request="0x963C"/>
+      <track id="SFX_50" title="[SFX] 50" command="0x50" type="sfx" request="0x963C"/>
+      <track id="SFX_51" title="[SFX] 51" command="0x51" type="sfx" request="0x963C"/>
+      <track id="SFX_52" title="[SFX] 52" command="0x52" type="sfx" request="0x963C"/>
+      <track id="SFX_53" title="[SFX] 53" command="0x53" type="sfx" request="0x963C"/>
+      <track id="SFX_54" title="[SFX] 54" command="0x54" type="sfx" request="0x963C"/>
+      <track id="SFX_55" title="[SFX] 55" command="0x55" type="sfx" request="0x963C"/>
+      <track id="SFX_56" title="[SFX] 56" command="0x56" type="sfx" request="0x963C"/>
+      <track id="SFX_57" title="[SFX] 57" command="0x57" type="sfx" request="0x963C"/>
+      <track id="SFX_58" title="[SFX] 58" command="0x58" type="sfx" request="0x963C"/>
+      <track id="SFX_59" title="[SFX] 59" command="0x59" type="sfx" request="0x963C"/>
+      <track id="SFX_5A" title="[SFX] 5A" command="0x5A" type="sfx" request="0x963C"/>
+      <track id="SFX_5B" title="[SFX] 5B" command="0x5B" type="sfx" request="0x963C"/>
+      <track id="SFX_5C" title="[SFX] 5C" command="0x5C" type="sfx" request="0x963C"/>
+      <track id="SFX_5D" title="[SFX] 5D" command="0x5D" type="sfx" request="0x963C"/>
+      <track id="SFX_5E" title="[SFX] 5E" command="0x5E" type="sfx" request="0x963C"/>
+      <track id="SFX_5F" title="[SFX] 5F" command="0x5F" type="sfx" request="0x963C"/>
+    </tracks>
+  </game>
+</chipestra>

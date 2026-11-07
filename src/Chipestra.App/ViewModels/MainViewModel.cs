@@ -231,6 +231,9 @@ namespace Chipestra.App.ViewModels
                 return false;
             }
 
+            // The filter mode is per instance: set it before any sound is rendered.
+            _player.SetAnalogFilterMode(AnalogFilterOptions.Normalize((int)_settings.MegaDriveAnalogFilter));
+
             OutputFormatText = "-";
             ChipestraResult outputResult = _player.SelectOutput(
                 _settings.OutputKind == OutputKind.None ? OutputKind.WasapiShared : _settings.OutputKind,
@@ -277,6 +280,7 @@ namespace Chipestra.App.ViewModels
         {
             _settings = settings;
             AppSettingsStore.Save(settings);
+            _player?.SetAnalogFilterMode(AnalogFilterOptions.Normalize((int)settings.MegaDriveAnalogFilter));
         }
 
         // --- Status polling ---

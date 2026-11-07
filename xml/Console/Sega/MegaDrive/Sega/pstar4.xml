@@ -1,0 +1,131 @@
+<chipestra>
+  <game id="phantasystar4" title="Phantasy Star IV" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="Phantasy Star The end of the millennium">
+    <resources>
+      <rom name="rom" file="Phantasy Star The end of the millennium.smd|Phantasy Star The end of the millennium.bin|Phantasy Star The end of the millennium.md" crc_search="true" search_crc32="f0bfad42" search_size="3146240"/>
+    </resources>
+    <!-- The sound driver is run by the game from its vertical-blank interrupt (0xD0000); 0xD0004 copies the Z80 program into the Z80 RAM and
+         sets the driver up (the game has already released the Z80 reset by then; the Z80 program waits about a quarter of a second after its start before it takes requests, hence the warm-up). The game hands a song or an effect to the driver in the first byte (0xFF500A) of a queue in its RAM; a number
+         from 0x81 up is a song or an effect. The header of the game says Japan. -->
+    <driver m68k_init="0xD0004" m68k_frame="0xD0000" request="0xFF500A" z80_reset="released" warmup_frames="24" region="japan" cart_crc32="f0bfad42"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x00" type="control"/>
+      <track id="BGM_81" title="BGM 81" command="0x81"/>
+      <track id="BGM_82" title="BGM 82" command="0x82"/>
+      <track id="BGM_83" title="BGM 83" command="0x83"/>
+      <track id="BGM_84" title="BGM 84" command="0x84"/>
+      <track id="BGM_85" title="BGM 85" command="0x85"/>
+      <track id="BGM_86" title="BGM 86" command="0x86"/>
+      <track id="BGM_87" title="BGM 87" command="0x87"/>
+      <track id="BGM_88" title="BGM 88" command="0x88"/>
+      <track id="BGM_89" title="BGM 89" command="0x89"/>
+      <track id="BGM_8A" title="BGM 8A" command="0x8A"/>
+      <track id="BGM_8B" title="BGM 8B" command="0x8B"/>
+      <track id="BGM_8C" title="BGM 8C" command="0x8C"/>
+      <track id="BGM_8D" title="BGM 8D" command="0x8D"/>
+      <track id="BGM_8E" title="BGM 8E" command="0x8E"/>
+      <track id="BGM_8F" title="BGM 8F" command="0x8F"/>
+      <track id="BGM_90" title="BGM 90" command="0x90"/>
+      <track id="BGM_91" title="BGM 91" command="0x91"/>
+      <track id="BGM_92" title="BGM 92" command="0x92"/>
+      <track id="BGM_93" title="BGM 93" command="0x93"/>
+      <track id="BGM_94" title="BGM 94" command="0x94"/>
+      <track id="BGM_95" title="BGM 95" command="0x95"/>
+      <track id="BGM_96" title="BGM 96" command="0x96"/>
+      <track id="BGM_97" title="BGM 97" command="0x97"/>
+      <track id="BGM_98" title="BGM 98" command="0x98"/>
+      <track id="BGM_99" title="BGM 99" command="0x99"/>
+      <track id="BGM_9A" title="BGM 9A" command="0x9A"/>
+      <track id="BGM_9B" title="BGM 9B" command="0x9B"/>
+      <track id="BGM_9C" title="BGM 9C" command="0x9C"/>
+      <track id="BGM_9D" title="BGM 9D" command="0x9D"/>
+      <track id="BGM_9E" title="BGM 9E" command="0x9E"/>
+      <track id="BGM_9F" title="BGM 9F" command="0x9F"/>
+      <track id="BGM_A0" title="BGM A0" command="0xA0"/>
+      <track id="BGM_A1" title="BGM A1" command="0xA1"/>
+      <track id="BGM_A2" title="BGM A2" command="0xA2"/>
+      <track id="BGM_A3" title="BGM A3" command="0xA3"/>
+      <track id="BGM_A4" title="BGM A4" command="0xA4"/>
+      <track id="BGM_A5" title="BGM A5" command="0xA5"/>
+      <track id="BGM_A6" title="BGM A6" command="0xA6"/>
+      <track id="BGM_A7" title="BGM A7" command="0xA7"/>
+      <track id="BGM_A8" title="BGM A8" command="0xA8"/>
+      <track id="BGM_A9" title="BGM A9" command="0xA9"/>
+      <track id="BGM_AA" title="BGM AA" command="0xAA"/>
+      <track id="BGM_AB" title="BGM AB" command="0xAB"/>
+      <track id="BGM_AC" title="BGM AC" command="0xAC"/>
+      <track id="BGM_AE" title="BGM AE" command="0xAE"/>
+      <track id="BGM_AF" title="BGM AF" command="0xAF"/>
+      <track id="BGM_B0" title="BGM B0" command="0xB0"/>
+      <track id="BGM_B1" title="BGM B1" command="0xB1"/>
+      <track id="BGM_B2" title="BGM B2" command="0xB2"/>
+      <track id="BGM_B3" title="BGM B3" command="0xB3"/>
+      <track id="BGM_B4" title="BGM B4" command="0xB4"/>
+      <track id="SFX_B5" title="[SFX] B5" command="0xB5" type="sfx" loops="false"/>
+      <track id="SFX_B6" title="[SFX] B6" command="0xB6" type="sfx" loops="false"/>
+      <track id="SFX_B7" title="[SFX] B7" command="0xB7" type="sfx" loops="false"/>
+      <track id="SFX_B8" title="[SFX] B8" command="0xB8" type="sfx" loops="false"/>
+      <track id="SFX_B9" title="[SFX] B9" command="0xB9" type="sfx" loops="false"/>
+      <track id="SFX_BA" title="[SFX] BA" command="0xBA" type="sfx" loops="false"/>
+      <track id="SFX_BB" title="[SFX] BB" command="0xBB" type="sfx" loops="false"/>
+      <track id="SFX_BC" title="[SFX] BC" command="0xBC" type="sfx" loops="false"/>
+      <track id="SFX_BD" title="[SFX] BD" command="0xBD" type="sfx" loops="false"/>
+      <track id="SFX_BE" title="[SFX] BE" command="0xBE" type="sfx" loops="false"/>
+      <track id="SFX_BF" title="[SFX] BF" command="0xBF" type="sfx" loops="false"/>
+      <track id="SFX_C0" title="[SFX] C0" command="0xC0" type="sfx" loops="false"/>
+      <track id="SFX_C1" title="[SFX] C1" command="0xC1" type="sfx" loops="false"/>
+      <track id="SFX_C2" title="[SFX] C2" command="0xC2" type="sfx" loops="false"/>
+      <track id="SFX_C3" title="[SFX] C3" command="0xC3" type="sfx" loops="false"/>
+      <track id="SFX_C4" title="[SFX] C4" command="0xC4" type="sfx" loops="false"/>
+      <track id="SFX_C5" title="[SFX] C5" command="0xC5" type="sfx" loops="false"/>
+      <track id="SFX_C6" title="[SFX] C6" command="0xC6" type="sfx" loops="false"/>
+      <track id="SFX_C7" title="[SFX] C7" command="0xC7" type="sfx" loops="false"/>
+      <track id="SFX_C8" title="[SFX] C8" command="0xC8" type="sfx" loops="false"/>
+      <track id="SFX_C9" title="[SFX] C9" command="0xC9" type="sfx" loops="false"/>
+      <track id="SFX_CA" title="[SFX] CA" command="0xCA" type="sfx" loops="false"/>
+      <track id="SFX_CB" title="[SFX] CB" command="0xCB" type="sfx" loops="false"/>
+      <track id="SFX_CC" title="[SFX] CC" command="0xCC" type="sfx" loops="false"/>
+      <track id="SFX_CD" title="[SFX] CD" command="0xCD" type="sfx" loops="false"/>
+      <track id="SFX_CE" title="[SFX] CE" command="0xCE" type="sfx" loops="false"/>
+      <track id="SFX_CF" title="[SFX] CF" command="0xCF" type="sfx" loops="false"/>
+      <track id="SFX_D0" title="[SFX] D0" command="0xD0" type="sfx" loops="false"/>
+      <track id="SFX_D1" title="[SFX] D1" command="0xD1" type="sfx" loops="false"/>
+      <track id="SFX_D2" title="[SFX] D2" command="0xD2" type="sfx" loops="false"/>
+      <track id="SFX_D3" title="[SFX] D3" command="0xD3" type="sfx" loops="false"/>
+      <track id="SFX_D4" title="[SFX] D4" command="0xD4" type="sfx" loops="false"/>
+      <track id="SFX_D5" title="[SFX] D5" command="0xD5" type="sfx" loops="false"/>
+      <track id="SFX_D6" title="[SFX] D6" command="0xD6" type="sfx" loops="false"/>
+      <track id="SFX_D7" title="[SFX] D7" command="0xD7" type="sfx" loops="false"/>
+      <track id="SFX_D8" title="[SFX] D8" command="0xD8" type="sfx" loops="false"/>
+      <track id="SFX_D9" title="[SFX] D9" command="0xD9" type="sfx" loops="false"/>
+      <track id="SFX_DA" title="[SFX] DA" command="0xDA" type="sfx" loops="false"/>
+      <track id="SFX_DB" title="[SFX] DB" command="0xDB" type="sfx" loops="false"/>
+      <track id="SFX_DC" title="[SFX] DC" command="0xDC" type="sfx" loops="false"/>
+      <track id="SFX_DD" title="[SFX] DD" command="0xDD" type="sfx" loops="false"/>
+      <track id="SFX_DE" title="[SFX] DE" command="0xDE" type="sfx" loops="false"/>
+      <track id="SFX_DF" title="[SFX] DF" command="0xDF" type="sfx" loops="false"/>
+      <track id="SFX_E0" title="[SFX] E0" command="0xE0" type="sfx" loops="false"/>
+      <track id="SFX_E1" title="[SFX] E1" command="0xE1" type="sfx" loops="false"/>
+      <track id="SFX_E2" title="[SFX] E2" command="0xE2" type="sfx" loops="false"/>
+      <track id="SFX_E3" title="[SFX] E3" command="0xE3" type="sfx" loops="false"/>
+      <track id="SFX_E4" title="[SFX] E4" command="0xE4" type="sfx" loops="false"/>
+      <track id="SFX_E5" title="[SFX] E5" command="0xE5" type="sfx" loops="false"/>
+      <track id="SFX_E6" title="[SFX] E6" command="0xE6" type="sfx" loops="false"/>
+      <track id="SFX_E7" title="[SFX] E7" command="0xE7" type="sfx" loops="false"/>
+      <track id="SFX_E8" title="[SFX] E8" command="0xE8" type="sfx" loops="false"/>
+      <track id="SFX_E9" title="[SFX] E9" command="0xE9" type="sfx" loops="false"/>
+      <track id="SFX_EA" title="[SFX] EA" command="0xEA" type="sfx" loops="false"/>
+      <track id="SFX_EB" title="[SFX] EB" command="0xEB" type="sfx" loops="false"/>
+      <track id="SFX_EC" title="[SFX] EC" command="0xEC" type="sfx" loops="false"/>
+      <track id="SFX_ED" title="[SFX] ED" command="0xED" type="sfx" loops="false"/>
+      <track id="SFX_EE" title="[SFX] EE" command="0xEE" type="sfx" loops="false"/>
+      <track id="SFX_EF" title="[SFX] EF" command="0xEF" type="sfx" loops="false"/>
+      <track id="SFX_F0" title="[SFX] F0" command="0xF0" type="sfx" loops="false"/>
+      <track id="SFX_F1" title="[SFX] F1" command="0xF1" type="sfx" loops="false"/>
+      <track id="SFX_F2" title="[SFX] F2" command="0xF2" type="sfx" loops="false"/>
+      <track id="SFX_F3" title="[SFX] F3" command="0xF3" type="sfx" loops="false"/>
+      <track id="SFX_F4" title="[SFX] F4" command="0xF4" type="sfx" loops="false"/>
+      <track id="SFX_F5" title="[SFX] F5" command="0xF5" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

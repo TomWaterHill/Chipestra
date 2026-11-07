@@ -45,16 +45,30 @@ namespace Chipestra.App.ViewModels
 
         public string OutputRateNote => OutputRateOptions.SharedModeNote;
 
+        private AnalogFilterMode _megaDriveAnalogFilter;
+
+        public AnalogFilterMode MegaDriveAnalogFilter
+        {
+            get => _megaDriveAnalogFilter;
+            set => SetField(ref _megaDriveAnalogFilter, value);
+        }
+
+        /// <summary>For the Mega Drive / Genesis ComboBox (value = <see cref="MegaDriveAnalogFilter"/>).</summary>
+        public IReadOnlyList<AnalogFilterOption> AvailableAnalogFilters => AnalogFilterOptions.All;
+
+        public string AnalogFilterNote => AnalogFilterOptions.Note;
+
         public SettingsViewModel(AppSettings current)
         {
             _outputRateHz = OutputRateOptions.Normalize(current.OutputRateHz);
             _romRoot = current.RomRoot;
+            _megaDriveAnalogFilter = AnalogFilterOptions.Normalize((int)current.MegaDriveAnalogFilter);
             _outputKind = current.OutputKind == OutputKind.None ? OutputKind.WasapiShared : current.OutputKind;
         }
 
         public AppSettings ToAppSettings()
         {
-            return new AppSettings { RomRoot = RomRoot, OutputKind = OutputKind, OutputRateHz = OutputRateOptions.Normalize(OutputRateHz) };
+            return new AppSettings { RomRoot = RomRoot, OutputKind = OutputKind, OutputRateHz = OutputRateOptions.Normalize(OutputRateHz), MegaDriveAnalogFilter = MegaDriveAnalogFilter };
         }
     }
 }
