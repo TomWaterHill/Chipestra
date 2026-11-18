@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="gauntlet4" title="Gauntlet IV" manufacturer="Tengen"
+  <game id="gauntlet4" title="ガントレット" manufacturer="Tengen"
         machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="GauntletIV">
     <resources>
       <rom name="rom" file="GauntletIV.smd|GauntletIV.bin|GauntletIV.md" crc_search="true" search_crc32="f9872055" search_size="1049088"/>
@@ -12,26 +12,26 @@
     <driver m68k_init="0x1DBD8" m68k_frame="0x39E04 0x39E0C" requests="0x39E10 0xFFF012" warmup_frames="4" region="japan" cart_crc32="f9872055"/>
     <tracks>
       <track id="0" title="Music Stop" command="0x00" type="control"/>
-      <track id="BGM_00" title="BGM 00" command="0x00" request="0x39E10"/>
-      <track id="BGM_01" title="BGM 01" command="0x01" request="0x39E10"/>
-      <track id="BGM_02" title="BGM 02" command="0x02" request="0x39E10"/>
-      <track id="BGM_03" title="BGM 03" command="0x03" request="0x39E10"/>
-      <track id="BGM_04" title="BGM 04" command="0x04" request="0x39E10"/>
-      <track id="BGM_05" title="BGM 05" command="0x05" request="0x39E10"/>
-      <track id="BGM_06" title="BGM 06" command="0x06" request="0x39E10"/>
-      <track id="BGM_07" title="BGM 07" command="0x07" request="0x39E10"/>
-      <track id="BGM_08" title="BGM 08" command="0x08" request="0x39E10"/>
-      <track id="BGM_09" title="BGM 09" command="0x09" request="0x39E10"/>
-      <track id="BGM_0A" title="BGM 0A" command="0x0A" request="0x39E10"/>
-      <track id="BGM_0B" title="BGM 0B" command="0x0B" request="0x39E10"/>
-      <track id="BGM_0C" title="BGM 0C" command="0x0C" request="0x39E10"/>
-      <track id="BGM_0D" title="BGM 0D" command="0x0D" request="0x39E10"/>
-      <track id="BGM_0E" title="BGM 0E" command="0x0E" request="0x39E10"/>
-      <track id="BGM_0F" title="BGM 0F" command="0x0F" request="0x39E10"/>
-      <track id="BGM_10" title="BGM 10" command="0x10" request="0x39E10"/>
-      <track id="BGM_11" title="BGM 11" command="0x11" request="0x39E10"/>
-      <track id="BGM_12" title="BGM 12" command="0x12" request="0x39E10"/>
-      <track id="BGM_14" title="BGM 14" command="0x14" request="0x39E10"/>
+      <track id="BGM_00" title="Main theme" command="0x00" request="0x39E10" loops="false"/>
+      <track id="BGM_14" title="Fade out" command="0x14" request="0x39E10" loops="false"/>
+      <track id="BGM_01" title="TREASURE ROOM 1P" command="0x01" request="0x39E10" loops="false"/>
+      <track id="BGM_02" title="TREASURE ROOM 2P" command="0x02" request="0x39E10" loops="false"/>
+      <track id="BGM_03" title="TREASURE ROOM 3P" command="0x03" request="0x39E10" loops="false"/>
+      <track id="BGM_04" title="TREASURE ROOM 4P" command="0x04" request="0x39E10" loops="false"/>
+      <track id="BGM_05" title="Back of Beyond" command="0x05" request="0x39E10"/>
+      <track id="BGM_06" title="WHISPER of PHANTOM" command="0x06" request="0x39E10"/>
+      <track id="BGM_07" title="MARCH in the DARK" command="0x07" request="0x39E10"/>
+      <track id="BGM_08" title="Sortie" command="0x08" request="0x39E10"/>
+      <track id="BGM_09" title="Transparent Obstacle" command="0x09" request="0x39E10"/>
+      <track id="BGM_0A" title="ADVENTURES of IRON" command="0x0A" request="0x39E10"/>
+      <track id="BGM_0B" title="Fire Starter" command="0x0B" request="0x39E10"/>
+      <track id="BGM_0C" title="Fire Starter(B)" command="0x0C" request="0x39E10"/>
+      <track id="BGM_0D" title="Retribution" command="0x0D" request="0x39E10"/>
+      <track id="BGM_0E" title="CRUX" command="0x0E" request="0x39E10"/>
+      <track id="BGM_0F" title="The SPARK" command="0x0F" request="0x39E10"/>
+      <track id="BGM_10" title="Betrayer" command="0x10" request="0x39E10" loops="false"/>
+      <track id="BGM_11" title="Explosion" command="0x11" request="0x39E10" loops="false"/>
+      <track id="BGM_12" title=". . ." command="0x12" request="0x39E10"/>
       <track id="SFX_01" title="[SFX] 01" command="0x01" type="sfx" request="0xFFF012" loops="false"/>
       <track id="SFX_02" title="[SFX] 02" command="0x02" type="sfx" request="0xFFF012" loops="false"/>
       <track id="SFX_03" title="[SFX] 03" command="0x03" type="sfx" request="0xFFF012" loops="false"/>

@@ -64,7 +64,7 @@
                  Border width alone sets the slack around the M/S buttons and PAN knob. -->
             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Padding="2,2"
                     Background="{StaticResource ChannelStripBackgroundBrush}"
-                    Width="34" Height="450">
+                    Width="34" Height="450" UseLayoutRounding="True" SnapsToDevicePixels="True">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Style.Triggers>
@@ -94,10 +94,13 @@
 
                     <!-- L/R meter bars. Row 1 is the flexible row; x:Name lets the nested mask/hold-marker Borders read
                          its live ActualHeight. -->
-                    <Grid x:Name="MeterRow" Grid.Row="1" Margin="0,4">
+                    <!-- Both bars are a fixed 12 DIU wide with a 4 DIU gap: multiples of 4 DIU are whole device pixels at
+                         100%, 125% and 150%, and layout rounding snaps the edges, so every bar has the same pixel width. -->
+                    <Grid x:Name="MeterRow" Grid.Row="1" Margin="0,4" Width="28" HorizontalAlignment="Center">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="4" />
+                            <ColumnDefinition Width="12" />
                         </Grid.ColumnDefinitions>
 
                         <!-- Left channel bar: static 3-zone background (green 78dB : yellow 6dB : red 6dB, i.e. 13:1:1) covered by
@@ -151,7 +154,7 @@
                         </Label>
 
                         <!-- Right channel bar - same structure as Left above. -->
-                        <Label Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Grid.Column="1" Margin="2,0,0,0"
+                        <Label Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Grid.Column="2"
                                automation:AutomationProperties.Name="{Binding ChannelName, StringFormat={}{0} Right Level}">
                             <Grid>
                                 <Grid>

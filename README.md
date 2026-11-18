@@ -267,7 +267,7 @@ NES とファミコン ディスクシステムでは、エミュレートした
 
 | システム | 確認したタイトル |
 |---|---|
-| Mega Drive（日本） | Battle Mania（バトルマニア）、Battle Mania Daiginjou（バトルマニア大吟醸）、Gauntlet IV（ガントレットIV）、Phantasy Star IV（ファンタシースターIV）、Star Cruiser（スタークルーザー）。BGM と効果音（サンプリング音を含む）を再生できます |
+| Mega Drive（日本） | Battle Mania（バトルマニア）、Battle Mania Daiginjou（バトルマニア大吟醸）、Gauntlet IV（ガントレット）、Phantasy Star IV（ファンタシースター 千年紀の終りに）、Star Cruiser（スタークルーザー）。BGM と効果音（サンプリング音を含む）を再生できます |
 
 設定に「Mega Drive / Genesis」の項目を追加しました。メガドライブの音に、本体のアナログ出力段のローパスフィルタを掛けるかどうかを選べます: Off（既定。音は変わりません）、Model 1（Mega Drive / Genesis。3.38kHz の1次）、Model 2（Mega Drive 2 / Genesis Model 2。FM の音に 6.7kHz の2次、全体に 3.8kHz の1次）。Model 2 の値は、エミュレータ jgenesis（https://github.com/jsgroth/jgenesis）の既定の設定値をもとにした近似で、元の回路の実測ではありません。切り替えは、再生中でもすぐに反映されます。
 

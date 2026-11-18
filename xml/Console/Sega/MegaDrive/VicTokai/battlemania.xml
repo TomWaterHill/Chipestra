@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="battlemania" title="Battle Mania" manufacturer="Vic Tokai"
+  <game id="battlemania" title="バトルマニア" manufacturer="Vic Tokai"
         machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="BattleMania">
     <resources>
       <rom name="rom" file="BattleMania.smd|BattleMania.bin|BattleMania.md" crc_search="true" search_crc32="1ab9a5de" search_size="524800"/>
@@ -12,29 +12,29 @@
     <driver m68k_init="0x61E4 0x6C000 0x6CBC2" m68k_frame="0x6C0AA 0x6CC16" requests="0x6C064 0x6C08E 0x6CBDA" warmup_frames="4" region="japan" cart_crc32="1ab9a5de"/>
     <tracks>
       <track id="0" title="Music Stop" command="0x00" type="control"/>
-      <track id="BGM_01" title="BGM 01" command="0x01" request="0x6C064"/>
-      <track id="BGM_02" title="BGM 02" command="0x02" request="0x6C064"/>
-      <track id="BGM_03" title="BGM 03" command="0x03" request="0x6C064"/>
-      <track id="BGM_04" title="BGM 04" command="0x04" request="0x6C064"/>
-      <track id="BGM_05" title="BGM 05" command="0x05" request="0x6C064"/>
-      <track id="BGM_06" title="BGM 06" command="0x06" request="0x6C064"/>
-      <track id="BGM_07" title="BGM 07" command="0x07" request="0x6C064"/>
-      <track id="BGM_08" title="BGM 08" command="0x08" request="0x6C064"/>
-      <track id="BGM_09" title="BGM 09" command="0x09" request="0x6C064"/>
-      <track id="BGM_0A" title="BGM 0A" command="0x0A" request="0x6C064"/>
-      <track id="BGM_0B" title="BGM 0B" command="0x0B" request="0x6C064"/>
-      <track id="BGM_0C" title="BGM 0C" command="0x0C" request="0x6C064"/>
-      <track id="BGM_0D" title="BGM 0D" command="0x0D" request="0x6C064"/>
-      <track id="BGM_0E" title="BGM 0E" command="0x0E" request="0x6C064"/>
-      <track id="BGM_0F" title="BGM 0F" command="0x0F" request="0x6C064"/>
-      <track id="BGM_10" title="BGM 10" command="0x10" request="0x6C064"/>
-      <track id="BGM_11" title="BGM 11" command="0x11" request="0x6C064"/>
-      <track id="BGM_12" title="BGM 12" command="0x12" request="0x6C064"/>
-      <track id="BGM_13" title="BGM 13" command="0x13" request="0x6C064"/>
-      <track id="BGM_14" title="BGM 14" command="0x14" request="0x6C064"/>
-      <track id="BGM_15" title="BGM 15" command="0x15" request="0x6C064"/>
-      <track id="BGM_16" title="BGM 16" command="0x16" request="0x6C064"/>
-      <track id="BGM_17" title="BGM 17" command="0x17" request="0x6C064"/>
+      <track id="BGM_16" title="OPENING" command="0x16" request="0x6C064" loops="false"/>
+      <track id="BGM_12" title="TITLE" command="0x12" request="0x6C064" loops="false"/>
+      <track id="BGM_0B" title="OPTIONS, CONTINUE" command="0x0B" request="0x6C064"/>
+      <track id="BGM_05" title="DEMO 1" command="0x05" request="0x6C064"/>
+      <track id="BGM_01" title="WEAPON SELECT" command="0x01" request="0x6C064"/>
+      <track id="BGM_10" title="STAGE 1" command="0x10" request="0x6C064"/>
+      <track id="BGM_0D" title="BOSS 1" command="0x0D" request="0x6C064"/>
+      <track id="BGM_17" title="TROUBLE SHOT!" command="0x17" request="0x6C064" loops="false"/>
+      <track id="BGM_0A" title="DIVE INTO THE NEXT TROUBLE!!" command="0x0A" request="0x6C064" loops="false"/>
+      <track id="BGM_11" title="STAGE 2" command="0x11" request="0x6C064"/>
+      <track id="BGM_02" title="BOSS 2" command="0x02" request="0x6C064"/>
+      <track id="BGM_0C" title="DEMO 2" command="0x0C" request="0x6C064"/>
+      <track id="BGM_07" title="STAGE 3, 6" command="0x07" request="0x6C064"/>
+      <track id="BGM_08" title="STAGE 4" command="0x08" request="0x6C064"/>
+      <track id="BGM_04" title="BOSS 3" command="0x04" request="0x6C064"/>
+      <track id="BGM_0F" title="STAGE 5" command="0x0F" request="0x6C064"/>
+      <track id="BGM_13" title="FINAL BOSS 1" command="0x13" request="0x6C064"/>
+      <track id="BGM_03" title="FINAL BOSS 2" command="0x03" request="0x6C064"/>
+      <track id="BGM_14" title="FINAL BOSS 3" command="0x14" request="0x6C064"/>
+      <track id="BGM_09" title="EXCELLENT! TROUBLE IS ALL OVER!!" command="0x09" request="0x6C064" loops="false"/>
+      <track id="BGM_06" title="ENDING" command="0x06" request="0x6C064"/>
+      <track id="BGM_15" title="STAFF ROLL" command="0x15" request="0x6C064"/>
+      <track id="BGM_0E" title="GAME OVER" command="0x0E" request="0x6C064" loops="false"/>
       <track id="SFX_19" title="[SFX] 19" command="0x19" type="sfx" request="0x6C08E" loops="false"/>
       <track id="SFX_1A" title="[SFX] 1A" command="0x1A" type="sfx" request="0x6C08E" loops="false"/>
       <track id="SFX_1B" title="[SFX] 1B" command="0x1B" type="sfx" request="0x6C08E" loops="false"/>

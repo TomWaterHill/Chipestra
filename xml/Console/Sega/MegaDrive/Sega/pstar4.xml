@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="phantasystar4" title="Phantasy Star IV" manufacturer="Sega"
+  <game id="phantasystar4" title="ファンタシースター 千年紀の終りに" manufacturer="Sega"
         machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="Phantasy Star The end of the millennium">
     <resources>
       <rom name="rom" file="Phantasy Star The end of the millennium.smd|Phantasy Star The end of the millennium.bin|Phantasy Star The end of the millennium.md" crc_search="true" search_crc32="f0bfad42" search_size="3146240"/>
@@ -10,57 +10,57 @@
     <driver m68k_init="0xD0004" m68k_frame="0xD0000" request="0xFF500A" z80_reset="released" warmup_frames="24" region="japan" cart_crc32="f0bfad42"/>
     <tracks>
       <track id="0" title="Music Stop" command="0x00" type="control"/>
-      <track id="BGM_81" title="BGM 81" command="0x81"/>
-      <track id="BGM_82" title="BGM 82" command="0x82"/>
-      <track id="BGM_83" title="BGM 83" command="0x83"/>
-      <track id="BGM_84" title="BGM 84" command="0x84"/>
-      <track id="BGM_85" title="BGM 85" command="0x85"/>
-      <track id="BGM_86" title="BGM 86" command="0x86"/>
-      <track id="BGM_87" title="BGM 87" command="0x87"/>
-      <track id="BGM_88" title="BGM 88" command="0x88"/>
-      <track id="BGM_89" title="BGM 89" command="0x89"/>
-      <track id="BGM_8A" title="BGM 8A" command="0x8A"/>
-      <track id="BGM_8B" title="BGM 8B" command="0x8B"/>
-      <track id="BGM_8C" title="BGM 8C" command="0x8C"/>
-      <track id="BGM_8D" title="BGM 8D" command="0x8D"/>
-      <track id="BGM_8E" title="BGM 8E" command="0x8E"/>
-      <track id="BGM_8F" title="BGM 8F" command="0x8F"/>
-      <track id="BGM_90" title="BGM 90" command="0x90"/>
-      <track id="BGM_91" title="BGM 91" command="0x91"/>
-      <track id="BGM_92" title="BGM 92" command="0x92"/>
-      <track id="BGM_93" title="BGM 93" command="0x93"/>
-      <track id="BGM_94" title="BGM 94" command="0x94"/>
-      <track id="BGM_95" title="BGM 95" command="0x95"/>
-      <track id="BGM_96" title="BGM 96" command="0x96"/>
-      <track id="BGM_97" title="BGM 97" command="0x97"/>
-      <track id="BGM_98" title="BGM 98" command="0x98"/>
-      <track id="BGM_99" title="BGM 99" command="0x99"/>
-      <track id="BGM_9A" title="BGM 9A" command="0x9A"/>
-      <track id="BGM_9B" title="BGM 9B" command="0x9B"/>
-      <track id="BGM_9C" title="BGM 9C" command="0x9C"/>
-      <track id="BGM_9D" title="BGM 9D" command="0x9D"/>
-      <track id="BGM_9E" title="BGM 9E" command="0x9E"/>
-      <track id="BGM_9F" title="BGM 9F" command="0x9F"/>
-      <track id="BGM_A0" title="BGM A0" command="0xA0"/>
-      <track id="BGM_A1" title="BGM A1" command="0xA1"/>
-      <track id="BGM_A2" title="BGM A2" command="0xA2"/>
-      <track id="BGM_A3" title="BGM A3" command="0xA3"/>
-      <track id="BGM_A4" title="BGM A4" command="0xA4"/>
-      <track id="BGM_A5" title="BGM A5" command="0xA5"/>
-      <track id="BGM_A6" title="BGM A6" command="0xA6"/>
-      <track id="BGM_A7" title="BGM A7" command="0xA7"/>
-      <track id="BGM_A8" title="BGM A8" command="0xA8"/>
-      <track id="BGM_A9" title="BGM A9" command="0xA9"/>
-      <track id="BGM_AA" title="BGM AA" command="0xAA"/>
-      <track id="BGM_AB" title="BGM AB" command="0xAB"/>
-      <track id="BGM_AC" title="BGM AC" command="0xAC"/>
-      <track id="BGM_AE" title="BGM AE" command="0xAE"/>
-      <track id="BGM_AF" title="BGM AF" command="0xAF"/>
-      <track id="BGM_B0" title="BGM B0" command="0xB0"/>
-      <track id="BGM_B1" title="BGM B1" command="0xB1"/>
-      <track id="BGM_B2" title="BGM B2" command="0xB2"/>
-      <track id="BGM_B3" title="BGM B3" command="0xB3"/>
-      <track id="BGM_B4" title="BGM B4" command="0xB4"/>
+      <track id="BGM_AC" title="The End of the Millennium" command="0xAC"/>
+      <track id="BGM_84" title="Motavia Town" command="0x84"/>
+      <track id="BGM_9F" title="Suspicion" command="0x9F"/>
+      <track id="BGM_82" title="Inn" command="0x82"/>
+      <track id="BGM_8C" title="Field Motavia" command="0x8C"/>
+      <track id="BGM_8F" title="Meet Them Head-On!" command="0x8F"/>
+      <track id="BGM_8B" title="Winners!" command="0x8B" loops="false"/>
+      <track id="BGM_83" title="Motavia Village" command="0x83"/>
+      <track id="BGM_87" title="Now on Sale" command="0x87"/>
+      <track id="BGM_97" title="Terrible Sight" command="0x97"/>
+      <track id="BGM_94" title="Rune" command="0x94"/>
+      <track id="BGM_81" title="Tonoe de Pon" command="0x81"/>
+      <track id="BGM_8A" title="In the Cave" command="0x8A"/>
+      <track id="BGM_95" title="Defeat at a Blow!" command="0x95"/>
+      <track id="BGM_9E" title="A Happy Settlement" command="0x9E"/>
+      <track id="BGM_88" title="Behind the Circuit" command="0x88"/>
+      <track id="BGM_92" title="Rika" command="0x92"/>
+      <track id="BGM_A5" title="Pain" command="0xA5"/>
+      <track id="BGM_A4" title="Her Last Breath" command="0xA4"/>
+      <track id="BGM_85" title="Organic Beat" command="0x85"/>
+      <track id="BGM_91" title="PS1 Dungeon Arrange 1" command="0x91"/>
+      <track id="BGM_B1" title="PS1 Dungeon Arrange 2" command="0xB1"/>
+      <track id="BGM_A7" title="PS1 Dungeon Arrange 2 (middle point start)" command="0xA7"/>
+      <track id="BGM_89" title="Machine Center" command="0x89"/>
+      <track id="BGM_8D" title="Land Master AXV-25" command="0x8D"/>
+      <track id="BGM_96" title="Cybernetic Carnival" command="0x96"/>
+      <track id="BGM_A8" title="The Black Blood" command="0xA8"/>
+      <track id="BGM_AA" title="Laughter" command="0xAA"/>
+      <track id="BGM_9B" title="Take Off! Landale" command="0x9B"/>
+      <track id="BGM_A9" title="Red Alert" command="0xA9"/>
+      <track id="BGM_99" title="Dezolis Field 1" command="0x99"/>
+      <track id="BGM_86" title="Dezolis Town 1" command="0x86"/>
+      <track id="BGM_A6" title="Jijy no Rag" command="0xA6"/>
+      <track id="BGM_9D" title="Dezolis Field 2" command="0x9D"/>
+      <track id="BGM_9C" title="Dezolis Town 2" command="0x9C"/>
+      <track id="BGM_8E" title="Requiem for Lutz" command="0x8E"/>
+      <track id="BGM_B3" title="Dezolis de Don" command="0xB3" loops="false"/>
+      <track id="BGM_93" title="Gumbious Temple" command="0x93"/>
+      <track id="BGM_A0" title="The King of Terrors" command="0xA0"/>
+      <track id="BGM_90" title="Rykros Field" command="0x90"/>
+      <track id="BGM_9A" title="Tower" command="0x9A"/>
+      <track id="BGM_A1" title="The Age of Fables" command="0xA1"/>
+      <track id="BGM_98" title="Edge of Darkness" command="0x98"/>
+      <track id="BGM_A2" title="Abyss" command="0xA2"/>
+      <track id="BGM_B4" title="Ooze" command="0xB4"/>
+      <track id="BGM_AF" title="The Promising Future 1" command="0xAF" loops="false"/>
+      <track id="BGM_B2" title="The Promising Future 2" command="0xB2" loops="false"/>
+      <track id="BGM_AE" title="Staff Roll" command="0xAE" loops="false"/>
+      <track id="BGM_B0" title="Pao-Pao!" command="0xB0"/>
+      <track id="BGM_A3" title="[SFX] A3" command="0xA3" loops="false"/>
+      <track id="BGM_AB" title="[SFX] AB" command="0xAB" loops="false"/>
       <track id="SFX_B5" title="[SFX] B5" command="0xB5" type="sfx" loops="false"/>
       <track id="SFX_B6" title="[SFX] B6" command="0xB6" type="sfx" loops="false"/>
       <track id="SFX_B7" title="[SFX] B7" command="0xB7" type="sfx" loops="false"/>

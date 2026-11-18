@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="battlemania2" title="Battle Mania Daiginjou" manufacturer="Vic Tokai"
+  <game id="battlemania2" title="バトルマニア大吟醸" manufacturer="Vic Tokai"
         machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="battleManiaDaiginjyo">
     <resources>
       <rom name="rom" file="battleManiaDaiginjyo.smd|battleManiaDaiginjyo.bin|battleManiaDaiginjyo.md" crc_search="true" search_crc32="cef82e30" search_size="1049088"/>
@@ -10,40 +10,40 @@
     <driver m68k_init="0x60010 0x60000" m68k_frame="0x6000C" requests="0x60004 0x60008" warmup_frames="4" region="japan" cart_crc32="cef82e30"/>
     <tracks>
       <track id="0" title="Music Stop" command="0x00" type="control"/>
-      <track id="BGM_01" title="BGM 01" command="0x01" request="0x60004"/>
-      <track id="BGM_02" title="BGM 02" command="0x02" request="0x60004"/>
-      <track id="BGM_03" title="BGM 03" command="0x03" request="0x60004"/>
-      <track id="BGM_04" title="BGM 04" command="0x04" request="0x60004"/>
-      <track id="BGM_05" title="BGM 05" command="0x05" request="0x60004"/>
-      <track id="BGM_06" title="BGM 06" command="0x06" request="0x60004"/>
-      <track id="BGM_07" title="BGM 07" command="0x07" request="0x60004"/>
-      <track id="BGM_08" title="BGM 08" command="0x08" request="0x60004"/>
-      <track id="BGM_09" title="BGM 09" command="0x09" request="0x60004"/>
-      <track id="BGM_0A" title="BGM 0A" command="0x0A" request="0x60004"/>
-      <track id="BGM_0B" title="BGM 0B" command="0x0B" request="0x60004"/>
-      <track id="BGM_0C" title="BGM 0C" command="0x0C" request="0x60004"/>
-      <track id="BGM_0D" title="BGM 0D" command="0x0D" request="0x60004"/>
-      <track id="BGM_0E" title="BGM 0E" command="0x0E" request="0x60004"/>
-      <track id="BGM_0F" title="BGM 0F" command="0x0F" request="0x60004"/>
-      <track id="BGM_10" title="BGM 10" command="0x10" request="0x60004"/>
-      <track id="BGM_11" title="BGM 11" command="0x11" request="0x60004"/>
-      <track id="BGM_12" title="BGM 12" command="0x12" request="0x60004"/>
-      <track id="BGM_13" title="BGM 13" command="0x13" request="0x60004"/>
-      <track id="BGM_14" title="BGM 14" command="0x14" request="0x60004"/>
-      <track id="BGM_15" title="BGM 15" command="0x15" request="0x60004"/>
-      <track id="BGM_16" title="BGM 16" command="0x16" request="0x60004"/>
-      <track id="BGM_17" title="BGM 17" command="0x17" request="0x60004"/>
-      <track id="BGM_18" title="BGM 18" command="0x18" request="0x60004"/>
-      <track id="BGM_19" title="BGM 19" command="0x19" request="0x60004"/>
-      <track id="BGM_1A" title="BGM 1A" command="0x1A" request="0x60004"/>
-      <track id="BGM_1B" title="BGM 1B" command="0x1B" request="0x60004"/>
-      <track id="BGM_1C" title="BGM 1C" command="0x1C" request="0x60004"/>
-      <track id="BGM_1D" title="BGM 1D" command="0x1D" request="0x60004"/>
-      <track id="BGM_1E" title="BGM 1E" command="0x1E" request="0x60004"/>
-      <track id="BGM_1F" title="BGM 1F" command="0x1F" request="0x60004"/>
-      <track id="BGM_20" title="BGM 20" command="0x20" request="0x60004"/>
-      <track id="BGM_21" title="BGM 21" command="0x21" request="0x60004"/>
-      <track id="BGM_22" title="BGM 22" command="0x22" request="0x60004"/>
+      <track id="BGM_01" title="OPEN MIND" command="0x01" request="0x60004"/>
+      <track id="BGM_02" title="BURNING HEART" command="0x02" request="0x60004"/>
+      <track id="BGM_03" title="PICK ME UP, BOY!" command="0x03" request="0x60004"/>
+      <track id="BGM_06" title="TWILIGHT EXPRESS" command="0x06" request="0x60004"/>
+      <track id="BGM_18" title="APPROACHING" command="0x18" request="0x60004"/>
+      <track id="BGM_0F" title="MIGHTY GALS 2" command="0x0F" request="0x60004"/>
+      <track id="BGM_1A" title="GREAT JOB!" command="0x1A" request="0x60004" loops="false"/>
+      <track id="BGM_05" title="CURRY AND RICE" command="0x05" request="0x60004"/>
+      <track id="BGM_07" title="BLUE SKY LAUNDRY" command="0x07" request="0x60004"/>
+      <track id="BGM_19" title="CREEPING THING" command="0x19" request="0x60004"/>
+      <track id="BGM_10" title="TYPHOONE VOL.1" command="0x10" request="0x60004"/>
+      <track id="BGM_11" title="TYPHOONE VOL.2" command="0x11" request="0x60004"/>
+      <track id="BGM_12" title="TYPHOONE VOL.3" command="0x12" request="0x60004"/>
+      <track id="BGM_1D" title="JAKYOU" command="0x1D" request="0x60004" loops="false"/>
+      <track id="BGM_04" title="NAVIGATORS" command="0x04" request="0x60004"/>
+      <track id="BGM_08" title="SHRINE" command="0x08" request="0x60004"/>
+      <track id="BGM_14" title="ON THE AIR" command="0x14" request="0x60004"/>
+      <track id="BGM_1E" title="SEVEN ELEVEN" command="0x1E" request="0x60004"/>
+      <track id="BGM_13" title="DANCING HUNTER" command="0x13" request="0x60004"/>
+      <track id="BGM_09" title="MY KINGDOM" command="0x09" request="0x60004"/>
+      <track id="BGM_0A" title="PRIVATE EYE" command="0x0A" request="0x60004"/>
+      <track id="BGM_1C" title="HA NA MI CHI" command="0x1C" request="0x60004"/>
+      <track id="BGM_0B" title="IRON CASANOVA" command="0x0B" request="0x60004"/>
+      <track id="BGM_16" title="LUNATIC MONKEY" command="0x16" request="0x60004"/>
+      <track id="BGM_20" title="HACHIMAKI PLEASE" command="0x20" request="0x60004"/>
+      <track id="BGM_0C" title="BRAWING UP" command="0x0C" request="0x60004"/>
+      <track id="BGM_15" title="KIKOKUSAI" command="0x15" request="0x60004"/>
+      <track id="BGM_0D" title="SMOKING HEAD" command="0x0D" request="0x60004"/>
+      <track id="BGM_0E" title="TELL ME WHY" command="0x0E" request="0x60004"/>
+      <track id="BGM_17" title="MA HA RA JA" command="0x17" request="0x60004"/>
+      <track id="BGM_1F" title="VERY GREAT JOB!" command="0x1F" request="0x60004" loops="false"/>
+      <track id="BGM_1B" title="SUN RISE PURPLE" command="0x1B" request="0x60004"/>
+      <track id="BGM_21" title="ALL OVER TONIGHT" command="0x21" request="0x60004" loops="false"/>
+      <track id="BGM_22" title="DEPOSIT COINS" command="0x22" request="0x60004"/>
       <track id="SFX_2D" title="[SFX] 2D" command="0x2D" type="sfx" request="0x60008" loops="false"/>
       <track id="SFX_2E" title="[SFX] 2E" command="0x2E" type="sfx" request="0x60008" loops="false"/>
       <track id="SFX_2F" title="[SFX] 2F" command="0x2F" type="sfx" request="0x60008" loops="false"/>

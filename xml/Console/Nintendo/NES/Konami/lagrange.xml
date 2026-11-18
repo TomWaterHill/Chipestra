@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="lagrange_point_japan" title="Lagrange Point" manufacturer="Konami"
+  <game id="lagrange_point_japan" title="ラグランジュポイント" manufacturer="Konami"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Lagrange Point (Japan)">
     <resources>
       <rom name="cart" file="Lagrange Point (Japan).nes" size="524304" crc32="ead4dedc" crc_search="true"/>

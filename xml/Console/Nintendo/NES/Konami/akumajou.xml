@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="akumajou_japan" title="Akumajou Densetsu" manufacturer="Konami"
+  <game id="akumajou_japan" title="悪魔城伝説" manufacturer="Konami"
         machine="NINTENDO_NES" variant="NES_BASE" archive="Akumajou Densetsu (Japan)">
     <resources>
       <rom name="cart" file="Akumajou Densetsu (Japan).nes" size="393232" crc32="2e93ce72" crc_search="true"/>
