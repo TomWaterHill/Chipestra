@@ -95,8 +95,9 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
         }
     }
     if (const pugi::xml_attribute zb = node.attribute("z80_bus")) {
-        if (std::string_view(zb.value()) != "instruction_end") return Fail(error, "<driver z80_bus>: expected \"instruction_end\"");
-        out.z80BusAtInstructionEnd = true;
+        const std::string_view mode = zb.value();
+        if (mode != "instruction_end" && mode != "instruction_start") return Fail(error, "<driver z80_bus>: expected \"instruction_end\" or \"instruction_start\"");
+        out.z80BusAtInstructionEnd = mode == "instruction_end";
     }
     if (const pugi::xml_attribute ra = node.attribute("request_arg")) {
         if (std::string_view(ra.value()) != "pointer") return Fail(error, "<driver request_arg>: expected \"pointer\"");
@@ -576,6 +577,15 @@ void MegaDrive68kMachine::SetBusRequest(bool requested) {
         const bool wasStopped = z80_stopped_;
         z80_stopped_ = z80_reset_;
         if (wasStopped && !z80_stopped_) z80_resume_pending_ = true;   // RunTo lets it go on from the end of the instruction
+    }
+}
+
+void MegaDrive68kMachine::RestartYmTimersForTest(std::uint64_t ticks) {
+    SyncYm(ticks);
+    ym_->SetAccessTime(ticks * timing_.ymClockHz / 15);
+    for (const std::uint8_t mode : {std::uint8_t{0x00}, std::uint8_t{0x0F}}) {
+        ym_->Write(0, 0x27);
+        ym_->Write(1, mode);
     }
 }
 

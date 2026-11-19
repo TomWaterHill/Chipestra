@@ -44,9 +44,9 @@
 //                  pairs separated by spaces (the settings a game's own start-up code leaves for its sound driver)
 //   request_arg    "pointer": the routines of `requests` get A0 pointing at a word on the stack that holds the number (and no
 //                  number in D0/D1)
-//   z80_bus        "instruction_end": a change of the Z80's bus request takes effect at the end of the 68000 instruction that makes it
-//                  (the Z80 runs on to that time before it stops, and takes up again from that time); by default it takes effect
-//                  at the start of that instruction
+//   z80_bus        "instruction_end" (the default): a change of the Z80's bus request takes effect at the end of the 68000
+//                  instruction that makes it (the Z80 runs on to that time before it stops, and takes up again from that time);
+//                  "instruction_start": it takes effect at the start of that instruction
 //   z80_reset      "released": the Z80 is not held in reset when the initialization begins (the game's own start-up code has
 //                  released it before it sets the sound driver up); by default the reset is held
 //   warmup_frames  how many frames the Machine runs after the initialization before it first writes a request (the state
@@ -65,7 +65,7 @@ struct MegaDrive68kDriverConfig {
     std::uint32_t hblankLines = 0;               // see `hblank_lines` (0: none)
     std::optional<std::uint32_t> a6;             // see `m68k_a6`
     bool requestByPointer = false;               // see `request_arg`
-    bool z80BusAtInstructionEnd = false;         // see `z80_bus`
+    bool z80BusAtInstructionEnd = true;          // see `z80_bus`
     std::vector<std::pair<std::uint32_t, std::uint16_t>> ramWords;   // see `m68k_ram_words`
 };
 
@@ -83,8 +83,8 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
 //
 // Time: one counter of master clock ticks (a 68000 cycle is 7 ticks, a Z80 cycle 15). The CPU that is behind runs one
 // instruction at a time, so the two are never more than an instruction apart. A change of the Z80's bus request takes effect
-// at the start of the 68000 instruction that made it, or, with z80_bus="instruction_end", at the end of it (the Z80 runs on to
-// that time before it stops, and takes up again from that time when the bus is given back); a Z80 held in reset stops and
+// at the end of the 68000 instruction that made it (the Z80 runs on to that time before it stops, and takes up again from
+// that time when the bus is given back), or, with z80_bus="instruction_start", at the start of it; a Z80 held in reset stops and
 // starts at once. The Z80 does not wait for the 68000's bus when it reads the cartridge through its window (the original
 // delays it by a few cycles).
 //
@@ -153,6 +153,9 @@ public:
     std::uint64_t TicksForTest() const { return std::min(t68_, TimeZ80()); }
     const MegaDriveTiming& TimingForTest() const { return timing_; }
     bool Z80BusRequestedForTest() const { return bus_requested_; }
+    // Stops the YM2612's timers and starts them again with the 68000's mode write 0x0F at `ticks` (a free-running timer's
+    // phase follows from when it was started; a replay that begins after the original's start-up sets that phase here).
+    void RestartYmTimersForTest(std::uint64_t ticks);
     // false: every switch runs the initialization and warm-up again instead of restoring the saved state.
     void SetWarmStateRestoreForTest(bool enabled) { restore_warm_state_ = enabled; }
     // Runs the Machine to `ticks` (master clock ticks since power-on) with the chips running (a driver that polls the

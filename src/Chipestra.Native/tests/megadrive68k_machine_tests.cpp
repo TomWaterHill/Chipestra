@@ -601,6 +601,10 @@ struct ReplayGame {
     // little from the original's (the Z80's phase builds up from every time it is stopped): the writes are compared by
     // lining the two lists up again after each difference (a few writes that one has and the other has not).
     bool resyncCompare = false;
+    // The YM2612's Timer A runs free from the 68000's first mode write (0x0F) and a Z80 program that waits for its flag sees the
+    // flag at a phase that follows from that time. The recording's first write is during the original's start-up, before the
+    // window, so the replay starts the timers again at the phase the original's timer has in the window.
+    bool alignYmTimerPhase = false;
 };
 
 struct AlignedWrites {
@@ -735,6 +739,27 @@ void CompareReplayWithRecording(const ReplayGame& game, double fromSeconds, doub
     }
     machine.RunToTicksForTest(start);
     logging = true;
+    // The offset in the window of the instant when the original's timers (started by its first mode write) are at the start of a
+    // period: the period of Timer A with its value 0 is 1024 * 144 chip clocks, and a chip clock is 7 master ticks.
+    constexpr std::uint64_t kTimerAPeriodTicks = 1024ull * 144 * 7;
+    std::optional<std::uint64_t> timerPhaseOffset;
+    if (game.alignYmTimerPhase) {
+        std::optional<std::uint32_t> address;
+        for (const Event& e : reference) {
+            if (e.kind != "YM68") continue;
+            std::istringstream fields(e.a);
+            std::uint32_t port = 0, value = 0;
+            fields >> port >> value;
+            if (port == 0) address = value;
+            else if (port == 1 && address && *address == 0x27) {
+                const std::uint64_t first = e.t;
+                timerPhaseOffset = first >= t0 ? (first - t0) % kTimerAPeriodTicks : (kTimerAPeriodTicks - (t0 - first) % kTimerAPeriodTicks) % kTimerAPeriodTicks;
+                break;
+            }
+        }
+        Check(timerPhaseOffset.has_value(), "the recording has the 68000's first write to the YM2612's mode register");
+    }
+    bool timerPhaseAligned = false;
     for (const Stimulus& call : calls) {
         std::uint64_t at = call.t;
         if (call.kind == "POKE") {
@@ -751,6 +776,11 @@ void CompareReplayWithRecording(const ReplayGame& game, double fromSeconds, doub
                 const std::uint64_t phase = call.t % kTicksPerFrame;
                 if (phase > vblank && phase <= vblank + 160000) at = call.t - (phase - vblank) - 4000;
             }
+        }
+        if (timerPhaseOffset && !timerPhaseAligned && at - t0 > *timerPhaseOffset) {
+            timerPhaseAligned = true;
+            machine.RunToTicksForTest(start + *timerPhaseOffset);
+            machine.RestartYmTimersForTest(start + *timerPhaseOffset);
         }
         machine.RunToTicksForTest(start + (at - t0));
         if (call.kind == "POKE") {
@@ -865,8 +895,9 @@ void MegaDrive68kBattleMania2ReplayMatchesTheOriginalsChipWrites() {
 void MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites() {
     std::printf("MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites\n");
     const ReplayGame game{"gauntlet4.xml", "md/gauntlet4/real_game/<flavor>/play_120s.txt", "md/gauntlet4/real_game/<flavor>/stimuli_120s.txt",
-                          {{"SONG", 1}, {"ZCMD", 3}, {"SEQ", 4}}, {}, true, {{0x100, 0x120}}, {0x39E14, 0x39E08}, true};
-    CompareReplayWithRecording(game, 15.0, 118.0, 17000.0, 17000.0);
+                          {{"SONG", 1}, {"ZCMD", 3}, {"SEQ", 4}}, {}, true, {{0x100, 0x120}}, {0x39E14, 0x39E08}, true, false, false, true};
+    // With the timer's phase of the original the Z80's sampled sounds are within 2 ms (without it the first one starts 13 ms late).
+    CompareReplayWithRecording(game, 15.0, 118.0, 2000.0, 17000.0);
 }
 
 void MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites() {
@@ -897,7 +928,9 @@ void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_a6=\"0x1000\" warmup_frames=\"3\""), config, &error) && error.find("m68k_a6") != std::string::npos, "A6 must point into the RAM");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_ram_words=\"0xFF0111=1\" warmup_frames=\"3\""), config, &error) && error.find("m68k_ram_words") != std::string::npos, "a word at an odd address is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_ram_words=\"0xFF0110=0x12345\" warmup_frames=\"3\""), config, &error) && error.find("m68k_ram_words") != std::string::npos, "a value above 16 bits is refused");
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" warmup_frames=\"3\""), config, &error) && config.z80BusAtInstructionEnd, "without z80_bus the bus request takes effect at the end of the instruction");
     Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" z80_bus=\"instruction_end\" warmup_frames=\"3\""), config, &error) && config.z80BusAtInstructionEnd, "z80_bus=\"instruction_end\" parses");
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" z80_bus=\"instruction_start\" warmup_frames=\"3\""), config, &error) && !config.z80BusAtInstructionEnd, "z80_bus=\"instruction_start\" parses");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" z80_bus=\"late\" warmup_frames=\"3\""), config, &error) && error.find("z80_bus") != std::string::npos, "an unknown z80_bus is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" request_arg=\"word\" warmup_frames=\"3\""), config, &error) && error.find("request_arg") != std::string::npos, "an unknown request_arg is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("vblank_handler=\"own\" request=\"0xFF0002\" warmup_frames=\"3\""), config, &error) && error.find("vblank_handler") != std::string::npos, "an unknown vblank_handler is refused");

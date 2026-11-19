@@ -208,6 +208,34 @@ if ($gitStatus) {
 }
 Write-StepOk -Name "Git: no unexpected files"
 
+# 5. No control characters in the tracked text files. A backslash escape that was interpreted on its way into a file
+#    (a Windows path written through a shell or a script) leaves a control character or a stray carriage
+#    return; tabs, line feeds and a carriage return that is part of CR LF are fine. Files under thirdparty/ are
+#    upstream sources and are skipped.
+Write-StepHeader -Name "Text: no control characters in tracked text files"
+$textExtensions = @('.md', '.txt', '.xml', '.cpp', '.h', '.hpp', '.ipp', '.c', '.inc', '.cs', '.xaml', '.ps1', '.py', '.lua', '.cmake', '.props', '.csproj', '.json', '.slnx', '.cfg', '.gitignore')
+$controlProblems = New-Object System.Collections.Generic.List[string]
+$controlPattern = [regex]'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]|\r(?!\n)'
+foreach ($file in (git ls-files)) {
+    if ($file.StartsWith('thirdparty/')) { continue }
+    if ($textExtensions -notcontains [System.IO.Path]::GetExtension($file).ToLowerInvariant() -and [System.IO.Path]::GetFileName($file) -ne '.gitignore') { continue }
+    $path = Join-Path $RepoRoot $file
+    if (-not (Test-Path -LiteralPath $path)) { continue }
+    # (read as Latin-1 so that every byte is one character and the byte values can be matched directly)
+    $content = [System.Text.Encoding]::GetEncoding(28591).GetString([System.IO.File]::ReadAllBytes($path))
+    foreach ($m in $controlPattern.Matches($content)) {
+        $lineNumber = 1 + ($content.Substring(0, $m.Index).Split("`n").Length - 1)
+        $controlProblems.Add(("  {0}:{1}: byte 0x{2:X2}" -f $file, $lineNumber, [int][char]$m.Value))
+        if ($controlProblems.Count -ge 50) { break }
+    }
+    if ($controlProblems.Count -ge 50) { break }
+}
+if ($controlProblems.Count -gt 0) {
+    Write-StepFail -Name "Text: control characters" -Detail ("Control characters (or a carriage return that is not part of CR LF) in tracked text files:`n" + ($controlProblems -join "`n"))
+    exit 1
+}
+Write-StepOk -Name "Text: no control characters"
+
 Write-Host ""
 Write-Host "Build gate: PASS" -ForegroundColor Green
 exit 0

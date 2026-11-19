@@ -13,7 +13,7 @@ It also plays the music of some Famicom / NES, Famicom Disk System and Mega Driv
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.005.00
+Version: Ver 1.005.01
 
 ### Support history
 
@@ -81,7 +81,13 @@ these games are given by the XML files.
 |---|---|
 | Mega Drive (Japan) | Battle Mania, Battle Mania Daiginjou, Gauntlet IV, Phantasy Star IV, Star Cruiser (music and sound effects, including the sampled sounds) |
 
-A new setting, Settings > Mega Drive / Genesis, selects the low-pass filter of the console's analog output stage for Mega Drive sound: Off (the default; the sound is unchanged), Model 1 (Mega Drive / Genesis; a first-order filter at 3.38 kHz) or Model 2 (Mega Drive 2 / Genesis Model 2; a second-order filter at 6.7 kHz on the FM sound plus a first-order filter at 3.8 kHz on everything). The Model 2 values are approximations based on the default settings of the jgenesis emulator (https://github.com/jsgroth/jgenesis), not measurements of the original circuit. The change takes effect immediately, also during playback.
+A new setting, Settings > Mega Drive / Genesis, selects the low-pass filter of the console's analog output stage for Mega Drive sound: Off (the default; the sound is unchanged), Model 1 (Mega Drive / Genesis; a first-order filter at 3.38 kHz) or Model 2 (Mega Drive 2 / Genesis Model 2; a second-order filter at 6.14 kHz on the FM sound plus a first-order filter at 3.3 kHz on everything). The Model 2 values are those of the circuit of the Model 2 (VA3) board; earlier Model 2 boards (VA0 to VA1.8) may have a different circuit. The change takes effect immediately, also during playback.
+
+#### Ver 1.005.01
+
+The Model 2 filter of the Mega Drive / Genesis setting now uses the values of the circuit of the Model 2 (VA3) board, replacing the approximate values of the earlier version: a second-order filter at 6.14 kHz (Q 1.08, a small peak near 4.6 kHz) on the FM sound plus a first-order filter at 3.3 kHz on everything. Off and Model 1 are unchanged.
+
+The Z80 of the Mega Drive games that run a 68000 sound driver (Sonic the Hedgehog, Battle Mania, Battle Mania Daiginjou, Phantasy Star IV) now stops and starts at the end of the 68000 instruction that asks for or gives back its bus, as in the original; some tracks of these games sound slightly different (the pace of the sampled sounds and the timing of the notes).
 
 ### Features
 
@@ -208,7 +214,7 @@ Chipestra（チップエストラ。「チップ」と「オーケストラ」�
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.005.00
+バージョン: Ver 1.005.01
 
 ### 対応の履歴
 
@@ -269,7 +275,13 @@ NES とファミコン ディスクシステムでは、エミュレートした
 |---|---|
 | Mega Drive（日本） | Battle Mania（バトルマニア）、Battle Mania Daiginjou（バトルマニア大吟醸）、Gauntlet IV（ガントレット）、Phantasy Star IV（ファンタシースター 千年紀の終りに）、Star Cruiser（スタークルーザー）。BGM と効果音（サンプリング音を含む）を再生できます |
 
-設定に「Mega Drive / Genesis」の項目を追加しました。メガドライブの音に、本体のアナログ出力段のローパスフィルタを掛けるかどうかを選べます: Off（既定。音は変わりません）、Model 1（Mega Drive / Genesis。3.38kHz の1次）、Model 2（Mega Drive 2 / Genesis Model 2。FM の音に 6.7kHz の2次、全体に 3.8kHz の1次）。Model 2 の値は、エミュレータ jgenesis（https://github.com/jsgroth/jgenesis）の既定の設定値をもとにした近似で、元の回路の実測ではありません。切り替えは、再生中でもすぐに反映されます。
+設定に「Mega Drive / Genesis」の項目を追加しました。メガドライブの音に、本体のアナログ出力段のローパスフィルタを掛けるかどうかを選べます: Off（既定。音は変わりません）、Model 1（Mega Drive / Genesis。3.38kHz の1次）、Model 2（Mega Drive 2 / Genesis Model 2。FM の音に 6.14kHz の2次、全体に 3.3kHz の1次）。Model 2 の値は、Model 2（VA3）の基板の回路の値です。それより前の Model 2 の基板（VA0〜VA1.8）は、回路が違う可能性があります。切り替えは、再生中でもすぐに反映されます。
+
+#### Ver 1.005.01
+
+設定の「Mega Drive / Genesis」の Model 2 のフィルタを、Model 2（VA3）の基板の回路の値に変えました（前の版の近似の値から変更）。FM の音に 6.14kHz の2次（Q 1.08。4.6kHz 付近にわずかな山があります）、全体に 3.3kHz の1次です。Off と Model 1 は変わりません。
+
+68000 のサウンドドライバーを動かすメガドライブのゲーム（ソニック・ザ・ヘッジホッグ、バトルマニア、バトルマニア大吟醸、ファンタシースター IV）で、Z80 がバスを取られる・返されるタイミングを、実機と同じく 68000 の命令の終わりにしました。これらのゲームの一部の曲で、サンプル音の速さや音の出るタイミングがわずかに変わります。
 
 ### 機能
 

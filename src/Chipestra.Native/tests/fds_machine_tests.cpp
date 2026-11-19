@@ -603,7 +603,7 @@ void FdsMachineViaDefinitionXmlRealDisk() {
     // writes the real game's own sound driver made (a recording of the game running, see the reference folder).
     const char* referenceEnv = GetEnvVar("CHIPESTRA_REFERENCE_DIR");
     if (referenceEnv == nullptr || referenceEnv[0] == '\0') {
-        std::printf("  SKIP: CHIPESTRA_REFERENCE_DIR is not set - the sound-register writes are not compared with the real game's\n");
+        std::printf("  SKIP: CHIPESTRA_REFERENCE_DIR is not set - the sound-register writes are not compared with the real game's\n");
         return;
     }
     const std::filesystem::path recordDir = std::filesystem::path(referenceEnv) / "fds" / "metroid" / "real_game";
@@ -674,15 +674,15 @@ void FdsMachineViaDefinitionXmlRealDisk() {
         } else if (explained && differing <= allowance.maxFrames) {
             ++toleratedTracks;
             toleratedFrames += differing;
-            std::printf("    %s: %zu of %llu frames differ, only in period/variable registers (%s)\n", track.Id.c_str(), differing,
+            std::printf("    %s: %zu of %llu frames differ, only in period/variable registers (%s)\n", track.Id.c_str(), differing,
                         static_cast<unsigned long long>(kCompareFrames), allowance.reason);
         } else {
             allMatch = false;
-            std::printf("    DIFFERENT: track %s: %zu of %llu frames differ%s\n", track.Id.c_str(), differing,
+            std::printf("    DIFFERENT: track %s: %zu of %llu frames differ%s\n", track.Id.c_str(), differing,
                         static_cast<unsigned long long>(kCompareFrames), explained ? " (more than allowed)" : "");
         }
     }
-    std::printf("  %zu tracks compared with the real game over %llu frames: %zu exact, %zu with explained differences (%zu frames)\n", compared,
+    std::printf("  %zu tracks compared with the real game over %llu frames: %zu exact, %zu with explained differences (%zu frames)\n", compared,
                 static_cast<unsigned long long>(kCompareFrames), exact, toleratedTracks, toleratedFrames);
     Check(compared > 30, "reference records: more than 30 tracks were compared");
     Check(allMatch, "every track writes the sound registers as the real game does (frame, address, value), apart from the explained differences");

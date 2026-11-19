@@ -508,7 +508,7 @@ an effect is written into the game's RAM by Chipestra, as the game's main loop w
 | `request` | The 68000 address (`0xFF0000`-`0xFFFFFF`) of the byte of the game's RAM in which the game puts the number of a song or an effect for the driver to take at its next frame. A track's `command` is written there. |
 | `requests` | For a driver that the game does not hand its requests in a byte of RAM but by calling a subroutine with the number in a register: the addresses of these subroutines (1 to 7, separated by spaces; each ends with `RTS`). It replaces `request`. A track names the subroutine that takes its number with `request="0x..."` (the same address as in this list); the number (`command`) is given to it in both `D0` and `D1` (or, with `request_arg="pointer"`, in a word on the stack that `A0` points at), and the subroutine is called as soon as possible, as the game's main program would. An entry may also be the address of a byte of the game's RAM (`0xE00000`-`0xFFFFFF`) instead of a subroutine: the number is then written into that byte, for a request that the game makes through a variable of its own. |
 | `request_arg` | `pointer`: the subroutines of `requests` get the number in a word that register `A0` points at (on the stack) and not in `D0` and `D1`. |
-| `z80_bus` | `instruction_end`: a change of the Z80's bus request takes effect at the end of the 68000 instruction that makes it. The Z80 runs on to that time before it stops, and takes up again from that time when the bus is given back; a driver that asks for the bus for every write it makes to the sound chip has its Z80 play the sampled sounds at the pace of the original only this way. Without it the change takes effect at the start of that instruction. |
+| `z80_bus` | `instruction_end` (the default): a change of the Z80's bus request takes effect at the end of the 68000 instruction that makes it. The Z80 runs on to that time before it stops, and takes up again from that time when the bus is given back; a driver that asks for the bus for every write it makes to the sound chip has its Z80 play the sampled sounds at the pace of the original only this way. `instruction_start`: the change takes effect at the start of that instruction. |
 | `z80_reset` | `released`: the Z80 is already running (not held in reset) when the initialization begins, as the game's own start-up code leaves it; the initialization of such a game asks for the Z80's bus and waits for it, which a Z80 held in reset never grants. Without it the reset is held until the game releases it. |
 | `warmup_frames` | How many frames the sound routine runs before the first request. The state after them is kept and restored at every switch. |
 | `region`, `cart_crc32` | As in section 4c (a list of regions in `region` makes one game for each). |
@@ -547,15 +547,15 @@ A game whose sound driver is driven by both interrupts of its own (the horizonta
 with the routines taking their number through a pointer and the game's variables addressed through A6:
 
 ```xml
-<driver m68k_init="0x9592 0x9610" vblank_handler="game" hblank_lines="53" m68k_a6="0xFF0000" m68k_ram_words="0xFF0470=5" requests="0x9622 0x963C" request_arg="pointer" z80_bus="instruction_end" warmup_frames="4" region="japan" cart_crc32="2b75b52f"/>
+<driver m68k_init="0x9592 0x9610" vblank_handler="game" hblank_lines="53" m68k_a6="0xFF0000" m68k_ram_words="0xFF0470=5" requests="0x9622 0x963C" request_arg="pointer" warmup_frames="4" region="japan" cart_crc32="2b75b52f"/>
 ...
 <track id="BGM_12" title="BGM 12" command="0x12" request="0x9622"/>
 <track id="SFX_1F" title="[SFX] 1F" command="0x1F" type="sfx" request="0x963C"/>
 ```
 
 Time inside the Machine: the 68000 and the Z80 run side by side, the one that is behind running an instruction at a time. A change
-of the Z80's bus request takes effect at the start of the 68000 instruction that makes it, or, with `z80_bus="instruction_end"`, at
-the end of it.
+of the Z80's bus request takes effect at the end of the 68000 instruction that makes it, or, with `z80_bus="instruction_start"`, at
+the start of it.
 
 A routine must work with only the CPU, the RAM, the cartridge, the Z80's bus, the YM2612 and the PSG: the Machine answers the
 status register of the video chip (the vertical-blank flag and the scanline counter) and the controller ports (no button

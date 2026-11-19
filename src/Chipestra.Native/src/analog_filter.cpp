@@ -20,9 +20,8 @@ Coefficients DesignFirstOrderLowPass(double cutoffHz, double sampleRateHz) {
     return c;
 }
 
-Coefficients DesignButterworthLowPass2(double cutoffHz, double sampleRateHz) {
+Coefficients DesignSecondOrderLowPass(double cutoffHz, double q, double sampleRateHz) {
     const double k = std::tan(kPi * cutoffHz / sampleRateHz);
-    const double q = 1.0 / std::sqrt(2.0);
     const double norm = 1.0 / (1.0 + k / q + k * k);
     Coefficients c;
     c.b0 = k * k * norm;
@@ -42,7 +41,7 @@ Stages StagesFor(std::uint32_t mode, double sampleRateHz) {
             break;
         case CHIPESTRA_ANALOG_FILTER_MODEL2:
             s.hasFm = true;
-            s.fm = DesignButterworthLowPass2(kModel2FmCutoffHz, sampleRateHz);
+            s.fm = DesignSecondOrderLowPass(kModel2FmCutoffHz, kModel2FmQ, sampleRateHz);
             s.hasOutput = true;
             s.output = DesignFirstOrderLowPass(kModel2OutputCutoffHz, sampleRateHz);
             break;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 Tom Water Hill
 // Analog output-stage filter tests. The expected responses are derived from the analog transfer
-// functions (first-order and second-order Butterworth low-pass), not read back from the implementation.
+// functions (first-order and second-order low-pass), not read back from the implementation.
 
 #include "analog_filter_tests.h"
 
@@ -75,7 +75,11 @@ double MeasuredGain(std::uint32_t mode, AnalogFilterGroupId group, double hz) {
 
 double ToDb(double gain) { return 20.0 * std::log10(gain); }
 double FirstOrderDb(double hz, double fc) { return -10.0 * std::log10(1.0 + (hz / fc) * (hz / fc)); }
-double Butterworth2Db(double hz, double fc) { return -10.0 * std::log10(1.0 + std::pow(hz / fc, 4.0)); }
+// Magnitude (dB) of a second-order low-pass with natural frequency fc and quality factor q.
+double SecondOrderDb(double hz, double fc, double q) {
+    const double x = hz / fc;
+    return -10.0 * std::log10((1.0 - x * x) * (1.0 - x * x) + x * x / (q * q));
+}
 
 }  // namespace
 
@@ -116,21 +120,39 @@ void AnalogFilterModel1FrequencyResponseMatchesTheFirstOrderDesign() {
 
 void AnalogFilterModel2FrequencyResponseMatchesTheTwoStageDesign() {
     const double fa = analog_filter::kModel2FmCutoffHz;
+    const double qa = analog_filter::kModel2FmQ;
     const double fb = analog_filter::kModel2OutputCutoffHz;
-    Check(std::fabs(fa - 6725.0) < 1e-9 && std::fabs(fb - 3789.0) < 1e-9, "analog filter Model 2 cutoffs are 6725 Hz (FM) and 3789 Hz (output)");
+    Check(std::fabs(fa - 6140.0) < 1e-9 && std::fabs(qa - 1.08) < 1e-9 && std::fabs(fb - 3275.0) < 1e-9,
+          "analog filter Model 2: FM second-order f0 6140 Hz with Q 1.08, output first-order 3275 Hz");
     // PSG sees only the first-order output stage: -3 dB at its cutoff.
     const double psgAtB = ToDb(MeasuredGain(CHIPESTRA_ANALOG_FILTER_MODEL2, AnalogFilterGroupId::Psg, fb));
-    Check(std::fabs(psgAtB - (-3.0103)) < 0.1, "analog filter Model 2: PSG has only the first-order stage (-3 dB at 3789 Hz)");
-    // FM sees both: the product of the second-order Butterworth and the first-order response.
-    for (double hz : {500.0, 3000.0, 6725.0, 12000.0}) {
-        const double expected = Butterworth2Db(hz, fa) + FirstOrderDb(hz, fb);
+    Check(std::fabs(psgAtB - (-3.0103)) < 0.1, "analog filter Model 2: PSG has only the first-order stage (-3 dB at 3275 Hz)");
+    // FM sees both: the product of the second-order response (Q = 1.08) and the first-order response.
+    for (double hz : {500.0, 3000.0, 4600.0, 6140.0, 12000.0}) {
+        const double expected = SecondOrderDb(hz, fa, qa) + FirstOrderDb(hz, fb);
         const double measured = ToDb(MeasuredGain(CHIPESTRA_ANALOG_FILTER_MODEL2, AnalogFilterGroupId::Fm, hz));
         Check(std::fabs(measured - expected) < 0.3, "analog filter Model 2: FM response matches the two-stage design");
     }
-    // The second-order stage is -3 dB at 6725 Hz of its own: compare FM and PSG at that frequency.
-    const double fm = ToDb(MeasuredGain(CHIPESTRA_ANALOG_FILTER_MODEL2, AnalogFilterGroupId::Fm, fa));
-    const double psg = ToDb(MeasuredGain(CHIPESTRA_ANALOG_FILTER_MODEL2, AnalogFilterGroupId::Psg, fa));
-    Check(std::fabs((psg - fm) - 3.0103) < 0.15, "analog filter Model 2: the FM-only stage is -3 dB at 6725 Hz");
+    // The second-order stage on its own is FM minus PSG. Its resonance peak: about +1.7 dB near 4.6 kHz.
+    auto stageA = [](double hz) {
+        return ToDb(MeasuredGain(CHIPESTRA_ANALOG_FILTER_MODEL2, AnalogFilterGroupId::Fm, hz)) -
+               ToDb(MeasuredGain(CHIPESTRA_ANALOG_FILTER_MODEL2, AnalogFilterGroupId::Psg, hz));
+    };
+    double peakDb = -100.0, peakHz = 0.0;
+    for (double hz = 3600.0; hz <= 5800.0; hz += 100.0) {
+        const double v = stageA(hz);
+        if (v > peakDb) { peakDb = v; peakHz = hz; }
+    }
+    Check(std::fabs(peakHz - 4600.0) <= 200.0, "analog filter Model 2: the FM stage peaks near 4.6 kHz");
+    Check(std::fabs(peakDb - 1.71) < 0.15, "analog filter Model 2: the FM stage peak is about +1.7 dB");
+    Check(std::fabs(stageA(8060.0) - (-3.0)) < 0.2, "analog filter Model 2: the FM stage is -3 dB near 8.06 kHz");
+    Check(std::fabs(stageA(200.0)) < 0.1, "analog filter Model 2: the FM stage is flat in the low range");
+    // The general second-order design with Q = 1/sqrt(2) is the Butterworth response: -3.01 dB at its own cutoff.
+    const double k = std::tan(3.14159265358979323846 * 5000.0 / 192000.0);
+    const analog_filter::Coefficients bw = analog_filter::DesignSecondOrderLowPass(5000.0, 1.0 / std::sqrt(2.0), 192000.0);
+    const double norm = 1.0 / (1.0 + std::sqrt(2.0) * k + k * k);
+    Check(std::fabs(bw.b0 - k * k * norm) < 1e-15 && std::fabs(bw.a2 - (1.0 - std::sqrt(2.0) * k + k * k) * norm) < 1e-15,
+          "analog filter: the second-order design with Q = 1/sqrt(2) gives the Butterworth coefficients");
 }
 
 void AnalogFilterOnlyTouchesMarkedChannels() {
@@ -182,7 +204,7 @@ void AnalogFilterModeChangeCrossfadesWithoutAStep() {
     for (std::size_t i = 1; i < out.size(); ++i) worst = std::max(worst, static_cast<double>(std::fabs(out[i] - out[i - 1])));
     Check(worst <= maxStep * 1.25, "analog filter: changing the mode again in the middle of a crossfade leaves no step");
     // After the fade the output is the filtered signal: amplitude near the Model 2 FM response at 8 kHz.
-    const double expectedDb = Butterworth2Db(hz, analog_filter::kModel2FmCutoffHz) + FirstOrderDb(hz, analog_filter::kModel2OutputCutoffHz);
+    const double expectedDb = SecondOrderDb(hz, analog_filter::kModel2FmCutoffHz, analog_filter::kModel2FmQ) + FirstOrderDb(hz, analog_filter::kModel2OutputCutoffHz);
     double peak = 0.0;
     for (std::size_t i = out.size() - 2048; i < out.size(); ++i) peak = std::max(peak, static_cast<double>(std::fabs(out[i])));
     Check(std::fabs(ToDb(peak / amp) - expectedDb) < 0.5, "analog filter: after the crossfade the settled level is the new mode's response");
