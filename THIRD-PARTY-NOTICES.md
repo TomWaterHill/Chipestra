@@ -34,6 +34,18 @@ All of the following come from MAME (https://github.com/mamedev/mame), tag mame0
 - Copyright holders (as listed in the original files): Aaron Giles
 - Original implementation (path in mame0289): src/devices/cpu/m6800/m6800.cpp, m6800.h, m6801.cpp, m6801.h, 6800ops.hxx
 
+#### SH-2 (SH7604)
+- Copyright holders (as listed in the original files): David Haywood (sh.cpp, sh.h). Juergen Buchmueller, R. Belmont (sh2.cpp, sh2.h)
+- Original implementation (path in mame0289): src/devices/cpu/sh/sh.cpp, sh.h, sh2.cpp, sh2.h
+
+#### SH7604 on-chip peripherals (timers, divide unit, interrupt controller, DMA controller)
+- Copyright holders (as listed in the original files): Juergen Buchmueller, R. Belmont (sh7604.cpp, sh7604.h). Angelo Salese (sh7604_wdt.cpp). Olivier Galibert (sh_dmac.cpp)
+- Original implementation (path in mame0289): src/devices/cpu/sh/sh7604.cpp, sh7604.h, sh7604_wdt.cpp, sh_dmac.cpp
+
+#### Sega 32X (register map, interrupts and PWM sound unit)
+- Copyright holders (as listed in the original files): David Haywood (mega32x.cpp, mega32x.h)
+- Original implementation (path in mame0289): src/mame/shared/mega32x.cpp, mega32x.h
+
 #### H6280
 - Copyright holders (as listed in the original files): Bryan McPhail (the text of the files contains "Copyright Bryan McPhail, mish@tendril.co.uk")
 - Original implementation (path in mame0289): src/devices/cpu/h6280/h6280.cpp, h6280.h

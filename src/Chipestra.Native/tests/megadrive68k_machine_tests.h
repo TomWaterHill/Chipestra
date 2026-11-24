@@ -20,3 +20,7 @@ void MegaDrive68kGauntlet4ReplayMatchesTheOriginalsChipWrites();
 void MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites();
 void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests();
 void MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites();
+void MegaDrive68kSuper32xGamesPlayFromTheMegaDriveSide();
+void Super32xGamesShowThePwmChannelsToo();
+void MegaDrive68kStellarSoundRoutineRunsInFiveOfEverySixFrames();
+void MegaDrive68kVirtuaRacingDeluxeKeepsTheTempoOfTheOriginal();

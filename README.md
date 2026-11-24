@@ -13,7 +13,7 @@ It also plays the music of some Famicom / NES, Famicom Disk System and Mega Driv
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.005.01
+Version: Ver 1.006.00
 
 ### Support history
 
@@ -89,6 +89,14 @@ The Model 2 filter of the Mega Drive / Genesis setting now uses the values of th
 
 The Z80 of the Mega Drive games that run a 68000 sound driver (Sonic the Hedgehog, Battle Mania, Battle Mania Daiginjou, Phantasy Star IV) now stops and starts at the end of the 68000 instruction that asks for or gives back its bus, as in the original; some tracks of these games sound slightly different (the pace of the sampled sounds and the timing of the notes).
 
+#### Ver 1.006.00
+
+| System | Verified titles |
+|---|---|
+| Super 32X (Japan) | Virtua Racing Deluxe and Stellar Assault (the music and sound effects made by the Mega Drive side of the cartridge; Virtua Racing Deluxe also has the two start-up jingles that its SH-2 processor plays through the 32X's PWM sound unit), Virtua Fighter (the music of the Mega Drive side, and the sampled sounds that the cartridge's SH-2 processors play through the PWM sound unit), Space Harrier (the music and effects of its Z80 sound driver, with the sounds of the SH-2 synthesizer that the driver asks for, and the SEGA logo sound), After Burner Complete (the music and effects of its Z80 sound driver, with the sounds that its SH-2 processors play through the PWM sound unit, and the SEGA logo sound), Star Wars Arcade (the music and effects of the sound driver that runs on the 68000, and the long sampled sounds of the demo, the effects and the voices that its SH-2 processors play through the PWM sound unit) |
+
+The 32X's two SH-2 processors, their on-chip peripherals and the PWM sound unit are emulated. In a Super 32X game's track list, a track marked [PWM] is played by the PWM sound unit and the other tracks by the Mega Drive's sound chips. The SEGA logo of Space Harrier and After Burner Complete (the track "SEGA Logo") is a sampled voice that the SH-2 plays through the PWM sound unit while the game's start-up animation runs; Chipestra plays it by sending the slave SH-2 the same messages as the game's 68000. Apart from the start-up jingles of Virtua Racing Deluxe, Virtua Racing Deluxe and Stellar Assault use the PWM sound unit for nothing else that has been found.
+
 ### Features
 
 - Per-channel level meters, pan, mute and solo
@@ -113,7 +121,7 @@ The Z80 of the Mega Drive games that run a 68000 sound driver (Sonic the Hedgeho
   point Chipestra at the folder that contains them (Settings > ROM Root).
   For the NES, a .nes image of the game is used; for the Famicom Disk System,
   a .fds disk image (no BIOS is needed); for the Mega Drive, the cartridge image
-  (SpaceHarrier2.smd, SpaceHarrier2.bin or SpaceHarrier2.md; the layout is recognised) in SpaceHarrier2.zip, likewise Sorcerian.smd, Sorcerian.bin or Sorcerian.md in Sorcerian.zip, and TimeTrax.bin, TimeTrax.md or TimeTrax.smd for Time Trax, and SonicTheHedgehog.smd, SonicTheHedgehog.bin or SonicTheHedgehog.md in SonicTheHedgehog.zip for Sonic, and likewise a .smd, .bin or .md file in a .zip of the same name (BattleMania, battleManiaDaiginjyo, GauntletIV, "Phantasy Star The end of the millennium" and StarCruiser) for Battle Mania, Battle Mania Daiginjou, Gauntlet IV, Phantasy Star IV and Star Cruiser. Lagrange Point additionally needs
+  (SpaceHarrier2.smd, SpaceHarrier2.bin or SpaceHarrier2.md; the layout is recognised) in SpaceHarrier2.zip, likewise Sorcerian.smd, Sorcerian.bin or Sorcerian.md in Sorcerian.zip, and TimeTrax.bin, TimeTrax.md or TimeTrax.smd for Time Trax, and SonicTheHedgehog.smd, SonicTheHedgehog.bin or SonicTheHedgehog.md in SonicTheHedgehog.zip for Sonic, and likewise a .smd, .bin or .md file in a .zip of the same name (BattleMania, battleManiaDaiginjyo, GauntletIV, "Phantasy Star The end of the millennium" and StarCruiser) for Battle Mania, Battle Mania Daiginjou, Gauntlet IV, Phantasy Star IV and Star Cruiser. The Super 32X cartridge images (the .32x, .bin or .md file) are found in the same way, by their CRC-32 under any name inside a .zip. Lagrange Point additionally needs
   the ROM set "ds1001" (ds1001.zip), which holds the instrument table of the
   VRC7 sound chip.
 - The names of the NES, Famicom Disk System and Mega Drive files and of their
@@ -214,7 +222,7 @@ Chipestra（チップエストラ。「チップ」と「オーケストラ」�
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.005.01
+バージョン: Ver 1.006.00
 
 ### 対応の履歴
 
@@ -283,6 +291,14 @@ NES とファミコン ディスクシステムでは、エミュレートした
 
 68000 のサウンドドライバーを動かすメガドライブのゲーム（ソニック・ザ・ヘッジホッグ、バトルマニア、バトルマニア大吟醸、ファンタシースター IV）で、Z80 がバスを取られる・返されるタイミングを、実機と同じく 68000 の命令の終わりにしました。これらのゲームの一部の曲で、サンプル音の速さや音の出るタイミングがわずかに変わります。
 
+#### Ver 1.006.00
+
+| システム | 確認したタイトル |
+|---|---|
+| Super 32X（日本） | Virtua Racing Deluxe（バーチャレーシング デラックス）、Stellar Assault（ステラアサルト）（どちらもカートリッジのメガドライブ側が作る BGM と効果音。バーチャレーシング デラックスには、SH-2 が 32X の PWM 音源で鳴らす起動時のジングル2つも含みます）、Virtua Fighter（バーチャファイター）（メガドライブ側の BGM に加えて、カートリッジの SH-2 が PWM 音源で鳴らすサンプル音）、Space Harrier（スペースハリアー）（Z80 のサウンドドライバーの BGM と効果音。ドライバーが SH-2 のシンセサイザーに頼む音と、SEGA のロゴの音も鳴らします）、After Burner Complete（アフターバーナー コンプリート）（Z80 のサウンドドライバーの BGM と効果音に加えて、SH-2 が PWM 音源で鳴らす音と、SEGA のロゴの音）、Star Wars Arcade（スターウォーズ アーケード）（68000 で動くサウンドドライバーの BGM と効果音、およびデモの音楽、効果音、声など、SH-2 が PWM 音源で鳴らす長いサンプル音） |
+
+32X の2つの SH-2、その内蔵周辺機能、PWM 音源をエミュレートしています。Super 32X のゲームのトラック一覧では、[PWM] の付いたトラックを PWM 音源が、それ以外のトラックをメガドライブの音源が鳴らします。スペースハリアーとアフターバーナー コンプリートの SEGA のロゴ（トラック「SEGA Logo」）は、ゲームの起動時のアニメーションの間に SH-2 が PWM 音源で鳴らすサンプル音の声です。Chipestra は、ゲームの 68000 と同じメッセージをスレーブの SH-2 に送って鳴らします。Virtua Racing Deluxe と Stellar Assault では、Virtua Racing Deluxe の起動時のジングルのほかに、PWM 音源を使う音は見つかっていません。
+
 ### 機能
 
 - チャンネルごとのレベルメーター、パン、ミュート、ソロ
@@ -297,7 +313,7 @@ NES とファミコン ディスクシステムでは、エミュレートした
 
 - Windows 11（64bit）。Windows 11 でのみ動作を確認しています。
 - .NET 10 Desktop Runtime（x64）。[Microsoft のサイト](https://dotnet.microsoft.com/download/dotnet/10.0) から入手できます。入っていない場合は、Chipestra の起動時に、Windows がダウンロード先の案内を表示します。
-- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージ（BIOS は要りません）、メガドライブはカートリッジのイメージ（SpaceHarrier2.smd、SpaceHarrier2.bin、SpaceHarrier2.md のいずれか。並びは中身から判定します）を SpaceHarrier2.zip に入れたものを使います（Sorcerian も同様に、Sorcerian.smd、Sorcerian.bin、Sorcerian.md のいずれかを Sorcerian.zip に入れます。Time Trax は TimeTrax.bin、TimeTrax.md、TimeTrax.smd のいずれかです。Sonic は SonicTheHedgehog.smd、SonicTheHedgehog.bin、SonicTheHedgehog.md のいずれかを SonicTheHedgehog.zip に入れます。Battle Mania、Battle Mania Daiginjou、Gauntlet IV、Phantasy Star IV、Star Cruiser も同様に、.smd、.bin、.md のいずれかを、同じ名前の .zip（BattleMania、battleManiaDaiginjyo、GauntletIV、"Phantasy Star The end of the millennium"、StarCruiser）に入れます）。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
+- 再生したいゲームの ROM ファイル。Chipestra には、ROM、BIOS イメージ、その他のゲームデータは一切含まれていません。ご自身で用意し、そのフォルダを Chipestra に指定してください（Settings > ROM Root）。NES は .nes のイメージ、ファミコン ディスクシステムは .fds のディスクイメージ（BIOS は要りません）、メガドライブはカートリッジのイメージ（SpaceHarrier2.smd、SpaceHarrier2.bin、SpaceHarrier2.md のいずれか。並びは中身から判定します）を SpaceHarrier2.zip に入れたものを使います（Sorcerian も同様に、Sorcerian.smd、Sorcerian.bin、Sorcerian.md のいずれかを Sorcerian.zip に入れます。Time Trax は TimeTrax.bin、TimeTrax.md、TimeTrax.smd のいずれかです。Sonic は SonicTheHedgehog.smd、SonicTheHedgehog.bin、SonicTheHedgehog.md のいずれかを SonicTheHedgehog.zip に入れます。Battle Mania、Battle Mania Daiginjou、Gauntlet IV、Phantasy Star IV、Star Cruiser も同様に、.smd、.bin、.md のいずれかを、同じ名前の .zip（BattleMania、battleManiaDaiginjyo、GauntletIV、"Phantasy Star The end of the millennium"、StarCruiser）に入れます）。Super 32X のカートリッジのイメージ（.32x、.bin、.md）も同じ方法で、.zip の中から CRC-32 で、どんな名前でも見つけます。Lagrange Point だけは、VRC7 音源の音色の表を収めた ROM セット ds1001（ds1001.zip）も必要です。
 - NES、ファミコン ディスクシステム、メガドライブのファイル名や、それを入れた .zip の名前は、上の名前と同じでなくても構いません（たとえば「Space Harrier II (Japan, USA).md」をどんな名前の .zip に入れてもよい）。期待する名前のファイルが無いときは、ROM Root の下の .zip の中から CRC-32 でファイルを探します（Super Magic Drive 形式のメガドライブのファイルは、サイズで探します）。この方法で見つかったファイルは、候補が 1 つだけのときにだけ使い、どのファイルを使ったかをウィンドウに表示します。.zip に入っていないファイルは、名前だけで探します。
 
 ### ダウンロードと起動

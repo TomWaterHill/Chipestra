@@ -193,6 +193,16 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
             }
         }
         track.Loops = std::string_view(trackNode.attribute("loops").as_string("true")) != "false";
+        // unit (optional): "pwm" names the 32X's PWM sound unit as the one that plays the track (a game that has both; see 4f).
+        bool pwmUnit = false;
+        if (pugi::xml_attribute unitAttr = trackNode.attribute("unit")) {
+            if (std::string_view(unitAttr.value()) != "pwm") {
+                result.Status = XmlParseStatus::InvalidAttributeValue;
+                result.Detail = "<track id=\"" + track.Id + "\">: unknown unit \"" + std::string(unitAttr.value()) + "\" (expected \"pwm\")";
+                return result;
+            }
+            pwmUnit = true;
+        }
         // set / request (optional): see TrackDefinition::Auxiliary.
         const pugi::xml_attribute setAttr = trackNode.attribute("set");
         const pugi::xml_attribute requestAttr = trackNode.attribute("request");
@@ -227,6 +237,7 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
         }
         // Bit 7 marks a control track (see TrackDefinition::Auxiliary).
         if (track.IsControlCommand) track.Auxiliary |= 0x80;
+        if (pwmUnit) track.Auxiliary |= 0x40;
         def.Tracks.push_back(std::move(track));
     }
 

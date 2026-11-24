@@ -14,6 +14,8 @@
 #include "devices/nintendo/fds/fds_machine.h"
 #include "devices/sega/megadrive/megadrive_machine.h"
 #include "devices/sega/megadrive/megadrive68k_machine.h"
+#include "devices/sega/megadrive/sega32x_pwm_machine.h"
+#include "devices/sega/megadrive/sega32x_music_machine.h"
 #include "devices/nintendo/nes/nes_cartridge.h"
 #include "devices/nintendo/nes/nes_machine.h"
 #include "devices/namco/dragonspirit/dragon_spirit_rom_layout.h"
@@ -282,8 +284,30 @@ MachineRegistry BuildDefaultRegistry() {
     md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_BASE"), "Base"});
     // The games whose sound driver runs on the 68000 (see MegaDrive68kMachine).
     md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_68K"), "68000 sound driver"});
+    // The Super 32X games whose sampled sounds an SH-2 plays through the PWM unit (see Sega32xPwmMachine).
+    md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_32X_PWM"), "32X SH-2 PWM sound"});
+    // Both: the Mega Drive side's music and effects, and the SH-2's sampled sounds (see Sega32xMusicMachine).
+    md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_32X_MUSIC"), "32X: 68000 sound driver and SH-2 PWM sound"});
+    // The Z80 sound driver of a Super 32X game that also writes events for the SH-2's synthesizer (see Sega32xMusicMachine).
+    md_def.Variants.push_back(MachineVariant{VariantId("MEGADRIVE_32X_Z80"), "32X: Z80 sound driver and SH-2 PWM synthesizer"});
     // Without resources: a registered-but-not-playable Machine (no cartridge).
     md_def.Factory = [](const VariantId& variant, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        if (variant.Value() == "MEGADRIVE_32X_MUSIC") {
+            MegaDrive68kMachineInputs md = AssembleMegaDrive68kMachineInputs(resources);
+            Sega32xPwmMachineInputs pwm = AssembleSega32xPwmMachineInputs(resources);
+            return std::make_unique<Sega32xMusicMachine>(std::make_unique<MegaDrive68kMachine>(std::move(md.cartridge), std::move(md.driver)),
+                                                         std::make_unique<Sega32xPwmMachine>(std::move(pwm.cartridge), std::move(pwm.driver)));
+        }
+        if (variant.Value() == "MEGADRIVE_32X_Z80") {
+            MegaDriveMachineInputs md = AssembleMegaDriveMachineInputs(resources);
+            Sega32xPwmMachineInputs pwm = AssembleSega32xPwmMachineInputs(resources);
+            return std::make_unique<Sega32xMusicMachine>(std::make_unique<MegaDriveMachine>(std::move(md.cartridge), std::move(md.driver)),
+                                                         std::make_unique<Sega32xPwmMachine>(std::move(pwm.cartridge), std::move(pwm.driver)));
+        }
+        if (variant.Value() == "MEGADRIVE_32X_PWM") {
+            Sega32xPwmMachineInputs inputs = AssembleSega32xPwmMachineInputs(resources);
+            return std::make_unique<Sega32xPwmMachine>(std::move(inputs.cartridge), std::move(inputs.driver));
+        }
         if (variant.Value() == "MEGADRIVE_68K") {
             MegaDrive68kMachineInputs inputs = AssembleMegaDrive68kMachineInputs(resources);
             return std::make_unique<MegaDrive68kMachine>(std::move(inputs.cartridge), std::move(inputs.driver));

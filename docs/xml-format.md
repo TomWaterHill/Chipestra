@@ -454,6 +454,8 @@ listed); the layout is then recognised and `cart_crc32` decides whether it is th
 | `request` | no | The address in the Z80's RAM (`0`-`0x1FFF`) of the request byte. Default `0x1804`. |
 | `region` | no | The console the game is played on: `japan` (Mega Drive, NTSC; the default), `usa` (Genesis, NTSC) or `europe` (Mega Drive, PAL). It sets the master clock (53,693,175 Hz NTSC, 53,203,424 Hz PAL) and with it the clocks of the Z80 and the PSG (the master clock divided by 15: 3,579,545 or 3,546,894 Hz) and of the YM2612 (divided by 7: 7,670,453 or 7,600,489 Hz), and the length of a frame (262 or 313 scanlines of 228 Z80 cycles: 59,736 or 71,364 cycles, 60 or 50 frames a second), so the Z80's vertical-blank interrupt comes 60 or 50 times a second. The game list shows the system as `Mega Drive (Japan)`, `Genesis (North America)` or `Mega Drive (Europe)`. The region bits of the console's version register (`$A10001`: bit 7 set outside Japan, bit 6 set in a PAL console) are kept for a 68000 that may be run one day; the sound program does not read them. Any other value is an error. The times of `release_cycle` and `warmup_frames` are those of the region's console. The region is always given in the XML: the region field of the cartridge header is not used (many cartridges leave it blank or allow every region). A game that can be played on more than one console lists them separated by `|` (`region="usa|europe"`): see "Games for more than one region" below. |
 | `region` (list) | - | `a|b`: see "Games for more than one region" below. |
+| `frame_counter` | no | A Z80 RAM address (up to `0x1FFF`) of a byte that the game's 68000 adds one to once a frame (in its vertical-blank handler) and that the driver counts frames with. The Machine adds one to it at the Z80's vertical-blank interrupt. After Burner Complete needs it (`0x16FF`). |
+| `frame_counter_extra` | no | With `frame_counter`: a fraction of a frame, above 0 and below 1. The game's 68000 handler also runs a second time that long after the vertical blank (the byte is added to, and the driver steps, twice a frame). After Burner Complete uses `0.575`. |
 | `release_cycle` | yes | When the Z80 starts running after the game's 68000 has loaded the program, in Z80 cycles of the region's clock (3,579,545 per second in the NTSC consoles) since power-on. Only its position in the video frame (59,736 cycles NTSC, 71,364 PAL) matters: it decides where in a frame the Z80's vertical-blank interrupts fall. |
 | `cart_crc32` | no | CRC-32 (hexadecimal) of the cartridge in plain 68000 order, whichever file layout was found. A file with another CRC-32 is refused, and the message gives both numbers. |
 | `warmup_frames` | yes | How long the sound program runs before the game first writes a request, in frames: the request is written at the start of the frame that is this many frames after the frame the Z80 was released in (0-100000). |
@@ -505,11 +507,17 @@ an effect is written into the game's RAM by Chipestra, as the game's main loop w
 | `hblank_lines` | `1`-`256`: the horizontal-blank interrupt (level 4) is raised every this many scanlines, which is the value of the video chip's register 10 plus one, and runs the game's own handler (the level 4 vector of the cartridge). The first one comes after that many lines of the frame, and the last one before line 224 (with 53, on the lines 52, 105, 158 and 211 of every frame). Without it the interrupt is never raised. |
 | `m68k_a6` | The address (`0xE00000`-`0xFFFFFF`) that register A6 holds from the start. For a game whose handlers and routines take it for granted that A6 is the base of the variables of the game. |
 | `m68k_ram_words` | Words that Chipestra writes into the game's RAM before it calls the initialization routines, as `address=value` pairs separated by spaces (an even address in `0xE00000`-`0xFFFFFF`, a value up to `0xFFFF`): settings that the game's own start-up code leaves for the sound driver. |
+| `m68k_ram_words_after_init` | The same, but the words are written after the initialization routines have run: a setting that the game's own start-up code makes after it has called the sound driver's initialization (which clears it). |
 | `request` | The 68000 address (`0xFF0000`-`0xFFFFFF`) of the byte of the game's RAM in which the game puts the number of a song or an effect for the driver to take at its next frame. A track's `command` is written there. |
 | `requests` | For a driver that the game does not hand its requests in a byte of RAM but by calling a subroutine with the number in a register: the addresses of these subroutines (1 to 7, separated by spaces; each ends with `RTS`). It replaces `request`. A track names the subroutine that takes its number with `request="0x..."` (the same address as in this list); the number (`command`) is given to it in both `D0` and `D1` (or, with `request_arg="pointer"`, in a word on the stack that `A0` points at), and the subroutine is called as soon as possible, as the game's main program would. An entry may also be the address of a byte of the game's RAM (`0xE00000`-`0xFFFFFF`) instead of a subroutine: the number is then written into that byte, for a request that the game makes through a variable of its own. |
+| `m68k_ram_load` | For a game whose sound driver the game copies from the cartridge into its RAM before it runs: blocks to copy, as `cartridge_address:ram_address:size` separated by space (the RAM address in `0xFF0000`-`0xFFFFFF`, the block inside it). The copy is made when the Machine starts, before `m68k_ram_words` and the initialization routines. `m68k_init` and `m68k_frame` may then name addresses in the RAM (`0xE00000`-`0xFFFFFF`). |
+| `request_d0` | `0`-`127`: the subroutines of `requests` get this number in `D0` (a function number of the driver) and the request number in `D1`, instead of the request number in both. With it, an entry of `requests` in the RAM is a subroutine there, not a byte to write to. |
 | `request_arg` | `pointer`: the subroutines of `requests` get the number in a word that register `A0` points at (on the stack) and not in `D0` and `D1`. |
 | `z80_bus` | `instruction_end` (the default): a change of the Z80's bus request takes effect at the end of the 68000 instruction that makes it. The Z80 runs on to that time before it stops, and takes up again from that time when the bus is given back; a driver that asks for the bus for every write it makes to the sound chip has its Z80 play the sampled sounds at the pace of the original only this way. `instruction_start`: the change takes effect at the start of that instruction. |
 | `z80_reset` | `released`: the Z80 is already running (not held in reset) when the initialization begins, as the game's own start-up code leaves it; the initialization of such a game asks for the Z80's bus and waits for it, which a Z80 held in reset never grants. Without it the reset is held until the game releases it. |
+| `cart_window` | `32x`: the cartridge is seen through the Super 32X's window as well: 0x880000-0x8FFFFF is the start of the cartridge and 0x900000-0x9FFFFF its second megabyte (the bank the 32X game leaves selected), as the 68000 reads it with the 32X adapter on. For a Super 32X game whose sound driver is on the Mega Drive side and keeps absolute addresses of its data in that window. The 32X's own processors and its PWM sound are not run. |
+| `cart_window_bank` | `0` to `3` (with `cart_window`): which megabyte of the cartridge the second window (0x900000-0x9FFFFF) shows. Default `1`. A game that leaves another bank selected names it, so the absolute addresses the driver keeps there point at the data. |
+| `cart_adapter` | `idle` (with `cart_window`): the 32X adapter registers (0xA15100-0xA1513F) read as zero, as if the master SH-2 had already answered every command the game's 68000 gave it. For a game whose sound driver calls routines that hand a command to the master processor and wait until it is done. |
 | `warmup_frames` | How many frames the sound routine runs before the first request. The state after them is kept and restored at every switch. |
 | `region`, `cart_crc32` | As in section 4c (a list of regions in `region` makes one game for each). |
 
@@ -568,6 +576,74 @@ instruction at a time. A Z80 that the 68000 has stopped (bus requested, or held 
 68000's access to the Z80's bus registers, as in the original. A Z80 that reads the cartridge through its window is not made
 to wait for the 68000's bus (the original delays it by a few cycles).
 
+## 4e. Sampled sounds of a Super 32X game: `<driver>` (Mega Drive, variant `MEGADRIVE_32X_PWM`)
+
+A Super 32X cartridge carries programs for the two SH-2 processors of the 32X adapter. For some games the SH-2 plays
+sampled sounds (sound effects and voices) through the adapter's PWM sound unit. This variant runs the cartridge's two
+SH-2 programs (the 68000 and the video part of the adapter are not run) and plays what the PWM unit makes. The music
+of the Mega Drive side (YM2612 and PSG) is a different set of tracks: see `cart_window` in 4d.
+
+```xml
+<game id="vf" machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_PWM" ...>
+  <resources><rom name="rom" file="..." crc32="b5de9626"/></resources>
+  <driver sh2_queue="0x06008774" sh2_command_address="0x20004005" sh2_command="4" sh2_warmup_ms="300" sh2_halt_master="true" cart_crc32="b5de9626"/>
+  <tracks> <track id="PWM_12" title="[SFX] 12" command="0x0C" type="sfx" loops="false"/> ... </tracks>
+</game>
+```
+
+| Attribute | Meaning |
+|---|---|
+| `sh2_queue` | The SH-2 address of the game's queue of sound requests: a 16-bit count of the bytes that follow, then one 16-bit number for each sound (the game's own sample number). |
+| `sh2_command_address` | The SH-2 address of the byte through which the game's master processor tells the slave what to do next. |
+| `sh2_command` | The value that makes the slave start the sounds in the queue. |
+| `sh2_warmup_ms` | Optional, 50 to 5000 (default 300): the time the two processors run after the start before the first request, so that they have set the PWM unit up and are idle. The state is rebuilt this way at every switch. |
+| `sh2_comm_word` | Optional, an even offset from `0x00` to `0x2E`: instead of `sh2_queue`, `sh2_command_address` and `sh2_command`, the 68000 asks the master processor for a sound by writing the communication word at this offset (the word is `sh2_comm_base`, default 0, or-ed with the track's `command`). The master plays the sound through the PWM unit by itself. Virtua Racing Deluxe has two such start-up jingles (`sh2_comm_base="0x0100"`, commands 6 and 7). |
+| `sh2_sample_table` | Optional, a file offset: instead of the attributes above, the sounds are the entries of a table in the cartridge, 8 bytes each (the SH-2 address of the sound's descriptor, then its priority), and the track's `command` is the entry's number. A request does what the game's 68000 does: the descriptor address goes into the communication words 0x24 and 0x26, the priority into 0x28, command `sh2_sample_command` (default `0x3C`) into the first word and the command interrupt is raised; then command 0x08 with the argument 12 tells the master to start the sound. `sh2_sample_stop` (default `0x40`) is the command that stops it. Star Wars Arcade. |
+| `sh2_start_words` | Optional, up to four hexadecimal words separated by spaces (`0x5348 0x474F`): written into the communication words 0x20, 0x22, ... after the 68000's part of the start-up, for a game whose master program waits for a word of the game's own before it runs on. |
+| `sh2_comm_base` | Optional, with `sh2_comm_word`: the value that is or-ed with the track's `command`. |
+| `sh2_halt_master` | Optional, `true` or `false` (default `false`): `true` stops the master processor after that start-up, for a game whose master program only idles once the sounds are requested through the queue. It makes the sounds much cheaper to produce. |
+| `sh2_script` | Optional: the start-up sound of the game (the SEGA logo of Space Harrier) as the messages that the game's 68000 sends to the processors while it plays. Steps are separated by spaces; a step is `<frame>[/<interrupt>]:<offset>=<value>[,<offset>=<value>...]`: `<frame>` counts video frames (59.92 Hz) from the request, the offsets are communication words (`0x20` to `0x2E`, 16-bit values), and `<interrupt>` is the command interrupt that follows the words (1 the master, 2 the slave, 3 both; default 2). A track of the PWM unit (`unit="pwm"`, any `command`) plays the script. Space Harrier: the slave is told the sounds `0x89`, `0x8A`, `0x8B` (in the word at `0x28`, both bytes), five times `0x80` and, at the end, `0xA2`. After Burner Complete: the slave is told `0x0204` (in the word at `0x22`, with the frame counter in the word at `0x2A`), then `0x0205` five times and `0x01FF`, followed by frame ends `0x0200`; while a PWM-unit track plays, the Machine does not tell the slave the frame ends of the Z80 driver (the game's 68000 is not in its frame loop during the logo). |
+| `sh2_mailbox` | Optional, with `sh2_queue`, a 68000 RAM address (the combined variant `MEGADRIVE_32X_MUSIC`): two words in which the game's sound driver leaves the numbers of sampled sounds that belong to its music (the drums; the low byte of each word, 0 is none). The game's own code takes the two numbers once a frame, hands them to the master processor and clears the words; the Machine does the same, so the drums sound with the song. Virtua Fighter: `0xFF5D1A` (the driver's work area plus 4). |
+| `cart_crc32` | The CRC-32 of the cartridge image. |
+
+A track's `command` is the number of the sample (what the master puts into the queue). A track of `type="control"` is
+"Music Stop": it only restarts the processors, so the output is silent afterwards. The output of the PWM unit is not passed
+through the Mega Drive's analog low-pass stage (the Mega Drive analog filter setting does not apply to it).
+
+## 4f. Both sound makers of a Super 32X game: `<driver>` (Mega Drive, variant `MEGADRIVE_32X_MUSIC`)
+
+A Super 32X game may have the music and effects of the Mega Drive side (4d) and the sampled sounds of the SH-2 and the PWM unit (4e). One
+`<driver>` element carries the attributes of both, and the Machine runs the two on the same cartridge. A track with `unit="pwm"` is played by the
+PWM unit (its `command` is the game's own sample number, as in 4e); every other track is a request of the Mega Drive's sound driver. A request for
+one unit silences the other. The Mega Drive's analog low-pass setting applies to the YM2612 and the PSG channels only; the PWM channels never pass it.
+With the Mega Drive part, `requests` must name one subroutine (a track's request number then does not collide with the unit bit).
+
+## 4g. A Super 32X game whose Z80 sound driver also drives the SH-2's synthesizer (Mega Drive, variant `MEGADRIVE_32X_Z80`)
+
+In some Super 32X games (Space Harrier) the Z80 sound driver is the sequencer of the whole music. Besides the YM2612 and the PSG it writes
+events for a synthesizer that runs on the slave SH-2 and plays through the PWM unit: a ring buffer in the Z80's RAM (the byte at
+`sh2_event_ring` is the write index, the events follow from the next address). The game's 68000 takes the events out once a frame and hands each to
+the slave through the communication words; the Machine does that. The `<driver>` element has the attributes of 4c (the Z80 program, `request`,
+`release_cycle`, `warmup_frames`, `region`, `cart_crc32`) and of 4e (`sh2_warmup_ms`, `sh2_halt_master`), and:
+
+| Attribute | Meaning |
+|---|---|
+| `cart_window` | `32x` (as in 4d): the Z80 reads the cartridge through the 32X windows; `cart_window_bank` is the megabyte of the second window (default `0`). |
+| `sh2_event_ring` | The Z80 RAM address (up to `0x1FFE`) of the ring buffer's write index. An event is one to three bytes: the command, then its parameters (`0x7F` one parameter, `0x70` to `0x75` two). |
+
+Every track is a request of the Z80 driver (`command` is the request byte). A request starts the slave afresh and then makes the request; "Music Stop"
+(`type="control"`) restarts both.
+
+In other games (After Burner Complete) the slave gets no events from the Z80. The game's 68000 tells it every sound request that it gives the Z80 driver
+(in the communication word at `sh2_request_word`: `0x0100` plus the request number, with the slave's command interrupt), and in each vertical-blank
+handler it looks at a byte that the Z80 driver sets when it takes a request: when the byte was set it clears it and tells the slave `0x0203`, then it
+tells the slave `0x0200`. The slave stores the requests and plays the PWM sounds that belong to them when it has been told `0x0203`. The Machine does the same:
+
+| Attribute | Meaning |
+|---|---|
+| `sh2_request_word` | Instead of `sh2_event_ring`: the offset (`0x20` to `0x2E`, from the adapter registers at `0xA15100`) of the communication word that the request goes into. After Burner Complete: `0x22`. |
+| `sh2_request_flag` | The Z80 RAM address (up to `0x1FFF`) of the byte that the Z80 driver sets when it has taken a request. After Burner Complete: `0x16FD`. |
+
 ## 5. Tracks: `<tracks>` and `<track>`
 
 ```xml
@@ -584,6 +660,7 @@ to wait for the 68000's bus (the original delays it by a few cycles).
 | `command` | yes | The value sent to the game's sound program. |
 | `type` | no | `control`, `wsg` or `sfx`. Omit it for an ordinary track. |
 | `loops` | no | `false` for a track that ends by itself. |
+| `unit` | no | `pwm`: the track is played by the 32X's PWM sound unit (4f). |
 | `set` | no | Famicom Disk System and Mega Drive: the `id` of the `<driver><set>` used for this track (sections 4b and 4c). |
 | `request` | no | NES and Famicom Disk System: the address, from `<driver requests>`, the `command` is written to (sections 4a and 4b). |
 

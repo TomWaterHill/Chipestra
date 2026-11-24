@@ -57,7 +57,7 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
             while (i < list.size() && list[i] != ' ') ++i;
             if (i == start) break;
             std::uint64_t address = 0;
-            if (!ParseNumber(list.substr(start, i - start), address) || address > 0x3FFFFF || (address & 1))
+            if (!ParseNumber(list.substr(start, i - start), address) || (address > 0x3FFFFF && (address < 0xE00000 || address > 0xFFFFFF)) || (address & 1))
                 return Fail(error, "<driver m68k_init>: expected addresses of subroutines in the cartridge (even, below 0x400000) separated by spaces");
             out.init.push_back(static_cast<std::uint32_t>(address));
         }
@@ -77,7 +77,11 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
             return Fail(error, "<driver m68k_a6>: expected an address in the game's RAM (0xE00000-0xFFFFFF)");
         out.a6 = static_cast<std::uint32_t>(value);
     }
-    if (const pugi::xml_attribute rw = node.attribute("m68k_ram_words")) {
+    const struct { const char* name; std::vector<std::pair<std::uint32_t, std::uint16_t>>* list; } wordLists[] = {
+        {"m68k_ram_words", &out.ramWords}, {"m68k_ram_words_after_init", &out.ramWordsAfterInit}};
+    for (const auto& wl : wordLists) {
+        const pugi::xml_attribute rw = node.attribute(wl.name);
+        if (!rw) continue;
         std::string_view list = rw.value();
         std::size_t i = 0;
         while (i < list.size()) {
@@ -90,9 +94,30 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
             std::uint64_t address = 0, word = 0;
             if (eq == std::string_view::npos || !ParseNumber(pair.substr(0, eq), address) || !ParseNumber(pair.substr(eq + 1), word) ||
                 address < 0xE00000 || address > 0xFFFFFF || (address & 1) || word > 0xFFFF)
-                return Fail(error, "<driver m68k_ram_words>: expected \"address=value\" pairs (an even address in the game's RAM, 0xE00000-0xFFFFFF, and a 16-bit value) separated by spaces");
-            out.ramWords.emplace_back(static_cast<std::uint32_t>(address), static_cast<std::uint16_t>(word));
+                return Fail(error, std::string("<driver ") + wl.name + ">: expected \"address=value\" pairs (an even address in the game's RAM, 0xE00000-0xFFFFFF, and a 16-bit value) separated by spaces");
+            wl.list->emplace_back(static_cast<std::uint32_t>(address), static_cast<std::uint16_t>(word));
         }
+    }
+    if (const pugi::xml_attribute rl = node.attribute("m68k_ram_load")) {
+        std::string_view list = rl.value();
+        std::size_t i = 0;
+        while (i < list.size()) {
+            while (i < list.size() && list[i] == ' ') ++i;
+            const std::size_t start = i;
+            while (i < list.size() && list[i] != ' ') ++i;
+            if (i == start) break;
+            const std::string_view triple = list.substr(start, i - start);
+            const std::size_t c1 = triple.find(':'), c2 = c1 == std::string_view::npos ? c1 : triple.find(':', c1 + 1);
+            std::uint64_t source = 0, destination = 0, size = 0;
+            if (c2 == std::string_view::npos || !ParseNumber(triple.substr(0, c1), source) || !ParseNumber(triple.substr(c1 + 1, c2 - c1 - 1), destination) || !ParseNumber(triple.substr(c2 + 1), size) ||
+                source > 0x3FFFFF || destination < 0xFF0000 || destination > 0xFFFFFF || size == 0 || destination + size > 0x1000000)
+                return Fail(error, "<driver m68k_ram_load>: expected \"cartridge_address:ram_address:size\" (the RAM address in 0xFF0000-0xFFFFFF, the block inside it) separated by spaces");
+            out.ramLoads.push_back({static_cast<std::uint32_t>(source), static_cast<std::uint32_t>(destination), static_cast<std::uint32_t>(size)});
+        }
+    }
+    if (const pugi::xml_attribute d0 = node.attribute("request_d0")) {
+        if (!ParseNumber(d0.value(), value) || value > 127) return Fail(error, "<driver request_d0>: expected a number 0-127");
+        out.requestD0 = static_cast<std::uint32_t>(value);
     }
     if (const pugi::xml_attribute zb = node.attribute("z80_bus")) {
         const std::string_view mode = zb.value();
@@ -111,7 +136,7 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
             const std::size_t start = i;
             while (i < list.size() && list[i] != ' ') ++i;
             if (i == start) break;
-            if (!ParseNumber(list.substr(start, i - start), value) || value > 0x3FFFFF || (value & 1))
+            if (!ParseNumber(list.substr(start, i - start), value) || (value > 0x3FFFFF && (value < 0xE00000 || value > 0xFFFFFF)) || (value & 1))
                 return Fail(error, "<driver m68k_frame>: expected the address of the game's sound routine (even, below 0x400000)");
             out.frames.push_back(static_cast<std::uint32_t>(value));
         }
@@ -128,7 +153,7 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
             if (i == start) break;
             std::uint64_t address = 0;
             const bool inRam = ParseNumber(list.substr(start, i - start), address) && address >= 0xE00000 && address <= 0xFFFFFF;
-            if (!inRam && (!ParseNumber(list.substr(start, i - start), address) || address > 0x3FFFFF || (address & 1)))
+            if (!(inRam && (!out.requestD0.has_value() || !(address & 1))) && (!ParseNumber(list.substr(start, i - start), address) || (address > 0x3FFFFF && !(out.requestD0.has_value() && inRam)) || (address & 1)))
                 return Fail(error, "<driver requests>: expected addresses of subroutines in the cartridge (even, below 0x400000) or of bytes in the game's RAM (0xE00000-0xFFFFFF) separated by spaces");
             out.requestRoutines.push_back(static_cast<std::uint32_t>(address));
         }
@@ -152,6 +177,21 @@ bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDrive
     if (const pugi::xml_attribute z80 = node.attribute("z80_reset")) {
         if (std::string_view(z80.value()) != "released") return Fail(error, "<driver z80_reset>: expected \"released\"");
         out.z80ResetReleased = true;
+    }
+    if (const pugi::xml_attribute window = node.attribute("cart_window")) {
+        if (std::string_view(window.value()) != "32x") return Fail(error, "<driver cart_window>: expected \"32x\"");
+        out.cartridgeWindow32x = true;
+    }
+    if (const pugi::xml_attribute adapter = node.attribute("cart_adapter")) {
+        if (std::string_view(adapter.value()) != "idle") return Fail(error, "<driver cart_adapter>: expected \"idle\"");
+        if (!out.cartridgeWindow32x) return Fail(error, "<driver cart_adapter>: needs cart_window=\"32x\"");
+        out.adapterIdle = true;
+    }
+    if (const pugi::xml_attribute bank = node.attribute("cart_window_bank")) {
+        const std::string_view text = bank.value();
+        if (!out.cartridgeWindow32x) return Fail(error, "<driver cart_window_bank>: needs cart_window=\"32x\"");
+        if (text != "0" && text != "1" && text != "2" && text != "3") return Fail(error, "<driver cart_window_bank>: expected 0 to 3");
+        out.cartridgeWindowBank = static_cast<std::uint32_t>(text[0] - '0');
     }
     if (const pugi::xml_attribute crc = node.attribute("cart_crc32")) {
         std::string_view text = crc.value();
@@ -186,11 +226,11 @@ MegaDrive68kMachineInputs AssembleMegaDrive68kMachineInputs(const MachineResourc
         }
     }
     for (std::uint32_t address : inputs.driver.init)
-        if (address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: a <driver m68k_init> routine is not inside the cartridge");
+        if (address < 0xE00000 && address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: a <driver m68k_init> routine is not inside the cartridge");
     for (std::uint32_t address : inputs.driver.requestRoutines)
         if (address < 0xE00000 && address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: a <driver requests> routine is not inside the cartridge");
     for (std::uint32_t address : inputs.driver.frames)
-        if (address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: the <driver m68k_frame> routine is not inside the cartridge");
+        if (address < 0xE00000 && address + 2 > inputs.cartridge.size()) throw std::runtime_error("Mega Drive: the <driver m68k_frame> routine is not inside the cartridge");
     return inputs;
 }
 
@@ -283,6 +323,7 @@ void MegaDrive68kMachine::BuildStub() {
     if (driver_.a6.has_value()) { word(0x2C7C); word(static_cast<std::uint16_t>(*driver_.a6 >> 16)); word(static_cast<std::uint16_t>(*driver_.a6)); }   // MOVEA.L #a6,A6
     for (const auto& w : driver_.ramWords) { word(0x33FC); word(w.second); word(static_cast<std::uint16_t>(w.first >> 16)); word(static_cast<std::uint16_t>(w.first)); }   // MOVE.W #value,address
     for (std::uint32_t routine : driver_.init) jsr(routine);
+    for (const auto& w : driver_.ramWordsAfterInit) { word(0x33FC); word(w.second); word(static_cast<std::uint16_t>(w.first >> 16)); word(static_cast<std::uint16_t>(w.first)); }
     word(0x46FC); word(0x2000);       // MOVE #$2000,SR
     word(0x4E72); word(0x2000);       // loop: STOP #$2000
     word(0x60FA);                     // BRA loop
@@ -304,9 +345,15 @@ void MegaDrive68kMachine::BuildStub() {
             word(0x548F);                                                                                        // ADDQ.L #2,A7
         } else {
             word(0x2079); word(static_cast<std::uint16_t>(kStubRequestRoutine >> 16)); word(static_cast<std::uint16_t>(kStubRequestRoutine));   // MOVEA.L routine,A0
-            word(0x7000);                                                                                        // MOVEQ #0,D0
-            word(0x3039); word(static_cast<std::uint16_t>(kStubRequestValue >> 16)); word(static_cast<std::uint16_t>(kStubRequestValue));         // MOVE.W value,D0
-            word(0x2200);                                                                                        // MOVE.L D0,D1
+            if (driver_.requestD0.has_value()) {
+                word(0x7200);                                                                                    // MOVEQ #0,D1
+                word(0x3239); word(static_cast<std::uint16_t>(kStubRequestValue >> 16)); word(static_cast<std::uint16_t>(kStubRequestValue));     // MOVE.W value,D1
+                word(static_cast<std::uint16_t>(0x7000 | *driver_.requestD0));                                  // MOVEQ #d0,D0
+            } else {
+                word(0x7000);                                                                                    // MOVEQ #0,D0
+                word(0x3039); word(static_cast<std::uint16_t>(kStubRequestValue >> 16)); word(static_cast<std::uint16_t>(kStubRequestValue));     // MOVE.W value,D0
+                word(0x2200);                                                                                    // MOVE.L D0,D1
+            }
             word(0x4E90);                                                                                        // JSR (A0)
         }
         word(0x4CDF); word(0x7FFF);       // MOVEM.L (A7)+,D0-D7/A0-A6
@@ -325,6 +372,8 @@ std::uint8_t MegaDrive68kMachine::RomByte(std::uint32_t address) const {
 
 void MegaDrive68kMachine::ResetMachineState() {
     ram_.fill(0);
+    for (const auto& load : driver_.ramLoads)
+        for (std::uint32_t i = 0; i < load.size; ++i) ram_[(load.destination + i) & 0xFFFF] = RomByte(load.source + i);
     z80_ram_.fill(0);
     Put32(&stub_[kStubRequestRoutine - kStubBase], 0);
     bank_ = 0;
@@ -409,7 +458,7 @@ void MegaDrive68kMachine::ColdStart() {
 void MegaDrive68kMachine::QueueCall(std::uint32_t routineNumber, std::uint8_t value) {
     if (driver_.requestRoutines.empty()) return;
     const std::size_t index = routineNumber == 0 ? 0 : std::min<std::size_t>(routineNumber - 1, driver_.requestRoutines.size() - 1);
-    if (driver_.requestRoutines[index] >= 0xE00000) {
+    if (driver_.requestRoutines[index] >= 0xE00000 && !driver_.requestD0.has_value()) {
         // an entry that names a byte of the game's RAM: the number is written there, as the game's main program does
         ram_[driver_.requestRoutines[index] & 0xFFFF] = value;
         return;
@@ -495,6 +544,8 @@ std::uint8_t MegaDrive68kMachine::Read68k(std::uint32_t address) {
     if (a >= kStubBase && a < kStubBase + stub_.size()) return stub_[a - kStubBase];
     if (a < vectors_.size()) return vectors_[a];
     if (a < 0x400000) return RomByte(a);
+    if (driver_.cartridgeWindow32x && a >= 0x880000 && a < 0x900000) return RomByte(a - 0x880000);   // the 32X's window onto the start of the cartridge
+    if (driver_.cartridgeWindow32x && a >= 0x900000 && a < 0xA00000) return RomByte(driver_.cartridgeWindowBank * 0x100000 + (a - 0x900000));   // its banked window, on the bank the game leaves selected
     if (a >= 0xE00000) return ram_[a & 0xFFFF];
     if (a >= 0xA00000 && a < 0xA10000) return ReadZ80Area(a & 0xFFFF);
     if (a >= 0xA10000 && a < 0xA10020) {
@@ -504,6 +555,7 @@ std::uint8_t MegaDrive68kMachine::Read68k(std::uint32_t address) {
             default: return 0;
         }
     }
+    if (driver_.adapterIdle && a >= 0xA15100 && a < 0xA15140) return 0;   // the 32X adapter: a master processor that has finished every command
     if (a == 0xA11100 || a == 0xA11101) return bus_requested_ && !z80_reset_ ? 0x00 : 0x01;
     if (a >= 0xC00000 && a < 0xC00020) {
         const std::uint64_t line = (std::min(t68_, TimeZ80()) % frame_ticks_) / kScanlineTicks;

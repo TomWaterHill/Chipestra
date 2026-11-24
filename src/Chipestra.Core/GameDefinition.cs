@@ -45,11 +45,23 @@ namespace Chipestra.Core
 
         /// <summary>
         /// The name of the console the game is shown under: the Machine's display name, except that a Mega Drive game
-        /// with a <see cref="Region"/> is shown as "Mega Drive (Japan)", "Genesis (North America)" or "Mega Drive (Europe)".
+        /// with a <see cref="Region"/> is shown as "Mega Drive (Japan)", "Genesis (North America)" or "Mega Drive (Europe)"; a Super 32X game as
+        /// "Super 32X (Japan)", "Genesis 32X (North America)" or "Mega Drive 32X (Europe)".
         /// </summary>
         public string SystemName(string machineDisplayName)
         {
             if (!machineDisplayName.StartsWith("Mega Drive", StringComparison.Ordinal)) return machineDisplayName;
+            // A Super 32X cartridge (its own variant, or a 68000 sound driver that reads the cartridge through the 32X window)
+            if (VariantId.StartsWith("MEGADRIVE_32X", StringComparison.Ordinal) ||
+                (DriverXml != null && DriverXml.Contains("cart_window=\"32x\"", StringComparison.Ordinal)))
+            {
+                return Region switch
+                {
+                    "usa" => "Genesis 32X (North America)",
+                    "europe" => "Mega Drive 32X (Europe)",
+                    _ => "Super 32X (Japan)",
+                };
+            }
             return Region switch
             {
                 "usa" => "Genesis (North America)",

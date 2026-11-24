@@ -1,0 +1,105 @@
+<chipestra>
+  <game id="swa" title="スターウォーズ アーケード" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC">
+    <resources>
+      <rom name="rom" file="Star Wars Arcade (32X) (J) [!].32x|StarWarsArcade(J).32x|StarWarsArcade(J).bin" crc_search="true" crc32="f4e9b846" search_crc32="f4e9b846" search_size="2621440"/>
+    </resources>
+    <!-- A Super 32X game with two sound systems. The Mega Drive side (unit omitted): the game's sound driver (0xE000-0xFE68 in the file) runs on the 68000
+         and sends the YM2612 commands to a small Z80 program (0xFE68, loaded by the game's routine 0xEF26); the sampled sounds are fed to the Z80 through a ring buffer.
+         The driver calls routines that the game keeps in its RAM (the first 0x404F bytes of RAM, copied from 0x82D6E: m68k_ram_load) and talks to the master SH-2
+         through the communication registers, waiting for the answer; cart_adapter="idle" answers every command at once. The game starts the driver with 0xEF26 (the
+         Z80 program), 0xEE78 (reset the 16 channel slots) and 0xEEB0 (enable the sound routine, which the vertical-blank handler calls once a frame: 0xE7AE).
+         A song or an effect is started by 0xEDBE with its number in D0: 1 to 10 are songs of 5 to 7 channels, 11 to 42 shorter sounds (0x0B only silences the PSG), the
+         table of the numbers (0x8B90C4) ends there.
+         The long sampled sounds (the music of the demo and the effects and voices of the game; unit="pwm") are played by the slave SH-2 through the PWM unit. The game's
+         68000 asks for one with two commands for the master SH-2: command 0x3C (the address of the sound's descriptor from the table at 0x7EE28 in the file, 8 bytes for each number
+         from 2 to 42, and its priority) and command 0x08 with the argument 12, which makes the master tell the slave to start it. The master program starts when the 68000
+         writes "SH" "GO" into the first two communication words (sh2_start_words). -->
+    <driver m68k_ram_load="0x082D6E:0xFF0000:0x404F" m68k_init="0x0EF26 0x0EE78 0x0EEB0" m68k_frame="0x0E7AE" requests="0x0EDBE" warmup_frames="4" region="japan" z80_reset="released" cart_adapter="idle" sh2_start_words="0x5348 0x474F" sh2_sample_table="0x7EE28" cart_window="32x" cart_window_bank="0" cart_crc32="f4e9b846"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x00" type="control"/>
+      <track id="PWM_02" title="PWM BGM 02" command="0x02" unit="pwm" loops="false"/>
+      <track id="BGM_01" title="Track 2" command="0x01"/>
+      <track id="BGM_02" title="Track 3" command="0x02" loops="false"/>
+      <track id="BGM_03" title="Track 4" command="0x03"/>
+      <track id="BGM_04" title="Track 5" command="0x04" loops="false"/>
+      <track id="BGM_05" title="Track 6" command="0x05"/>
+      <track id="BGM_06" title="Track 7" command="0x06"/>
+      <track id="BGM_07" title="Track 8" command="0x07" loops="false"/>
+      <track id="BGM_08" title="Track 9" command="0x08"/>
+      <track id="BGM_09" title="Track 10" command="0x09" loops="false"/>
+      <track id="BGM_0A" title="Track 11" command="0x0A" loops="false"/>
+      <track id="SFX_0C" title="[SFX] 0C" command="0x0C" type="sfx" loops="false"/>
+      <track id="SFX_0D" title="[SFX] 0D" command="0x0D" type="sfx" loops="false"/>
+      <track id="SFX_0E" title="[SFX] 0E" command="0x0E" type="sfx" loops="false"/>
+      <track id="SFX_0F" title="[SFX] 0F" command="0x0F" type="sfx" loops="false"/>
+      <track id="SFX_10" title="[SFX] 10" command="0x10" type="sfx" loops="false"/>
+      <track id="SFX_11" title="[SFX] 11" command="0x11" type="sfx" loops="false"/>
+      <track id="SFX_12" title="[SFX] 12" command="0x12" type="sfx" loops="false"/>
+      <track id="SFX_13" title="[SFX] 13" command="0x13" type="sfx" loops="false"/>
+      <track id="SFX_14" title="[SFX] 14" command="0x14" type="sfx" loops="false"/>
+      <track id="SFX_15" title="[SFX] 15" command="0x15" type="sfx" loops="false"/>
+      <track id="SFX_16" title="[SFX] 16" command="0x16" type="sfx" loops="false"/>
+      <track id="SFX_17" title="[SFX] 17" command="0x17" type="sfx" loops="false"/>
+      <track id="SFX_18" title="[SFX] 18" command="0x18" type="sfx" loops="false"/>
+      <track id="SFX_19" title="[SFX] 19" command="0x19" type="sfx" loops="false"/>
+      <track id="SFX_1A" title="[SFX] 1A" command="0x1A" type="sfx" loops="false"/>
+      <track id="SFX_1B" title="[SFX] 1B" command="0x1B" type="sfx" loops="false"/>
+      <track id="SFX_1C" title="[SFX] 1C" command="0x1C" type="sfx"/>
+      <track id="SFX_1D" title="[SFX] 1D" command="0x1D" type="sfx" loops="false"/>
+      <track id="SFX_1E" title="[SFX] 1E" command="0x1E" type="sfx" loops="false"/>
+      <track id="SFX_1F" title="[SFX] 1F" command="0x1F" type="sfx" loops="false"/>
+      <track id="SFX_20" title="[SFX] 20" command="0x20" type="sfx" loops="false"/>
+      <track id="SFX_21" title="[SFX] 21" command="0x21" type="sfx" loops="false"/>
+      <track id="SFX_22" title="[SFX] 22" command="0x22" type="sfx" loops="false"/>
+      <track id="SFX_23" title="[SFX] 23" command="0x23" type="sfx" loops="false"/>
+      <track id="SFX_24" title="[SFX] 24" command="0x24" type="sfx" loops="false"/>
+      <track id="SFX_25" title="[SFX] 25" command="0x25" type="sfx" loops="false"/>
+      <track id="SFX_26" title="[SFX] 26" command="0x26" type="sfx" loops="false"/>
+      <track id="SFX_27" title="[SFX] 27" command="0x27" type="sfx" loops="false"/>
+      <track id="SFX_28" title="[SFX] 28" command="0x28" type="sfx" loops="false"/>
+      <track id="SFX_29" title="[SFX] 29" command="0x29" type="sfx"/>
+      <track id="SFX_2A" title="[SFX] 2A" command="0x2A" type="sfx"/>
+      <track id="PWM_03" title="[PWM] 03" command="0x03" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_04" title="[PWM] 04" command="0x04" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_05" title="[PWM] 05" command="0x05" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_06" title="[PWM] 06" command="0x06" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_07" title="[PWM] 07" command="0x07" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_08" title="[PWM] 08" command="0x08" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_09" title="[PWM] 09" command="0x09" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_0A" title="[PWM] 0A" command="0x0A" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_0B" title="[PWM] 0B" command="0x0B" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_0C" title="[PWM] 0C" command="0x0C" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_0D" title="[PWM] 0D" command="0x0D" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_0E" title="[PWM] 0E" command="0x0E" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_0F" title="[PWM] 0F" command="0x0F" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_10" title="[PWM] 10" command="0x10" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_11" title="[PWM] 11" command="0x11" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_12" title="[PWM] 12" command="0x12" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_13" title="[PWM] 13" command="0x13" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_14" title="[PWM] 14" command="0x14" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_15" title="[PWM] 15" command="0x15" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_16" title="[PWM] 16" command="0x16" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_17" title="[PWM] 17" command="0x17" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_18" title="[PWM] 18" command="0x18" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_19" title="[PWM] 19" command="0x19" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_1A" title="[PWM] 1A" command="0x1A" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_1B" title="[PWM] 1B" command="0x1B" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_1C" title="[PWM] 1C" command="0x1C" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_1D" title="[PWM] 1D" command="0x1D" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_1E" title="[PWM] 1E" command="0x1E" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_1F" title="[PWM] 1F" command="0x1F" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_20" title="[PWM] 20" command="0x20" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_21" title="[PWM] 21" command="0x21" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_22" title="[PWM] 22" command="0x22" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_23" title="[PWM] 23" command="0x23" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_24" title="[PWM] 24" command="0x24" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_25" title="[PWM] 25" command="0x25" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_26" title="[PWM] 26" command="0x26" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_27" title="[PWM] 27" command="0x27" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_28" title="[PWM] 28" command="0x28" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_29" title="[PWM] 29" command="0x29" type="sfx" unit="pwm" loops="false"/>
+      <track id="PWM_2A" title="[PWM] 2A" command="0x2A" type="sfx" unit="pwm" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

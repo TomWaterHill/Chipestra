@@ -117,6 +117,10 @@ struct MegaDriveDriverConfig {
     std::vector<std::string> setIds;
     std::vector<Image> sets;
     std::uint16_t requestAddress = 0x1804;
+    double frameCounterExtra = 0.0;              // when above 0: the counter is added to a second time this fraction of a frame after the vertical blank (the 68000's handler runs twice a frame)
+    std::optional<std::uint16_t> frameCounter;   // a Z80 RAM byte the game's 68000 adds one to once a frame (its vertical-blank handler); the driver counts frames with it
+    bool cartridgeWindow32x = false;      // a Super 32X game: the Z80 reads the cartridge through the 32X windows (0x880000 and the banked 0x900000)
+    std::uint32_t cartridgeWindowBank = 0;
     std::uint64_t releaseCycle = 0;
     std::uint64_t requestCycle = 0;  // derived from warmup_frames: Z80 cycles since power-on
     std::optional<std::uint32_t> cartridgeCrc32;  // CRC-32 of the cartridge image in 68000 order (after the layout is fixed)
@@ -186,6 +190,11 @@ public:
     using ChipWriteObserver = std::function<void(std::uint64_t cycle, char kind, std::uint32_t port, std::uint8_t value)>;
     void SetChipWriteObserverForTest(ChipWriteObserver observer) { chip_write_observer_ = std::move(observer); }
     std::uint8_t Z80RamForTest(std::uint16_t address) const { return ram_[address & 0x1FFF]; }
+    void PokeZ80Ram(std::uint16_t address, std::uint8_t value) { ram_[address & 0x1FFF] = value; }
+    // The number of vertical-blank interrupts the Z80 has been given since the start.
+    std::uint64_t FramesGiven() const { return frames_given_; }
+    // The same, counting the extra frame-counter tick of a frame (frame_counter_extra) too: the game's handler runs once for each of them.
+    std::uint64_t HandlerRunsGiven() const { return frames_given_ + extra_ticks_given_; }
     std::uint32_t LoadedSetForTest() const { return loaded_set_; }
     std::uint64_t BankForTest() const { return bank_; }
     MameDerivedZ80Adapter::RegisterSnapshot CpuSnapshotForTest() const { return z80_->Snapshot(); }
@@ -229,7 +238,8 @@ private:
         MameDerivedZ80Adapter::SavedState z80;
         Ym2612DeviceAdapter::SavedState ym;
         Sn76489SoundDeviceAdapter::SavedState psg;
-        std::uint64_t cyclesDone = 0, ymSamplesMade = 0, psgSamplesMade = 0, nextIrqEdge = 0;
+        std::uint64_t cyclesDone = 0, ymSamplesMade = 0, psgSamplesMade = 0, nextIrqEdge = 0, extraTickDue = 0;
+        bool extraTickPending = false;
         bool irqHigh = false;
     };
     void LoadImage(const MegaDriveDriverConfig::Image& image, bool applyData);
@@ -263,6 +273,8 @@ private:
     std::array<DcBlocker, Ym2612DeviceAdapter::kChannelCount> dc_block_{};
 
     std::uint32_t loaded_set_ = 0;
+    std::uint64_t frames_given_ = 0;      // vertical-blank interrupts given to the Z80
+    std::uint64_t extra_ticks_given_ = 0; // the extra frame-counter ticks given (frame_counter_extra)
     std::uint64_t cycles_done_ = 0;       // Z80 cycles since the start (the release from reset)
     std::uint64_t origin_cycles_ = 0;     // cycle count at the start of the sound that Render() delivers
     std::uint64_t cumulative_ticks_ = 0;
@@ -270,6 +282,8 @@ private:
     std::uint64_t psg_samples_made_ = 0;
     std::uint64_t next_irq_edge_ = 0;
     bool irq_high_ = false;
+    bool extra_tick_pending_ = false;
+    std::uint64_t extra_tick_due_ = 0;
     bool keep_sound_ = false;
     bool command_sent_since_reset_ = false;
     bool restore_warm_state_ = true;

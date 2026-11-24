@@ -81,6 +81,11 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/cpu/m6502/im6502_core.h
     src/devices/cpu/m6502/mame_derived_rp2a03_adapter.h
     src/devices/cpu/m6502/mame_derived_rp2a03_adapter.cpp
+    src/devices/cpu/sh2/ish2_core.h
+    src/devices/cpu/sh2/mame_derived_sh2_adapter.h
+    src/devices/cpu/sh2/mame_derived_sh2_adapter.cpp
+    src/devices/cpu/sh2/sh7604_onchip.h
+    src/devices/cpu/sh2/sh7604_onchip.cpp
     src/devices/cpu/m6502/mame_derived_rp2a03_op_decls.inc
     src/devices/cpu/m6502/mame_derived_rp2a03_ops.inc
     src/devices/sound/nes_apu/nes_apu_device_adapter.h
@@ -118,6 +123,14 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/sega/megadrive/megadrive_machine.cpp
     src/devices/sega/megadrive/megadrive68k_machine.h
     src/devices/sega/megadrive/megadrive68k_machine.cpp
+    src/devices/sega/megadrive/sega32x_pwm.h
+    src/devices/sega/megadrive/sega32x_pwm.cpp
+    src/devices/sega/megadrive/sega32x_system.h
+    src/devices/sega/megadrive/sega32x_system.cpp
+    src/devices/sega/megadrive/sega32x_pwm_machine.h
+    src/devices/sega/megadrive/sega32x_pwm_machine.cpp
+    src/devices/sega/megadrive/sega32x_music_machine.h
+    src/devices/sega/megadrive/sega32x_music_machine.cpp
     src/devices/nintendo/fds/fds_machine.h
     src/devices/nintendo/fds/fds_machine.cpp
     src/devices/cpu/hd63701/ihd63701_core.h
@@ -399,6 +412,11 @@ add_executable(chipestra_native_tests
     tests/rp2a03_adapter_tests.cpp
     tests/nes_apu_adapter_tests.cpp
     tests/rp2c33_adapter_tests.cpp
+    tests/sh2_adapter_tests.cpp
+    tests/sh7604_onchip_tests.cpp
+    tests/sega32x_pwm_tests.cpp
+    tests/sega32x_system_tests.cpp
+    tests/sega32x_pwm_machine_tests.cpp
     tests/vrc6_adapter_tests.cpp
     tests/namco_163_adapter_tests.cpp
     tests/sunsoft_5b_adapter_tests.cpp

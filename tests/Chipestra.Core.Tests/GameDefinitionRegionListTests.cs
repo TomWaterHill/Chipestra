@@ -69,5 +69,26 @@ namespace Chipestra.Core.Tests
             Assert.Contains("timetrax_proto@europe", result.Catalog.Keys);
             Assert.DoesNotContain("timetrax_proto", result.Catalog.Keys);
         }
+
+        private static string Xml32x(string variant, string driverExtra, string region) => $@"<chipestra>
+  <game id=""g32"" title=""A 32X game"" machine=""SEGA_MEGADRIVE"" variant=""{variant}"" manufacturer=""Sega"">
+    <resources><rom name=""rom"" file=""a.32x""/></resources>
+    <driver m68k_init=""0x30004"" m68k_frame=""0x30000"" request=""0xFF850A"" warmup_frames=""4"" region=""{region}"" {driverExtra}/>
+    <tracks><track id=""1"" command=""0x01"" title=""Song""/></tracks>
+  </game>
+</chipestra>";
+
+        [Fact]
+        public void SystemName_ASuper32xGameIsShownAsSuper32x()
+        {
+            var viaWindow = GameDefinitionXml.ParseAll(Xml32x("MEGADRIVE_68K", "cart_window=\"32x\"", "japan"));
+            Assert.Equal("Super 32X (Japan)", viaWindow[0].SystemName("Mega Drive"));
+            var viaVariant = GameDefinitionXml.ParseAll(Xml32x("MEGADRIVE_32X_MUSIC", "", "japan"));
+            Assert.Equal("Super 32X (Japan)", viaVariant[0].SystemName("Mega Drive"));
+            Assert.Equal("Genesis 32X (North America)", GameDefinitionXml.ParseAll(Xml32x("MEGADRIVE_32X_MUSIC", "", "usa"))[0].SystemName("Mega Drive"));
+            Assert.Equal("Mega Drive 32X (Europe)", GameDefinitionXml.ParseAll(Xml32x("MEGADRIVE_32X_MUSIC", "", "europe"))[0].SystemName("Mega Drive"));
+            var plain = GameDefinitionXml.ParseAll(Xml32x("MEGADRIVE_68K", "", "japan"));
+            Assert.Equal("Mega Drive (Japan)", plain[0].SystemName("Mega Drive"));
+        }
     }
 }

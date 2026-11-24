@@ -42,6 +42,8 @@
 //   m68k_a6        the value of A6 when the initialization begins (a game whose handlers take a base register for granted)
 //   m68k_ram_words words that the Machine writes into the game's RAM before the initialization routines, as "address=value"
 //                  pairs separated by spaces (the settings a game's own start-up code leaves for its sound driver)
+//   m68k_ram_words_after_init   the same, written after the initialization routines (a setting that the game's start-up code makes
+//                  after it has called the sound driver's initialization, which clears it)
 //   request_arg    "pointer": the routines of `requests` get A0 pointing at a word on the stack that holds the number (and no
 //                  number in D0/D1)
 //   z80_bus        "instruction_end" (the default): a change of the Z80's bus request takes effect at the end of the 68000
@@ -65,8 +67,15 @@ struct MegaDrive68kDriverConfig {
     std::uint32_t hblankLines = 0;               // see `hblank_lines` (0: none)
     std::optional<std::uint32_t> a6;             // see `m68k_a6`
     bool requestByPointer = false;               // see `request_arg`
+    bool cartridgeWindow32x = false;             // see `cart_window`
+    bool adapterIdle = false;                    // see `cart_adapter`
+    std::uint32_t cartridgeWindowBank = 1;       // see `cart_window_bank`
     bool z80BusAtInstructionEnd = true;          // see `z80_bus`
     std::vector<std::pair<std::uint32_t, std::uint16_t>> ramWords;   // see `m68k_ram_words`
+    std::vector<std::pair<std::uint32_t, std::uint16_t>> ramWordsAfterInit;   // see `m68k_ram_words_after_init`
+    struct RamLoad { std::uint32_t source = 0, destination = 0, size = 0; };
+    std::vector<RamLoad> ramLoads;                // see `m68k_ram_load`
+    std::optional<std::uint32_t> requestD0;       // see `request_d0`
 };
 
 bool ParseMegaDrive68kDriverConfig(std::string_view driverXml, MegaDrive68kDriverConfig& out, std::string* error);

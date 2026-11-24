@@ -1,0 +1,56 @@
+<chipestra>
+  <game id="stellar" title="ステラアサルト" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC">
+    <resources>
+      <rom name="rom" file="StellarAssault32X(J).32x|StellarAssault32X(J).bin" crc_search="true" crc32="fce4c8c7" search_crc32="fce4c8c7" search_size="2097152"/>
+    </resources>
+    <!-- The cartridge is a Super 32X game, but its music and effects are made on the Mega Drive side only (the 32X processors and PWM are not used for sound, but the PWM unit is shown, silent, as in the other Super 32X games):
+         a sound driver in the cartridge (0xC0000 in the file, 0x9C0000 as the 68000 sees it through the 32X window) runs on the 68000 once a frame
+         and plays the songs and effects on the YM2612 and the PSG, and loads a small Z80 program for sampled sounds. The game sets a divider in the driver's variables (0xFFF000) so that the sound routine
+         runs in five of every six frames (50 times a second on a 60 Hz console); m68k_ram_words_after_init makes that setting. -->
+    <driver m68k_init="0x0C0004" m68k_frame="0x0C0000" m68k_ram_words_after_init="0xFFF000=0x0200" request="0xFFF00A" warmup_frames="20" region="japan" z80_reset="released" sh2_comm_word="0x00" cart_window="32x" cart_window_bank="0" cart_crc32="fce4c8c7"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0xFB" type="control"/>
+      <track id="BGM_83" title="Intro, Fighter Select" command="0x83"/>
+      <track id="BGM_8F" title="Title Screen" command="0x8F" loops="false"/>
+      <track id="BGM_81" title="Mission 1" command="0x81"/>
+      <track id="BGM_85" title="Mission Complete" command="0x85" loops="false"/>
+      <track id="BGM_8A" title="Mission 2" command="0x8A"/>
+      <track id="BGM_87" title="Mission 3" command="0x87"/>
+      <track id="BGM_89" title="Mission 4" command="0x89"/>
+      <track id="BGM_82" title="Mission 5" command="0x82"/>
+      <track id="BGM_86" title="Mission 6" command="0x86"/>
+      <track id="BGM_88" title="Last Boss" command="0x88"/>
+      <track id="BGM_8B" title="All Missions Clear" command="0x8B" loops="false"/>
+      <track id="BGM_8E" title="Staff Roll" command="0x8E" loops="false"/>
+      <track id="BGM_84" title="Game Over" command="0x84" loops="false"/>
+      <track id="BGM_8D" title="Ending (Unused)" command="0x8D" loops="false"/>
+      <track id="SFX_A0" title="[SFX] A0" command="0xA0" type="sfx" loops="false"/>
+      <track id="SFX_A1" title="[SFX] A1" command="0xA1" type="sfx" loops="false"/>
+      <track id="SFX_A2" title="[SFX] A2" command="0xA2" type="sfx" loops="false"/>
+      <track id="SFX_A3" title="[SFX] A3" command="0xA3" type="sfx" loops="false"/>
+      <track id="SFX_A4" title="[SFX] A4" command="0xA4" type="sfx" loops="false"/>
+      <track id="SFX_A5" title="[SFX] A5" command="0xA5" type="sfx" loops="false"/>
+      <track id="SFX_A6" title="[SFX] A6" command="0xA6" type="sfx" loops="false"/>
+      <track id="SFX_A7" title="[SFX] A7" command="0xA7" type="sfx" loops="false"/>
+      <track id="SFX_A8" title="[SFX] A8" command="0xA8" type="sfx" loops="false"/>
+      <track id="SFX_A9" title="[SFX] A9" command="0xA9" type="sfx" loops="false"/>
+      <track id="SFX_AA" title="[SFX] AA" command="0xAA" type="sfx" loops="false"/>
+      <track id="SFX_AC" title="[SFX] AC" command="0xAC" type="sfx" loops="false"/>
+      <track id="SFX_AE" title="[SFX] AE" command="0xAE" type="sfx" loops="false"/>
+      <track id="SFX_AF" title="[SFX] AF" command="0xAF" type="sfx" loops="false"/>
+      <track id="SFX_B0" title="[SFX] B0" command="0xB0" type="sfx" loops="false"/>
+      <track id="SFX_B1" title="[SFX] B1" command="0xB1" type="sfx" loops="false"/>
+      <track id="SFX_B2" title="[SFX] B2" command="0xB2" type="sfx" loops="false"/>
+      <track id="SFX_B3" title="[SFX] B3" command="0xB3" type="sfx" loops="false"/>
+      <track id="SFX_B4" title="[SFX] B4" command="0xB4" type="sfx" loops="false"/>
+      <track id="SFX_B5" title="[SFX] B5" command="0xB5" type="sfx" loops="false"/>
+      <track id="SFX_B6" title="[SFX] B6" command="0xB6" type="sfx" loops="false"/>
+      <track id="SFX_B7" title="[SFX] B7" command="0xB7" type="sfx" loops="false"/>
+      <track id="SFX_B8" title="[SFX] B8" command="0xB8" type="sfx" loops="false"/>
+      <track id="SFX_B9" title="[SFX] B9" command="0xB9" type="sfx" loops="false"/>
+      <track id="SFX_BA" title="[SFX] BA" command="0xBA" type="sfx" loops="false"/>
+      <track id="SFX_BB" title="[SFX] BB" command="0xBB" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

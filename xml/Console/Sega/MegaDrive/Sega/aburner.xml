@@ -1,0 +1,48 @@
+<chipestra>
+  <game id="aburner32x" title="アフターバーナー コンプリート" manufacturer="Sega"
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_Z80">
+    <resources>
+      <rom name="rom" file="After Burner Complete (32X) (JU) [!].32x|AfterBurnerComplete(JU).32x|AfterBurnerComplete(JU).bin" crc_search="true" crc32="204044c4" search_crc32="204044c4" search_size="2097152"/>
+    </resources>
+    <!-- A Super 32X game whose music and effects are made by a Z80 program in the cartridge (0x17B900 in the file; the game's 68000 copies it to the Z80's RAM).
+         The driver reads the cartridge through the 32X windows (cart_window; the game leaves the second megabyte selected). Its requests go into a queue of eight bytes
+         at the Z80's RAM address 0x1800 (0x80 is a free place); the driver does a step only when the byte at 0x16FF, which the game's 68000 adds one to in its
+         vertical-blank handler (twice a frame: at the vertical blank and 0.575 of a frame later, frame_counter_extra), is not zero (frame_counter). The game's 68000 also tells the slave SH-2 every request that it gives the Z80 (the request word,
+         sh2_request_word) and, in each vertical-blank handler, whether the Z80 took a request (0x0203, then 0x0200; the flag byte at sh2_request_flag), and the slave plays
+         PWM sounds for the requests through the PWM unit; the Machine does the same. The master SH-2 draws the 3D scene and is stopped here (sh2_halt_master). -->
+    <driver music="0x17B900:5888" request="0x1800" frame_counter="0x16FF" frame_counter_extra="0.575" release_cycle="3365294" warmup_frames="104" region="japan" cart_window="32x" cart_window_bank="1" sh2_halt_master="true" sh2_script="0:0x20=0x0101,0x22=0x0204,0x28=0x000A,0x2A=0x00CC,0x2E=0x0001 103:0x22=0x0205,0x2A=0x0120 125:0x22=0x0205,0x2A=0x0110 138:0x22=0x0205,0x2A=0x0109 146:0x22=0x0205,0x2A=0x0106 151:0x22=0x0205,0x2A=0x0102 207:0x22=0x01FF,0x2A=0x0100 207:0x22=0x0200 208:0x22=0x0200 209:0x22=0x0200 210:0x22=0x0200" sh2_request_word="0x22" sh2_request_flag="0x16FD" cart_crc32="204044c4"/>
+    <tracks>
+      <track id="0" title="Music Stop" command="0x80" type="control"/>
+      <track id="PWM_LOGO" title="SEGA Logo" command="0x00" unit="pwm" loops="false"/>
+      <track id="BGM_92" title="Maximum Power" command="0x92"/>
+      <track id="BGM_91" title="Final Take Off" command="0x91"/>
+      <track id="BGM_94" title="Red Out" command="0x94"/>
+      <track id="BGM_93" title="Super Stripe" command="0x93"/>
+      <track id="BGM_95" title="After Burner" command="0x95"/>
+      <track id="BGM_96" title="City 202" command="0x96"/>
+      <track id="BGM_99" title="BGM 99" command="0x99" loops="false"/>
+      <track id="SFX_7F" title="[SFX] 7F" command="0x7F" type="sfx" loops="false"/>
+      <track id="SFX_9A" title="[SFX] 9A" command="0x9A" type="sfx" loops="false"/>
+      <track id="SFX_9B" title="[SFX] 9B" command="0x9B" type="sfx" loops="false"/>
+      <track id="SFX_9C" title="[SFX] 9C" command="0x9C" type="sfx" loops="false"/>
+      <track id="SFX_9D" title="[SFX] 9D" command="0x9D" type="sfx" loops="false"/>
+      <track id="SFX_9E" title="[SFX] 9E" command="0x9E" type="sfx" loops="false"/>
+      <track id="SFX_9F" title="[SFX] 9F" command="0x9F" type="sfx" loops="false"/>
+      <track id="SFX_E0" title="[SFX] E0" command="0xE0" type="sfx" loops="false"/>
+      <track id="SFX_E1" title="[SFX] E1" command="0xE1" type="sfx" loops="false"/>
+      <track id="SFX_E2" title="[SFX] E2" command="0xE2" type="sfx" loops="false"/>
+      <track id="SFX_E3" title="[SFX] E3" command="0xE3" type="sfx" loops="false"/>
+      <track id="SFX_E4" title="[SFX] E4" command="0xE4" type="sfx" loops="false"/>
+      <track id="SFX_E5" title="[SFX] E5" command="0xE5" type="sfx" loops="false"/>
+      <track id="SFX_E6" title="[SFX] E6" command="0xE6" type="sfx" loops="false"/>
+      <track id="SFX_E7" title="[SFX] E7" command="0xE7" type="sfx" loops="false"/>
+      <track id="SFX_E8" title="[SFX] E8" command="0xE8" type="sfx" loops="false"/>
+      <track id="SFX_E9" title="[SFX] E9" command="0xE9" type="sfx" loops="false"/>
+      <track id="SFX_EA" title="[SFX] EA" command="0xEA" type="sfx" loops="false"/>
+      <track id="SFX_EB" title="[SFX] EB" command="0xEB" type="sfx" loops="false"/>
+      <track id="SFX_EC" title="[SFX] EC" command="0xEC" type="sfx" loops="false"/>
+      <track id="SFX_ED" title="[SFX] ED" command="0xED" type="sfx" loops="false"/>
+      <track id="SFX_F3" title="[SFX] F3" command="0xF3" type="sfx" loops="false"/>
+    </tracks>
+  </game>
+</chipestra>

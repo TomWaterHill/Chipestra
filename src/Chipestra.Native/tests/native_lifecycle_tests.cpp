@@ -59,6 +59,11 @@
 #include "h6280_adapter_tests.h"
 #include "m6809_adapter_tests.h"
 #include "rp2a03_adapter_tests.h"
+#include "sh2_adapter_tests.h"
+#include "sh7604_onchip_tests.h"
+#include "sega32x_pwm_tests.h"
+#include "sega32x_system_tests.h"
+#include "sega32x_pwm_machine_tests.h"
 #include "nes_apu_adapter_tests.h"
 #include "rp2c33_adapter_tests.h"
 #include "vrc6_adapter_tests.h"
@@ -1407,6 +1412,10 @@ void RunMegaDriveTests() {
     MegaDrive68kPhantasyStar4ReplayMatchesTheOriginalsChipWrites();
     MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests();
     MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites();
+    MegaDrive68kSuper32xGamesPlayFromTheMegaDriveSide();
+    Super32xGamesShowThePwmChannelsToo();
+    MegaDrive68kStellarSoundRoutineRunsInFiveOfEverySixFrames();
+    MegaDrive68kVirtuaRacingDeluxeKeepsTheTempoOfTheOriginal();
 }
 
 }  // namespace
@@ -1419,12 +1428,40 @@ int main() {
     // CHIPESTRA_TEST_GROUP=megadrive runs only the Mega Drive tests (a shorter run while working on them).
     if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "starcruiser") {
         MegaDrive68kStarCruiserReplayMatchesTheOriginalsChipWrites();
+        MegaDrive68kSuper32xGamesPlayFromTheMegaDriveSide();
+    Super32xGamesShowThePwmChannelsToo();
+        MegaDrive68kStellarSoundRoutineRunsInFiveOfEverySixFrames();
+        MegaDrive68kVirtuaRacingDeluxeKeepsTheTempoOfTheOriginal();
         std::printf(g_failures == 0 ? "native lifecycle tests (Star Cruiser only): all checks passed\n" : "native lifecycle tests (Star Cruiser only): %d check(s) FAILED\n", g_failures);
         return g_failures == 0 ? 0 : 1;
     }
     if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "megadrive") {
         RunMegaDriveTests();
         std::printf(g_failures == 0 ? "native lifecycle tests (Mega Drive only): all checks passed\n" : "native lifecycle tests (Mega Drive only): %d check(s) FAILED\n", g_failures);
+        return g_failures == 0 ? 0 : 1;
+    }
+    if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "32x") {
+        Sh2CycleCountsPerInstruction();
+        Sh7604DivideUnit();
+        Sega32xPwmOutputFilterIsTheBoardsInputNetwork();
+        Sega32xPwmMixerFiltersAreTheBoardsCircuit();
+        Sh7604DmaController();
+        Sega32xPwmDriverConfigIsParsedAndChecked();
+        Sega32xPwmMachinePlaysTheGamesSamples();
+        Sega32xPwmMachineRunsFasterThanRealTime();
+        Sega32xMusicMachinePlaysBothUnits();
+        Sega32xMusicMachinePlaysTheStartJinglesOfTheMaster();
+        Sega32xZ80MachineSendsTheEventsOfTheOriginal();
+    Sega32xMusicMachineHandsTheDriversSamplesToThePwmUnit();
+    Sega32xMusicMachineTellsTheSlaveTheZ80DriversRequests();
+    Sega32xZ80DriverTempoMatchesTheOriginal();
+    Sega32xStarWarsArcadeMatchesTheOriginal();
+    Sega32xStarWarsArcadePwmMatchesTheOriginal();
+    Sega32xSpaceHarrierLogoMatchesTheOriginal();
+    Sega32xAfterBurnerLogoMatchesTheOriginal();
+        Sega32xZ80GamePlaysItsSongs();
+        Sega32xMusicMachineMatchesTheGamesSongWrites();
+        std::printf(g_failures == 0 ? "native lifecycle tests (32X only): all checks passed\n" : "native lifecycle tests (32X only): %d check(s) FAILED\n", g_failures);
         return g_failures == 0 ? 0 : 1;
     }
     TestMachineDeterminism();
@@ -1610,6 +1647,45 @@ int main() {
     Rp2a03NmiIgnoredBeforeFirstCycle();
     Rp2a03NmiDuringBrkTakesNmiVector();
     Rp2a03SetOverflowPin();
+    Sh2ResetReadsTheVectors();
+    Sh2ArithmeticFlagsAgainstAReferenceModel();
+    Sh2ShiftsRotatesAndSwaps();
+    Sh2MultiplyAndMultiplyAccumulate();
+    Sh2Div1UnsignedDivision();
+    Sh2DelayedBranchesAndSubroutines();
+    Sh2MemoryAccessForms();
+    Sh2ExceptionsInterruptsAndReturn();
+    Sh2CycleCountsPerInstruction();
+    Sh7604RegistersAreReadBackAtAnyWidth();
+    Sh7604DivideUnit();
+    Sh7604FreeRunningTimerAndItsInterrupts();
+    Sh7604WatchdogAndBusController();
+    Sh7604DmaController();
+    Sega32xPwmFifoStatusAndRegisters();
+    Sega32xPwmSamplePeriodLevelAndRouting();
+    Sega32xPwmInterruptIntervalAndRunningConditions();
+    Sega32xPwmRasterizesTheChangesToAnOutputRate();
+    Sega32xSystemBootsFromTheCartridgeHeader();
+    Sega32xSystemCommunicationRegisters();
+    Sega32xSystemPwmInterruptServiceFeedsTheFifo();
+    Sega32xSystemVerticalInterruptMaskAndClear();
+    Sega32xPwmOutputFilterIsTheBoardsInputNetwork();
+    Sega32xPwmMixerFiltersAreTheBoardsCircuit();
+    Sega32xPwmDriverConfigIsParsedAndChecked();
+    Sega32xPwmMachinePlaysTheGamesSamples();
+    Sega32xPwmMachineRunsFasterThanRealTime();
+    Sega32xMusicMachinePlaysBothUnits();
+    Sega32xMusicMachinePlaysTheStartJinglesOfTheMaster();
+    Sega32xZ80MachineSendsTheEventsOfTheOriginal();
+    Sega32xMusicMachineHandsTheDriversSamplesToThePwmUnit();
+    Sega32xMusicMachineTellsTheSlaveTheZ80DriversRequests();
+    Sega32xZ80DriverTempoMatchesTheOriginal();
+    Sega32xStarWarsArcadeMatchesTheOriginal();
+    Sega32xStarWarsArcadePwmMatchesTheOriginal();
+    Sega32xSpaceHarrierLogoMatchesTheOriginal();
+    Sega32xAfterBurnerLogoMatchesTheOriginal();
+    Sega32xZ80GamePlaysItsSongs();
+    Sega32xMusicMachineMatchesTheGamesSongWrites();
     Rp2a03UndocumentedReadModifyWriteOpcodes();
     Rp2a03UndocumentedLoadStoreAndImmediateOpcodes();
     Rp2a03UndocumentedHighByteStoreOpcodes();

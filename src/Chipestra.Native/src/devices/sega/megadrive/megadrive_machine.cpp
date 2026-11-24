@@ -247,6 +247,29 @@ bool ParseMegaDriveDriverConfig(std::string_view driverXml, MegaDriveDriverConfi
         else if (text == "europe") out.region = MegaDriveRegion::Europe;
         else return Fail(error, "<driver region>: expected \"japan\", \"usa\" or \"europe\"");
     }
+    if (const pugi::xml_attribute counter = node.attribute("frame_counter")) {
+        std::uint64_t value = 0;
+        if (!ParseNumber(counter.value(), value) || value > 0x1FFF) return Fail(error, "<driver frame_counter>: expected a Z80 RAM address up to 0x1FFF");
+        out.frameCounter = static_cast<std::uint16_t>(value);
+    }
+    if (const pugi::xml_attribute extra = node.attribute("frame_counter_extra")) {
+        char* end = nullptr;
+        const double fraction = std::strtod(extra.value(), &end);
+        if (!out.frameCounter.has_value() || end == extra.value() || *end != 0 || !(fraction > 0.0) || !(fraction < 1.0)) {
+            return Fail(error, "<driver frame_counter_extra>: expected a fraction of a frame above 0 and below 1, together with frame_counter");
+        }
+        out.frameCounterExtra = fraction;
+    }
+    if (const pugi::xml_attribute window = node.attribute("cart_window")) {
+        if (std::string_view(window.value()) != "32x") return Fail(error, "<driver cart_window>: expected \"32x\"");
+        out.cartridgeWindow32x = true;
+    }
+    if (const pugi::xml_attribute bank = node.attribute("cart_window_bank")) {
+        const std::string_view text = bank.value();
+        if (!out.cartridgeWindow32x) return Fail(error, "<driver cart_window_bank>: needs cart_window=\"32x\"");
+        if (text != "0" && text != "1" && text != "2" && text != "3") return Fail(error, "<driver cart_window_bank>: expected 0 to 3");
+        out.cartridgeWindowBank = static_cast<std::uint32_t>(text[0] - '0');
+    }
     if (const pugi::xml_attribute crc = node.attribute("cart_crc32")) {
         std::string_view text = crc.value();
         std::uint32_t value = 0;
@@ -504,6 +527,8 @@ void MegaDriveMachine::ColdStart(std::uint32_t setNumber, bool runToRequest) {
         psg_samples_made_ = warm_.psgSamplesMade;
         next_irq_edge_ = warm_.nextIrqEdge;
         irq_high_ = warm_.irqHigh;
+        extra_tick_pending_ = warm_.extraTickPending;
+        extra_tick_due_ = warm_.extraTickDue;
         loaded_set_ = 0;
         command_sent_since_reset_ = false;
         return;
@@ -530,6 +555,8 @@ void MegaDriveMachine::ColdStart(std::uint32_t setNumber, bool runToRequest) {
         warm_.psgSamplesMade = psg_samples_made_;
         warm_.nextIrqEdge = next_irq_edge_;
         warm_.irqHigh = irq_high_;
+        warm_.extraTickPending = extra_tick_pending_;
+        warm_.extraTickDue = extra_tick_due_;
         warm_.valid = true;
     }
 }
@@ -550,6 +577,8 @@ void MegaDriveMachine::ResetMachineState() {
     ym_samples_made_ = 0;
     psg_samples_made_ = 0;
     irq_high_ = false;
+    extra_tick_pending_ = false;
+    extra_tick_due_ = 0;
     // The first interrupt falls at scanline 224 of the frame the Z80 was released in, or of the next one.
     const std::uint64_t phase = driver_.releaseCycle % timing_.cyclesPerFrame;
     next_irq_edge_ = kIrqAssertCycle >= phase ? kIrqAssertCycle - phase : kIrqAssertCycle + timing_.cyclesPerFrame - phase;
@@ -595,7 +624,12 @@ std::uint8_t MegaDriveMachine::ReadBus(std::uint16_t address) {
     }
     if (address < 0x7F00) return 0xFF;
     if (address < 0x8000) return 0;  // the VDP's ports: nothing the sound driver reads
-    const std::uint32_t source = (bank_ + (address & 0x7FFFu));
+    std::uint32_t source = (bank_ + (address & 0x7FFFu));
+    if (driver_.cartridgeWindow32x) {
+        if (source >= 0x880000 && source < 0x900000) source -= 0x880000;
+        else if (source >= 0x900000 && source < 0xA00000) source = driver_.cartridgeWindowBank * 0x100000 + (source - 0x900000);
+        else return 0xFF;
+    }
     return source < cartridge_.size() ? cartridge_[source] : std::uint8_t{0xFF};
 }
 
@@ -648,9 +682,21 @@ void MegaDriveMachine::SyncPsg(std::uint64_t cycle) {
 void MegaDriveMachine::RunZ80To(std::uint64_t targetCycle, bool keepSound) {
     keep_sound_ = keepSound;
     while (cycles_done_ < targetCycle) {
+        if (extra_tick_pending_ && extra_tick_due_ <= cycles_done_) {
+            ++ram_[*driver_.frameCounter & 0x1FFF];
+            ++extra_ticks_given_;
+            extra_tick_pending_ = false;
+            continue;
+        }
         if (next_irq_edge_ <= cycles_done_) {
             if (!irq_high_) {
                 z80_->SetInputLine(Z80InputLine::Irq, Z80InputLineState::Assert);
+                if (driver_.frameCounter) ++ram_[*driver_.frameCounter & 0x1FFF];
+                if (driver_.frameCounter && driver_.frameCounterExtra > 0.0) {
+                    extra_tick_due_ = next_irq_edge_ + static_cast<std::uint64_t>(driver_.frameCounterExtra * static_cast<double>(timing_.cyclesPerFrame));
+                    extra_tick_pending_ = true;
+                }
+                ++frames_given_;
                 irq_high_ = true;
                 next_irq_edge_ += kIrqLengthCycles;
             } else {
@@ -660,7 +706,8 @@ void MegaDriveMachine::RunZ80To(std::uint64_t targetCycle, bool keepSound) {
             }
             continue;
         }
-        const std::uint64_t stop = std::min(targetCycle, next_irq_edge_);
+        std::uint64_t stop = std::min(targetCycle, next_irq_edge_);
+        if (extra_tick_pending_) stop = std::min(stop, extra_tick_due_);
         cycles_done_ += z80_->Execute(stop - cycles_done_);
     }
 }

@@ -127,6 +127,14 @@ void MegaDrive68kDriverConfigIsParsedAndChecked() {
           "a routine at an odd address is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x71B4C\" request=\"0xFFF00B\" warmup_frames=\"4\" region=\"mars\""), config, &error) && error.find("region") != std::string::npos,
           "an unknown region is refused");
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x71B4C\" request=\"0xFFF00B\" warmup_frames=\"4\" cart_window=\"32x\""), config, &error) && config.cartridgeWindow32x && config.cartridgeWindowBank == 1,
+          "cart_window=\"32x\" leaves the window on bank 1 unless told otherwise");
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x71B4C\" request=\"0xFFF00B\" warmup_frames=\"4\" cart_window=\"32x\" cart_window_bank=\"0\""), config, &error) && config.cartridgeWindowBank == 0,
+          "cart_window_bank names the bank the window shows");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x71B4C\" request=\"0xFFF00B\" warmup_frames=\"4\" cart_window=\"32x\" cart_window_bank=\"4\""), config, &error) && error.find("cart_window_bank") != std::string::npos,
+          "a bank above 3 is refused");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x71B4C\" request=\"0xFFF00B\" warmup_frames=\"4\" cart_window_bank=\"0\""), config, &error) && error.find("cart_window_bank") != std::string::npos,
+          "a bank without the window is refused");
     const MachineRegistry& registry = DefaultMachineRegistry();
     Check(registry.Create(MachineId("SEGA_MEGADRIVE"), VariantId("MEGADRIVE_68K"), MachineResources{}) != nullptr, "the variant MEGADRIVE_68K is registered (without resources: not playable)");
 }
@@ -923,6 +931,10 @@ void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
     Check(config.vblankHandlerIsGame && config.hblankLines == 53 && config.a6 == 0xFF0000u && config.requestByPointer && config.ramWords.size() == 2 &&
               config.ramWords[0].first == 0xFF0110u && config.ramWords[0].second == 0x1234 && config.ramWords[1].second == 5,
           "the numbers are read as written");
+    Check(ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_ram_words_after_init=\"0xFFF000=0x0200\" warmup_frames=\"3\""), config, &error) &&
+              config.ramWordsAfterInit.size() == 1 && config.ramWordsAfterInit[0].first == 0xFFF000u && config.ramWordsAfterInit[0].second == 0x0200 && config.ramWords.empty(),
+          "m68k_ram_words_after_init parses into its own list");
+    Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_ram_words_after_init=\"0xFFF001=1\" warmup_frames=\"3\""), config, &error) && error.find("m68k_ram_words_after_init") != std::string::npos, "a word after the initialization at an odd address is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" hblank_lines=\"0\" warmup_frames=\"3\""), config, &error) && error.find("hblank_lines") != std::string::npos, "hblank_lines 0 is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" hblank_lines=\"257\" warmup_frames=\"3\""), config, &error) && error.find("hblank_lines") != std::string::npos, "hblank_lines above 256 is refused");
     Check(!ParseMegaDrive68kDriverConfig(DriverXml("m68k_frame=\"0x2000\" request=\"0xFF0002\" m68k_a6=\"0x1000\" warmup_frames=\"3\""), config, &error) && error.find("m68k_a6") != std::string::npos, "A6 must point into the RAM");
@@ -952,6 +964,7 @@ void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
     cartridge.at = 0x2A00;
     cartridge.Word(0x23CE); cartridge.Long(0x00FF0108);      // MOVE.L A6,$FF0108
     cartridge.Word(0x13F9); cartridge.Long(0x00A10003); cartridge.Long(0x00FF0106);   // MOVE.B $A10003,$FF0106   (the first controller)
+    cartridge.Word(0x33FC); cartridge.Word(0x0001); cartridge.Long(0x00FF0120);          // MOVE.W #1,$FF0120
     cartridge.Word(0x4E75);                                  // RTS
     cartridge.at = 0x2B00;
     cartridge.Word(0x33D0); cartridge.Long(0x00FF0104);      // MOVE.W (A0),$FF0104
@@ -962,6 +975,7 @@ void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
     game.hblankLines = 53;
     game.a6 = 0xFF0000u;
     game.ramWords = {{0xFF0110u, 0x1234}};
+    game.ramWordsAfterInit = {{0xFF0120u, 0x0700}};
     game.requestRoutines = {0x2B00};
     game.requestByPointer = true;
     game.warmupFrames = 3;
@@ -970,6 +984,7 @@ void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
     Check(machine.RamForTest(0x108) == 0x00 && machine.RamForTest(0x109) == 0xFF && machine.RamForTest(0x10A) == 0x00 && machine.RamForTest(0x10B) == 0x00, "A6 holds the base the definition names when the routines run");
     Check(machine.RamForTest(0x110) == 0x12 && machine.RamForTest(0x111) == 0x34, "the words of m68k_ram_words are there before the routines run");
     Check(machine.RamForTest(0x106) == 0x7F, "the controller reads as one with no button pressed");
+    Check(machine.RamForTest(0x120) == 0x07 && machine.RamForTest(0x121) == 0x00, "the words of m68k_ram_words_after_init are written after the initialization routines (which wrote 1 there)");
     auto word = [&](std::uint32_t at) { return static_cast<std::uint32_t>(machine.RamForTest(at) << 8 | machine.RamForTest(at + 1)); };
     const std::uint32_t hint0 = word(0x100), vint0 = word(0x102);
     machine.RunToTicksForTest(machine.TicksForTest() + 10 * kTicksPerFrame);
@@ -983,4 +998,216 @@ void MegaDrive68kGamesOwnHandlersHorizontalInterruptsAndPointerRequests() {
     machine.SendCommand(command);
     machine.RunToTicksForTest(machine.TicksForTest() + kTicksPerFrame / 2);
     Check(word(0x104) == 0x002B, "the routine of a pointer request finds the number in the word A0 points at");
+}
+
+namespace {
+
+struct Super32xGame {
+    const char* xml;
+    std::uint8_t song;      // a song request that plays on the Mega Drive side
+    std::uint32_t wrongBank;  // the other bank of the window
+    bool bankMatters;         // whether the songs read data through the banked window (else only through the start of the cartridge)
+};
+
+struct SoundWrites { std::uint64_t ym68 = 0, psg68 = 0, ymZ = 0; std::uint64_t digest = 1469598103934665603ull; };
+
+SoundWrites PlaySong(const MegaDrive68kMachineInputs& inputs, std::uint8_t song, double seconds) {
+    SoundWrites out;
+    MegaDrive68kMachine machine(inputs.cartridge, inputs.driver);
+    machine.Initialize();
+    bool counting = false;
+    machine.SetChipWriteObserverForTest([&](std::uint64_t, char cpu, char kind, std::uint32_t port, std::uint8_t value) {
+        if (!counting) return;
+        if (cpu == '6' && kind == 'Y') ++out.ym68; else if (cpu == '6') ++out.psg68; else if (kind == 'Y') ++out.ymZ;
+        out.digest = (out.digest ^ (static_cast<std::uint64_t>(cpu) << 40 ^ static_cast<std::uint64_t>(kind) << 32 ^ port << 8 ^ value)) * 1099511628211ull;
+    });
+    counting = true;
+    MusicCommand command;
+    command.Kind = MusicCommandKind::Raw;
+    command.Value = song;
+    machine.SendCommand(command);
+    machine.RunToTicksForTest(machine.TicksForTest() + static_cast<std::uint64_t>(seconds * 53693175.0));
+    return out;
+}
+
+void CheckSuper32xGame(const Super32xGame& game, const char* romRoot) {
+    const auto xmlPath = FindDefinitionXml(game.xml);
+    Check(xmlPath.has_value(), (std::string(game.xml) + " is present (run from the repo root)").c_str());
+    if (!xmlPath) return;
+    std::ifstream xmlFile(*xmlPath, std::ios::binary);
+    std::ostringstream xmlText;
+    xmlText << xmlFile.rdbuf();
+    const XmlParseResult parsed = ParseGameDefinition(xmlText.str());
+    Check(parsed.Status == XmlParseStatus::Ok, (std::string(game.xml) + " parses").c_str());
+    if (parsed.Status != XmlParseStatus::Ok) return;
+    const ResourceResolver resolver{std::filesystem::path(romRoot)};
+    ResourceResolutionResult res = resolver.Resolve(parsed.Definition.BuildRequiredResources());
+    Check(res.Ok, (std::string(game.xml) + ": the cartridge is found under CHIPESTRA_ROM_ROOT").c_str());
+    if (!res.Ok) return;
+    const std::string driverXml = ExtractDriverElementXml(xmlText.str());
+    res.Resources.Add(ResolvedResource("driver_xml", std::vector<std::uint8_t>(driverXml.begin(), driverXml.end())));
+    MegaDrive68kMachineInputs inputs = AssembleMegaDrive68kMachineInputs(res.Resources);
+    Check(inputs.driver.cartridgeWindow32x, (std::string(game.xml) + ": the cartridge is read through the 32X window").c_str());
+
+    const SoundWrites first = PlaySong(inputs, game.song, 2.0);
+    const SoundWrites second = PlaySong(inputs, game.song, 2.0);
+    Check(first.ym68 > 100 && first.psg68 > 10, (std::string(game.xml) + ": the 68000's driver plays the song on the YM2612 and the PSG").c_str());
+    Check(first.digest == second.digest && first.ym68 == second.ym68, (std::string(game.xml) + ": the same song twice makes the same chip writes").c_str());
+
+    // the same songs with the other bank in the window
+    MegaDrive68kMachineInputs wrong = inputs;
+    wrong.driver.cartridgeWindowBank = game.wrongBank;
+    std::size_t differentSongs = 0;
+    for (std::uint8_t song = 0x81; song <= 0x9F; ++song) differentSongs += PlaySong(wrong, song, 1.0).digest != PlaySong(inputs, song, 1.0).digest ? 1 : 0;
+    std::printf("  (songs that depend on the bank: %zu of 31)\n", differentSongs);
+    if (game.bankMatters) Check(differentSongs > 0, (std::string(game.xml) + ": a different bank of the window makes a different sound (the bank matters)").c_str());
+    else Check(differentSongs == 0, (std::string(game.xml) + ": the songs do not read the banked window (its bank does not change them)").c_str());
+}
+
+}  // namespace
+
+void MegaDrive68kStellarSoundRoutineRunsInFiveOfEverySixFrames() {
+    std::printf("MegaDrive68kStellarSoundRoutineRunsInFiveOfEverySixFrames\n");
+    const char* romRoot = GetEnvVar("CHIPESTRA_ROM_ROOT");
+    if (romRoot == nullptr) {
+        std::printf("  SKIP: CHIPESTRA_ROM_ROOT is needed for the real cartridge\n");
+        return;
+    }
+    const auto xmlPath = FindDefinitionXml("stellar.xml");
+    Check(xmlPath.has_value(), "stellar.xml is present (run from the repo root)");
+    if (!xmlPath) return;
+    std::ifstream xmlFile(*xmlPath, std::ios::binary);
+    std::ostringstream xmlText;
+    xmlText << xmlFile.rdbuf();
+    const XmlParseResult parsed = ParseGameDefinition(xmlText.str());
+    Check(parsed.Status == XmlParseStatus::Ok, "stellar.xml parses");
+    if (parsed.Status != XmlParseStatus::Ok) return;
+    const ResourceResolver resolver{std::filesystem::path(romRoot)};
+    ResourceResolutionResult res = resolver.Resolve(parsed.Definition.BuildRequiredResources());
+    Check(res.Ok, "stellar: the cartridge is found under CHIPESTRA_ROM_ROOT");
+    if (!res.Ok) return;
+    const std::string driverXml = ExtractDriverElementXml(xmlText.str());
+    res.Resources.Add(ResolvedResource("driver_xml", std::vector<std::uint8_t>(driverXml.begin(), driverXml.end())));
+    const MegaDrive68kMachineInputs inputs = AssembleMegaDrive68kMachineInputs(res.Resources);
+    MegaDrive68kMachine machine(inputs.cartridge, inputs.driver);
+    machine.Initialize();
+    // every call of the sound routine writes the byte at $FFF000 once: it counts 6, 5, ..., 1 down, and at 1 the call does nothing but write 6 again
+    std::size_t writes = 0, skipped = 0;
+    machine.SetRamWriteObserverForTest(0xFFF000, 0xFFF000, [&](std::uint64_t, std::uint32_t, std::uint8_t value) {
+        ++writes;
+        if (value == 6) ++skipped;
+    });
+    machine.RunToTicksForTest(machine.TicksForTest() + 60 * kTicksPerFrame);
+    char text[160];
+    std::snprintf(text, sizeof(text), "the sound routine of stellar is called at every vertical-blank interrupt (%zu calls in 60 frames)", writes);
+    Check(writes >= 59 && writes <= 61, text);
+    std::snprintf(text, sizeof(text), "and does its work in five of every six calls (%zu skipped of %zu)", skipped, writes);
+    Check(skipped >= 9 && skipped <= 11, text);
+}
+
+void MegaDrive68kVirtuaRacingDeluxeKeepsTheTempoOfTheOriginal() {
+    std::printf("MegaDrive68kVirtuaRacingDeluxeKeepsTheTempoOfTheOriginal\n");
+    const char* romRoot = GetEnvVar("CHIPESTRA_ROM_ROOT");
+    const char* referenceRoot = GetEnvVar("CHIPESTRA_REFERENCE_DIR");
+    if (romRoot == nullptr || referenceRoot == nullptr) {
+        std::printf("  SKIP: CHIPESTRA_ROM_ROOT and CHIPESTRA_REFERENCE_DIR are needed\n");
+        return;
+    }
+    std::ifstream reference(std::filesystem::path(referenceRoot) / "32x" / "vrdx" / "real_game" / "natural_81_keyons.txt");
+    if (!reference) { std::printf("  SKIP: 32x/vrdx/real_game/natural_81_keyons.txt is not there\n"); return; }
+    std::vector<std::pair<double, int>> original;
+    for (std::string line; std::getline(reference, line);) {
+        if (line.empty() || line[0] == '#') continue;
+        std::istringstream in(line);
+        double t = 0;
+        int channel = 0;
+        if (in >> t >> channel) original.emplace_back(t, channel);
+    }
+    const auto xmlPath = FindDefinitionXml("vrdx.xml");
+    Check(xmlPath.has_value(), "vrdx.xml is present (run from the repo root)");
+    if (!xmlPath) return;
+    std::ifstream xmlFile(*xmlPath, std::ios::binary);
+    std::ostringstream xmlText;
+    xmlText << xmlFile.rdbuf();
+    const XmlParseResult parsed = ParseGameDefinition(xmlText.str());
+    Check(parsed.Status == XmlParseStatus::Ok, "vrdx.xml parses");
+    if (parsed.Status != XmlParseStatus::Ok) return;
+    const ResourceResolver resolver{std::filesystem::path(romRoot)};
+    ResourceResolutionResult res = resolver.Resolve(parsed.Definition.BuildRequiredResources());
+    Check(res.Ok, "vrdx: the cartridge is found under CHIPESTRA_ROM_ROOT");
+    if (!res.Ok) return;
+    const std::string driverXml = ExtractDriverElementXml(xmlText.str());
+    res.Resources.Add(ResolvedResource("driver_xml", std::vector<std::uint8_t>(driverXml.begin(), driverXml.end())));
+    const MegaDrive68kMachineInputs inputs = AssembleMegaDrive68kMachineInputs(res.Resources);
+    MegaDrive68kMachine machine(inputs.cartridge, inputs.driver);
+    machine.Initialize();
+    std::vector<std::pair<double, int>> ours;
+    std::uint64_t base = 0;
+    int ymRegister = -1;
+    machine.SetChipWriteObserverForTest([&](std::uint64_t ticks, char cpu, char kind, std::uint32_t port, std::uint8_t value) {
+        if (cpu != '6' || kind != 'Y') return;
+        if (port == 0) ymRegister = value;
+        else if (port == 1 && ymRegister == 0x28 && (value >> 4) != 0 && ticks >= base) ours.emplace_back(static_cast<double>(ticks - base) / 53693175.0, value & 7);
+    });
+    base = machine.TicksForTest();
+    MusicCommand command;
+    command.Kind = MusicCommandKind::Raw;
+    command.Value = 0x81;
+    machine.SendCommand(command);
+    machine.RunToTicksForTest(base + static_cast<std::uint64_t>(4.0 * 53693175.0));
+    Check(original.size() >= 40, "the recording of the original has the key-ons of the song");
+    bool sameChannels = ours.size() >= original.size();
+    double first = 0, worst = 0;
+    for (std::size_t i = 0; sameChannels && i < original.size(); ++i) {
+        sameChannels = ours[i].second == original[i].second;
+        const double difference = ours[i].first - original[i].first;
+        if (i == 0) first = difference;
+        worst = std::max(worst, std::abs(difference - first));
+    }
+    Check(sameChannels, "the key-ons come on the same channels, in the same order, as in the original");
+    // the start differs by the time the request takes to be picked up; after that the key-ons keep the original's distances (no drift)
+    char text[160];
+    std::snprintf(text, sizeof(text), "the key-ons keep the distances of the original (the largest deviation is %.1f ms)", worst * 1000.0);
+    Check(worst < 0.002, text);
+}
+
+// Every Super 32X game is shown with the Mega Drive's 11 channels and the PWM unit's 2 (13), whether or not its songs use the PWM unit.
+void Super32xGamesShowThePwmChannelsToo() {
+    std::printf("Super32xGamesShowThePwmChannelsToo\n");
+    const char* romRoot = GetEnvVar("CHIPESTRA_ROM_ROOT");
+    if (romRoot == nullptr) {
+        std::printf("  SKIP: CHIPESTRA_ROM_ROOT is needed for the real cartridges\n");
+        return;
+    }
+    for (const char* xml : {"vf.xml", "vrdx.xml", "stellar.xml", "aburner.xml", "sharrier.xml", "swa.xml"}) {
+        const auto xmlPath = FindDefinitionXml(xml);
+        Check(xmlPath.has_value(), (std::string(xml) + " is present (run from the repo root)").c_str());
+        if (!xmlPath) continue;
+        std::ifstream xmlFile(*xmlPath, std::ios::binary);
+        std::ostringstream xmlText;
+        xmlText << xmlFile.rdbuf();
+        const XmlParseResult parsed = ParseGameDefinition(xmlText.str());
+        if (parsed.Status != XmlParseStatus::Ok) { Check(false, (std::string(xml) + " parses").c_str()); continue; }
+        const ResourceResolver resolver{std::filesystem::path(romRoot)};
+        ResourceResolutionResult res = resolver.Resolve(parsed.Definition.BuildRequiredResources());
+        if (!res.Ok) { Check(false, (std::string(xml) + ": the cartridge is found").c_str()); continue; }
+        const std::string driverXml = ExtractDriverElementXml(xmlText.str());
+        res.Resources.Add(ResolvedResource("driver_xml", std::vector<std::uint8_t>(driverXml.begin(), driverXml.end())));
+        std::unique_ptr<IMachine> machine = DefaultMachineRegistry().Create(MachineId(parsed.Definition.Machine), VariantId(parsed.Definition.Variant), res.Resources);
+        const std::vector<LogicalChannel>& channels = machine->LogicalChannels();
+        Check(channels.size() == 13, (std::string(xml) + ": 13 channels (the Mega Drive's 11 and the PWM unit's 2)").c_str());
+        Check(channels.size() >= 2 && channels[channels.size() - 1].DeviceName == "PWM" && channels[channels.size() - 2].DeviceName == "PWM",
+              (std::string(xml) + ": the last two channels are the PWM unit's").c_str());
+    }
+}
+
+void MegaDrive68kSuper32xGamesPlayFromTheMegaDriveSide() {
+    std::printf("MegaDrive68kSuper32xGamesPlayFromTheMegaDriveSide\n");
+    const char* romRoot = GetEnvVar("CHIPESTRA_ROM_ROOT");
+    if (romRoot == nullptr) {
+        std::printf("  SKIP: CHIPESTRA_ROM_ROOT is needed for the real cartridges\n");
+        return;
+    }
+    CheckSuper32xGame({"vrdx.xml", 0x81, 0, false}, romRoot);
+    CheckSuper32xGame({"stellar.xml", 0x81, 1, true}, romRoot);
 }
