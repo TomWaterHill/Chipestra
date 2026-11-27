@@ -687,7 +687,7 @@ void Sega32xZ80GamePlaysItsSongs() {
             machine->Render(EmuDuration(block), &sink);
             if (done >= static_cast<std::uint64_t>(from) * 192000)
                 for (std::size_t ch = 0; ch < count; ++ch) {
-                    if (machine->LogicalChannels()[ch].DeviceName == "PWM") continue;   // the Mega Drive side only: the Z80 driver's own sound
+                    if (machine->LogicalChannels()[ch].DeviceName == "315-5818") continue;   // the Mega Drive side only: the Z80 driver's own sound
                     const LogicalChannelBuffer& b = sink.ChannelBuffer(ChannelId(static_cast<std::uint32_t>(ch)));
                     for (std::size_t i = 0; i < b.Size(); ++i) energy += static_cast<double>(b[i]) * b[i];
                 }
@@ -738,7 +738,7 @@ void Sega32xMusicMachineTellsTheSlaveTheZ80DriversRequests() {
             sink.ClearAll();
             machine->Render(EmuDuration(256), &sink);
             for (const LogicalChannel& c : machine->LogicalChannels()) {
-                if (c.DeviceName != "PWM") continue;
+                if (c.DeviceName != "315-5818") continue;
                 const LogicalChannelBuffer& buffer = sink.ChannelBuffer(c.Id);
                 for (std::size_t i = 0; i < buffer.Size(); ++i) {
                     const double v = buffer.Data()[i];
@@ -1183,7 +1183,7 @@ void Sega32xMusicMachineHandsTheDriversSamplesToThePwmUnit() {
         sink.ClearAll();
         machine->Render(EmuDuration(256), &sink);
         for (const LogicalChannel& c : machine->LogicalChannels()) {
-            if (c.DeviceName != "PWM") continue;
+            if (c.DeviceName != "315-5818") continue;
             const LogicalChannelBuffer& buffer = sink.ChannelBuffer(c.Id);
             for (std::size_t i = 0; i < buffer.Size(); ++i) {
                 const std::size_t slot = static_cast<std::size_t>((done + i) / 1920);

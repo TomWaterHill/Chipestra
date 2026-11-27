@@ -207,7 +207,7 @@ void XBoardMachineRegisteredInDefaultCatalog() {
     Check(def != nullptr, "catalog: SEGA_XBOARD is registered in the default MachineRegistry");
     if (def != nullptr) {
         Check(def->Category == MachineCategory::Arcade, "catalog: SEGA_XBOARD Category == Arcade");
-        Check(def->Manufacturer == "SEGA", "catalog: SEGA_XBOARD Manufacturer == SEGA");
+        Check(def->Manufacturer == "Sega", "catalog: SEGA_XBOARD Manufacturer == Sega");
         Check(!def->Variants.empty(), "catalog: SEGA_XBOARD has at least one Variant");
     }
 }

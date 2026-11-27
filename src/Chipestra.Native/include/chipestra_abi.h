@@ -903,6 +903,10 @@ struct LogicalChannel {
     // chipestra_set_analog_filter_mode). Set by a Machine whose board has such a stage; None = the
     // channel is never filtered.
     AnalogFilterGroupId AnalogFilterGroup{AnalogFilterGroupId::None};
+    // Set by a Machine for a channel whose sound is only an idle voice of the sound driver (inaudible, never
+    // released). The Mixer then reports SourcePeak as 0 for it, so the channel never keeps a non-looping
+    // track from being judged finished; the sound and the Peak/RMS meters are unchanged.
+    bool ExcludeFromSongEnd{false};
 };
 
 // MusicCommandKind - what a MusicCommand asks the Machine to do. Raw is for command

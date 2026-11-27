@@ -72,7 +72,7 @@ void Mixer::MixBlock(const LogicalChannelSink& sink,
         }
 
         channel.Peak = peak;
-        channel.SourcePeak = sourcePeak;
+        channel.SourcePeak = channel.ExcludeFromSongEnd ? 0.0f : sourcePeak;
         channel.RMS = frameCount > 0
                           ? static_cast<float>(std::sqrt(sumSquares / static_cast<double>(frameCount)))
                           : 0.0f;

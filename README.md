@@ -13,7 +13,7 @@ It also plays the music of some Famicom / NES, Famicom Disk System and Mega Driv
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.006.00
+Version: Ver 1.007.00
 
 ### Support history
 
@@ -95,7 +95,15 @@ The Z80 of the Mega Drive games that run a 68000 sound driver (Sonic the Hedgeho
 |---|---|
 | Super 32X (Japan) | Virtua Racing Deluxe and Stellar Assault (the music and sound effects made by the Mega Drive side of the cartridge; Virtua Racing Deluxe also has the two start-up jingles that its SH-2 processor plays through the 32X's PWM sound unit), Virtua Fighter (the music of the Mega Drive side, and the sampled sounds that the cartridge's SH-2 processors play through the PWM sound unit), Space Harrier (the music and effects of its Z80 sound driver, with the sounds of the SH-2 synthesizer that the driver asks for, and the SEGA logo sound), After Burner Complete (the music and effects of its Z80 sound driver, with the sounds that its SH-2 processors play through the PWM sound unit, and the SEGA logo sound), Star Wars Arcade (the music and effects of the sound driver that runs on the 68000, and the long sampled sounds of the demo, the effects and the voices that its SH-2 processors play through the PWM sound unit) |
 
-The 32X's two SH-2 processors, their on-chip peripherals and the PWM sound unit are emulated. In a Super 32X game's track list, a track marked [PWM] is played by the PWM sound unit and the other tracks by the Mega Drive's sound chips. The SEGA logo of Space Harrier and After Burner Complete (the track "SEGA Logo") is a sampled voice that the SH-2 plays through the PWM sound unit while the game's start-up animation runs; Chipestra plays it by sending the slave SH-2 the same messages as the game's 68000. Apart from the start-up jingles of Virtua Racing Deluxe, Virtua Racing Deluxe and Stellar Assault use the PWM sound unit for nothing else that has been found.
+The 32X's two SH-2 processors, their on-chip peripherals and the PWM sound unit (in the 32X's 315-5818 chip, the name that the channel meters show) are emulated. In a Super 32X game's track list, a track marked [PWM] is played by the PWM sound unit and the other tracks by the Mega Drive's sound chips. The SEGA logo of Space Harrier and After Burner Complete (the track "SEGA Logo") is a sampled voice that the SH-2 plays through the PWM sound unit while the game's start-up animation runs; Chipestra plays it by sending the slave SH-2 the same messages as the game's 68000. Apart from the start-up jingles of Virtua Racing Deluxe, Virtua Racing Deluxe and Stellar Assault use the PWM sound unit for nothing else that has been found.
+
+#### Ver 1.007.00
+
+| System | Verified titles |
+|---|---|
+| Model 1 | Virtua Fighter (バーチャファイター) and Virtua Racing (バーチャレーシング): the music and sound effects of the sound board |
+
+The sound board of a Sega Model 1 game is a 68000 with two YMW258-F (MultiPCM) sound chips and a YM3438 that the game's sound driver uses as its timer; Chipestra runs the board's own program and gives it the MIDI messages that the game's main processor sends (one message per track), so the main processor is not needed. The ROM files of the board are the ones of the games' ROM sets (VF.zip and vr.zip in MAME's naming, found in the ROM Root by their file names and CRC-32); the program of the main processor, its video ROMs and the I/O board's ROM are not used. The track lists are made of the songs and sounds that the sound driver can start (many are short sound effects and voices); the names are numbers, as the games' sound drivers have no names for them.
 
 ### Features
 
@@ -222,7 +230,7 @@ Chipestra（チップエストラ。「チップ」と「オーケストラ」�
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.006.00
+バージョン: Ver 1.007.00
 
 ### 対応の履歴
 
@@ -297,7 +305,15 @@ NES とファミコン ディスクシステムでは、エミュレートした
 |---|---|
 | Super 32X（日本） | Virtua Racing Deluxe（バーチャレーシング デラックス）、Stellar Assault（ステラアサルト）（どちらもカートリッジのメガドライブ側が作る BGM と効果音。バーチャレーシング デラックスには、SH-2 が 32X の PWM 音源で鳴らす起動時のジングル2つも含みます）、Virtua Fighter（バーチャファイター）（メガドライブ側の BGM に加えて、カートリッジの SH-2 が PWM 音源で鳴らすサンプル音）、Space Harrier（スペースハリアー）（Z80 のサウンドドライバーの BGM と効果音。ドライバーが SH-2 のシンセサイザーに頼む音と、SEGA のロゴの音も鳴らします）、After Burner Complete（アフターバーナー コンプリート）（Z80 のサウンドドライバーの BGM と効果音に加えて、SH-2 が PWM 音源で鳴らす音と、SEGA のロゴの音）、Star Wars Arcade（スターウォーズ アーケード）（68000 で動くサウンドドライバーの BGM と効果音、およびデモの音楽、効果音、声など、SH-2 が PWM 音源で鳴らす長いサンプル音） |
 
-32X の2つの SH-2、その内蔵周辺機能、PWM 音源をエミュレートしています。Super 32X のゲームのトラック一覧では、[PWM] の付いたトラックを PWM 音源が、それ以外のトラックをメガドライブの音源が鳴らします。スペースハリアーとアフターバーナー コンプリートの SEGA のロゴ（トラック「SEGA Logo」）は、ゲームの起動時のアニメーションの間に SH-2 が PWM 音源で鳴らすサンプル音の声です。Chipestra は、ゲームの 68000 と同じメッセージをスレーブの SH-2 に送って鳴らします。Virtua Racing Deluxe と Stellar Assault では、Virtua Racing Deluxe の起動時のジングルのほかに、PWM 音源を使う音は見つかっていません。
+32X の2つの SH-2、その内蔵周辺機能、PWM 音源（32X の 315-5818 に入っているもので、チャンネルメーターにはこの型番が出ます）をエミュレートしています。Super 32X のゲームのトラック一覧では、[PWM] の付いたトラックを PWM 音源が、それ以外のトラックをメガドライブの音源が鳴らします。スペースハリアーとアフターバーナー コンプリートの SEGA のロゴ（トラック「SEGA Logo」）は、ゲームの起動時のアニメーションの間に SH-2 が PWM 音源で鳴らすサンプル音の声です。Chipestra は、ゲームの 68000 と同じメッセージをスレーブの SH-2 に送って鳴らします。Virtua Racing Deluxe と Stellar Assault では、Virtua Racing Deluxe の起動時のジングルのほかに、PWM 音源を使う音は見つかっていません。
+
+#### Ver 1.007.00
+
+| システム | 確認したタイトル |
+|---|---|
+| Model 1 | Virtua Fighter（バーチャファイター）、Virtua Racing（バーチャレーシング）: サウンドボードの BGM と効果音 |
+
+セガ Model 1 のサウンドボードは、68000 に YMW258-F（MultiPCM）音源2個と、ゲームのサウンドドライバーがタイマーとして使う YM3438 を載せたものです。Chipestra は、ボードのプログラムをそのまま動かし、ゲームのメインプロセッサーが送る MIDI メッセージ（1トラックにつき1メッセージ）を与えるので、メインプロセッサーは要りません。使う ROM は、ゲームの ROM セット（MAME の名前では VF.zip と vr.zip）のサウンドボードのファイルで、ROM Root の中から、ファイル名と CRC-32 で見つけます。メインプロセッサーのプログラム、映像の ROM、I/O ボードの ROM は使いません。トラックの一覧は、サウンドドライバーが鳴らせる曲と音（短い効果音や声が多数）で、ゲームのサウンドドライバーには名前が無いので、名前は番号です。
 
 ### 機能
 

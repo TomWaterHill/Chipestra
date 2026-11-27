@@ -579,7 +579,7 @@ to wait for the 68000's bus (the original delays it by a few cycles).
 ## 4e. Sampled sounds of a Super 32X game: `<driver>` (Mega Drive, variant `MEGADRIVE_32X_PWM`)
 
 A Super 32X cartridge carries programs for the two SH-2 processors of the 32X adapter. For some games the SH-2 plays
-sampled sounds (sound effects and voices) through the adapter's PWM sound unit. This variant runs the cartridge's two
+sampled sounds (sound effects and voices) through the adapter's PWM sound unit (in the 315-5818 chip, the name that the channel meters show). This variant runs the cartridge's two
 SH-2 programs (the 68000 and the video part of the adapter are not run) and plays what the PWM unit makes. The music
 of the Mega Drive side (YM2612 and PSG) is a different set of tracks: see `cart_window` in 4d.
 
@@ -643,6 +643,35 @@ tells the slave `0x0200`. The slave stores the requests and plays the PWM sounds
 |---|---|
 | `sh2_request_word` | Instead of `sh2_event_ring`: the offset (`0x20` to `0x2E`, from the adapter registers at `0xA15100`) of the communication word that the request goes into. After Burner Complete: `0x22`. |
 | `sh2_request_flag` | The Z80 RAM address (up to `0x1FFF`) of the byte that the Z80 driver sets when it has taken a request. After Burner Complete: `0x16FD`. |
+
+## 4h. Sound boards that take MIDI messages: `<driver>` (Model 1, `SEGA_MODEL1`)
+
+The sound board of a Sega Model 1 game has its own 68000 (at 10 MHz), two YMW258-F (MultiPCM) sound chips (the first for the music, the second for the sound effects,
+each with a sample ROM of up to 4 MB that is read through a bank register), a YM3438 that the driver uses as its timer, and a serial port. The game's main
+processor does not play the music itself: it sends the sound board MIDI messages, a byte every 320 microseconds, and the board's driver does the rest.
+The Machine runs the board's 68000 and sends the bytes of a track in the same way; the main processor is not emulated.
+
+The ROMs of the game declare the board's program (`sndcpu0`, and `sndcpu1` for the second program ROM of a game that has one; the files are the 16-bit-word-swapped
+dumps as they come from the game's own ROM set) and the sample ROMs as 2 MB halves: `pcm1_0`, `pcm1_1` (the first YMW258-F) and `pcm2_0`, `pcm2_1` (the second YMW258-F).
+A game with less sample ROM leaves the halves it does not have out.
+
+| Attribute of `<driver>` | Meaning |
+|---|---|
+| `midi` | The bytes (hexadecimal, separated by spaces) that start a track. `$S` stands for the track's `command`. Required. |
+| `midi1` ... `midi7` | Other messages. A track names one with `request`: the n-th number of `requests` selects `midiN`. |
+| `requests` | The numbers the tracks' `request` can name (any numbers; their position in the list gives the message number). |
+| `warmup_ms` | How many milliseconds of the board's time the Machine lets the 68000 start up before it sends the first byte (default 400). |
+
+Example (the music is started by a three-byte message with the song number as the last byte, an effect by a note-on):
+
+```xml
+<driver midi="AE 10 $S" midi2="9E $S 7F" requests="1 2" warmup_ms="400"/>
+<track id="1" title="BGM 01" command="0x01"/>
+<track id="2" title="[SFX] 11" command="0x11" request="2" loops="false"/>
+```
+
+Every track starts the sound board from power-on (the driver has no command that silences every voice); "Music Stop" (`type="control"`) only does that.
+The bytes of a track are the whole of the track's definition: which message starts a song or an effect is a property of the game's sound driver.
 
 ## 5. Tracks: `<tracks>` and `<track>`
 

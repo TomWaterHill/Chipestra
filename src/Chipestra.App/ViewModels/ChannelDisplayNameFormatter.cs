@@ -125,8 +125,10 @@ namespace Chipestra.App.ViewModels
                         : new Parsed("RP2A03", null, channelName, 1);
                 case "i8039":
                     return new Parsed("i8039", null, "DAC", 1);
-                case "SegaPCM":
-                    return new Parsed("SegaPCM", null, "PCM", TrailingDigitOrOne(channelName));
+                case "315-5818":
+                    return new Parsed("315-5818", null, channelName, 1);
+                case "315-5218":
+                    return new Parsed("315-5218", null, "PCM", TrailingDigitOrOne(channelName));
                 case "YM2610":
                     m = Ym2610Pattern.Match(channelName);
                     if (m.Success)
@@ -161,6 +163,14 @@ namespace Chipestra.App.ViewModels
                     }
                     break;
                 default:
+                    if (deviceName.StartsWith("YMW258-F", System.StringComparison.Ordinal))
+                    {
+                        Match chip = OkiInstancePattern.Match(deviceName);
+                        if (chip.Success)
+                        {
+                            return new Parsed("YMW258-F", chip.Groups[1].Value, "PCM", TrailingDigitOrOne(channelName));
+                        }
+                    }
                     if (deviceName.StartsWith("OKIM6295", System.StringComparison.Ordinal))
                     {
                         Match inst = OkiInstancePattern.Match(deviceName);

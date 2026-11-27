@@ -130,7 +130,7 @@ void OutRunMachineRegisteredInDefaultCatalog() {
     Check(def != nullptr, "catalog: SEGA_OUTRUN is registered in the default MachineRegistry");
     if (def != nullptr) {
         Check(def->Category == MachineCategory::Arcade, "catalog: SEGA_OUTRUN Category == Arcade");
-        Check(def->Manufacturer == "SEGA", "catalog: SEGA_OUTRUN Manufacturer == SEGA");
+        Check(def->Manufacturer == "Sega", "catalog: SEGA_OUTRUN Manufacturer == Sega");
         Check(!def->Variants.empty(), "catalog: SEGA_OUTRUN has at least one Variant");
     }
 }

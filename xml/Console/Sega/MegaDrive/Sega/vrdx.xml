@@ -15,7 +15,7 @@
       <track id="PWM_06" title="SEGA" command="0x06" unit="pwm" loops="false"/>
       <track id="BGM_9B" title="Demonstration" command="0x9B" loops="false"/>
       <track id="BGM_9D" title="TITLE" command="0x9D" loops="false"/>
-      <track id="BGM_81" title="Select BGM" command="0x81"/>
+      <track id="BGM_81" title="Select B.G.M." command="0x81"/>
       <track id="BGM_82" title="Big Forest" command="0x82" loops="false"/>
       <track id="BGM_83" title="Bay Bridge" command="0x83" loops="false"/>
       <track id="BGM_84" title="Acropolis" command="0x84" loops="false"/>

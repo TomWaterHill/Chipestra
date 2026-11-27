@@ -25,6 +25,7 @@
 #include "devices/sega/xboard/xboard_rom_layout.h"
 #include "devices/capcom/sf/sf_machine.h"
 #include "devices/capcom/sf/sf_rom_layout.h"
+#include "devices/sega/model1/model1_machine.h"
 #include "devices/taito/darius/darius_machine.h"
 #include "devices/taito/darius/darius_rom_layout.h"
 #include "devices/taito/metalblk/metalblack_rom_layout.h"
@@ -53,7 +54,7 @@ MachineRegistry BuildDefaultRegistry() {
     xboard_def.Id = MachineId("SEGA_XBOARD");
     xboard_def.DisplayName = "X-Board";
     xboard_def.Category = MachineCategory::Arcade;
-    xboard_def.Manufacturer = "SEGA";
+    xboard_def.Manufacturer = "Sega";
     xboard_def.Variants.push_back(MachineVariant{VariantId("XBOARD_BASE"), "Base"});
     // Sound ROMs are declared by the game XML, not the Machine; the resolved resources
     // arrive through `resources`. With an empty `resources` this still constructs a
@@ -68,7 +69,7 @@ MachineRegistry BuildDefaultRegistry() {
     outrun_def.Id = MachineId("SEGA_OUTRUN");
     outrun_def.DisplayName = "Out Run";
     outrun_def.Category = MachineCategory::Arcade;
-    outrun_def.Manufacturer = "SEGA";
+    outrun_def.Manufacturer = "Sega";
     outrun_def.Variants.push_back(MachineVariant{VariantId("OUTRUN_BASE"), "Base"});
     // Same pattern as SEGA_XBOARD: the game XML declares the resources
     // ("soundcpu"/"pcm1".."pcm6"); an empty `resources` constructs a
@@ -176,6 +177,21 @@ MachineRegistry BuildDefaultRegistry() {
         return std::make_unique<SfMachine>(std::move(roms.AudioCpuProgram), std::move(roms.SamplesProgram));
     };
     registry.Register(std::move(sf_def));
+
+    MachineDefinition model1_def;
+    model1_def.Id = MachineId("SEGA_MODEL1");
+    model1_def.DisplayName = "Model 1";
+    model1_def.Category = MachineCategory::Arcade;
+    model1_def.Manufacturer = "Sega";
+    model1_def.Variants.push_back(MachineVariant{VariantId("MODEL1_BASE"), "Base"});
+    // The game XML declares "sndcpu0" (and "sndcpu1"), the sample ROM halves and the <driver> element; an empty `resources`
+    // constructs a not-yet-playable Model1Machine.
+    model1_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
+        Model1MachineInputs inputs = AssembleModel1MachineInputs(resources);
+        return std::make_unique<Model1Machine>(std::move(inputs.program), std::move(inputs.pcm1), std::move(inputs.pcm2),
+                                               std::move(inputs.driver));
+    };
+    registry.Register(std::move(model1_def));
 
     MachineDefinition ninjaw_def;
     ninjaw_def.Id = MachineId("TAITO_NINJAWARRIORS");

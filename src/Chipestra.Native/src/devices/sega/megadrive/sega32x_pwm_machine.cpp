@@ -191,7 +191,7 @@ Sega32xPwmMachine::Sega32xPwmMachine(std::vector<std::uint8_t> cartridge, Sega32
     for (int side = 0; side < 2; ++side) {
         LogicalChannel channel;
         channel.Id = ChannelId(static_cast<std::uint32_t>(channels_.size()));
-        channel.DeviceName = "PWM";
+        channel.DeviceName = "315-5818";
         channel.ChannelName = side == 0 ? "Left" : "Right";
         channel.NativeSampleRate = kOutputRate;
         channel.RoutingGain = kRoutingGain;

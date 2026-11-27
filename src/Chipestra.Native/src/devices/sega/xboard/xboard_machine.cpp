@@ -113,7 +113,7 @@ void XBoardMachine::Initialize() {
     for (std::uint32_t v = 0; v < SegaPcmDeviceAdapter::kVoiceCount; ++v) {
         LogicalChannel channel;
         channel.Id = Ym2151DeviceAdapter::kChannelCount + v;
-        channel.DeviceName = "SegaPCM";
+        channel.DeviceName = "315-5218";
         channel.ChannelName = "PCM " + std::to_string(v + 1);
         channel.NativeSampleRate = SegaPcmDeviceAdapter::kOutputSampleRateHz;
         channel.RoutingGain = kSegaPcmRoutingGain;

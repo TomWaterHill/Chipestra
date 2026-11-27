@@ -91,9 +91,13 @@ All of the following come from MAME (https://github.com/mamedev/mame), tag mame0
 - Copyright holders (as listed in the original files): Tatsuyuki Satoh (vlm5030.cpp, vlm5030.h). Frank Palazzolo, Couriersud, Jonathan Gevaryahu (tms5110r.hxx)
 - Original implementation (path in mame0289): src/devices/sound/vlm5030.cpp, vlm5030.h, tms5110r.hxx
 
-#### SegaPCM
+#### 315-5218 (SegaPCM)
 - Copyright holders (as listed in the original files): Hiromitsu Shioya, Olivier Galibert
 - Original implementation (path in mame0289): src/devices/sound/segapcm.cpp, segapcm.h
+
+#### YMW258-F (MultiPCM, Sega 315-5560)
+- Copyright holders (as listed in the original files): Miguel Angel Horna
+- Original implementation (path in mame0289): src/devices/sound/multipcm.cpp, multipcm.h, gew.cpp, gew.h
 
 #### MSM5205
 - Copyright holders (as listed in the original files): Aaron Giles
@@ -193,12 +197,23 @@ The sources of the following MAME drivers were read, and the ROM layout, memory 
 - Copyright holders (as listed in the original files): Olivier Galibert
 - Board referenced: Street Fighter (Capcom 68000 Based)
 
+#### src/mame/sega/model1.cpp
+- License: BSD-3-Clause
+- Copyright holders (as listed in the original files): Olivier Galibert
+- Board referenced: Model 1
+
+#### src/mame/shared/segam1audio.cpp
+- License: BSD-3-Clause
+- Copyright holders (as listed in the original files): R. Belmont
+- Board referenced: Model 1 (the sound board)
+
 Parts copied directly (notes):
 
 - The sound-side memory maps, the I/O ports, the clocks, the 8000 Hz interrupt of the second Z80 and the routing gain values (YM2151 0.60, MSM5205 1.0) of the Street Fighter board are ported as-is from sf.cpp.
 - The routing gain values of the X-Board and Out Run devices are copied as-is from the values in segaxbd.cpp and segaorun.cpp.
 - The Gradius speech_w handling is ported as-is from the handling in nemesis.cpp.
 - The explanatory comments about ld1_w/ld2_w of the K005289 reuse the wording of the comments in k005289.cpp.
+- The memory map, the clocks and the routing gain values (YMW258-F 0.5, YM3438 0.30) of the Model 1 sound board are ported as-is from segam1audio.cpp.
 
 ### ymfm, libsoxr, pffft, miniz, pugixml
 

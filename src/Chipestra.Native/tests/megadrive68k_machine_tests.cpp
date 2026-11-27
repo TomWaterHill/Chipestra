@@ -1196,7 +1196,7 @@ void Super32xGamesShowThePwmChannelsToo() {
         std::unique_ptr<IMachine> machine = DefaultMachineRegistry().Create(MachineId(parsed.Definition.Machine), VariantId(parsed.Definition.Variant), res.Resources);
         const std::vector<LogicalChannel>& channels = machine->LogicalChannels();
         Check(channels.size() == 13, (std::string(xml) + ": 13 channels (the Mega Drive's 11 and the PWM unit's 2)").c_str());
-        Check(channels.size() >= 2 && channels[channels.size() - 1].DeviceName == "PWM" && channels[channels.size() - 2].DeviceName == "PWM",
+        Check(channels.size() >= 2 && channels[channels.size() - 1].DeviceName == "315-5818" && channels[channels.size() - 2].DeviceName == "315-5818",
               (std::string(xml) + ": the last two channels are the PWM unit's").c_str());
     }
 }

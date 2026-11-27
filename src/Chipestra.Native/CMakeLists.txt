@@ -172,6 +172,8 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/sound/msm5205/msm5205_device_adapter.cpp
     src/devices/sound/segapcm/segapcm_device_adapter.h
     src/devices/sound/segapcm/segapcm_device_adapter.cpp
+    src/devices/sound/multipcm/multipcm_device_adapter.h
+    src/devices/sound/multipcm/multipcm_device_adapter.cpp
     src/devices/sound/ay8910/ay8910_device_adapter.h
     src/devices/sound/ay8910/ay8910_device_adapter.cpp
     src/devices/sound/k005289/k005289_device_adapter.h
@@ -210,6 +212,8 @@ set(CHIPESTRA_CORE_SOURCES
     src/devices/capcom/sf/sf_rom_layout.cpp
     src/devices/capcom/sf/sf_machine.h
     src/devices/capcom/sf/sf_machine.cpp
+    src/devices/sega/model1/model1_machine.h
+    src/devices/sega/model1/model1_machine.cpp
     src/devices/taito/darius/darius_command_interface.h
     src/devices/taito/darius/darius_command_interface.cpp
     src/devices/taito/darius/darius_sound_memory_map.h
@@ -458,6 +462,7 @@ add_executable(chipestra_native_tests
     tests/ym2203_adapter_tests.cpp
     tests/msm5205_adapter_tests.cpp
     tests/sf_machine_tests.cpp
+    tests/model1_machine_tests.cpp
     tests/sf_memory_map_tests.cpp
     tests/darius_command_interface_tests.cpp
     tests/darius_machine_tests.cpp

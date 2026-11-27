@@ -1,5 +1,5 @@
 <chipestra>
-  <game id="outrun" title="Out Run" manufacturer="SEGA" machine="SEGA_OUTRUN" variant="OUTRUN_BASE"
+  <game id="outrun" title="Out Run" manufacturer="Sega" machine="SEGA_OUTRUN" variant="OUTRUN_BASE"
         archive="outrun">
     <resources>
       <rom name="soundcpu" file="epr-10187.88" size="32768" crc32="a10abaa9"/>
