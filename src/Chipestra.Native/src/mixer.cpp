@@ -13,10 +13,21 @@ float Mixer::PanRightGain(float pan) {
     return (1.0f + pan) * 0.5f;
 }
 
+float Mixer::Limit(float x) {
+    const float a = x < 0.0f ? -x : x;
+    if (a <= kLimiterThreshold) {
+        return x;
+    }
+    const float room = 1.0f - kLimiterThreshold;
+    const float limited = kLimiterThreshold + room * std::tanh((a - kLimiterThreshold) / room);
+    return x < 0.0f ? -limited : limited;
+}
+
 void Mixer::MixBlock(const LogicalChannelSink& sink,
                       std::vector<LogicalChannel>& channels,
                       std::size_t frameCount,
-                      std::vector<StereoFrame>& out) const {
+                      std::vector<StereoFrame>& out,
+                      const LevelMatching* levelMatching) const {
     out.assign(frameCount, StereoFrame{});
 
     for (LogicalChannel& channel : channels) {
@@ -46,6 +57,10 @@ void Mixer::MixBlock(const LogicalChannelSink& sink,
                 sourcePeak = sourceAbs;
             }
             float sample = channel.Mute ? 0.0f : raw * channelGain;
+            if (levelMatching != nullptr) {
+                const float t = static_cast<float>(i) / static_cast<float>(frameCount);
+                sample *= levelMatching->gainStart + (levelMatching->gainEnd - levelMatching->gainStart) * t;
+            }
 
             float sampleLeft = sample * leftGain;
             float sampleRight = sample * rightGain;
@@ -88,7 +103,12 @@ void Mixer::MixBlock(const LogicalChannelSink& sink,
 
     // Master hard clamp, applied once after all channels are summed (per-channel
     // Peak/RMS above are measured pre-clamp).
+    const bool limit = levelMatching != nullptr && levelMatching->limiter;
     for (StereoFrame& frame : out) {
+        if (limit) {
+            frame.left = Limit(frame.left);
+            frame.right = Limit(frame.right);
+        }
         frame.left = std::clamp(frame.left, -1.0f, 1.0f);
         frame.right = std::clamp(frame.right, -1.0f, 1.0f);
     }

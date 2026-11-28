@@ -1,6 +1,6 @@
 <chipestra>
   <game id="rolling_thunder_japan" title="Rolling Thunder" manufacturer="Namco"
-        machine="NINTENDO_NES" variant="NES_BASE" archive="Rolling Thunder (Japan)">
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Rolling Thunder (Japan)" level_gain_db="-4.4">
     <resources>
       <rom name="cart" file="Rolling Thunder (Japan).nes" size="393232" crc32="4837b489" crc_search="true"/>
     </resources>

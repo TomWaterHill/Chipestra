@@ -1,6 +1,6 @@
 <chipestra>
   <game id="swa" title="スターウォーズ アーケード" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC" level_gain_db="4.5">
     <resources>
       <rom name="rom" file="Star Wars Arcade (32X) (J) [!].32x|StarWarsArcade(J).32x|StarWarsArcade(J).bin" crc_search="true" crc32="f4e9b846" search_crc32="f4e9b846" search_size="2621440"/>
     </resources>

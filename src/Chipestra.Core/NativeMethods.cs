@@ -167,5 +167,8 @@ namespace Chipestra.Core
 
         [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl)]
         public static extern ChipestraResult chipestra_set_analog_filter_mode(IntPtr handle, uint mode);
+
+        [DllImport(NativeLibrary, CallingConvention = CallingConvention.Cdecl)]
+        public static extern ChipestraResult chipestra_set_level_matching(IntPtr handle, byte enabled, float gainDb);
     }
 }

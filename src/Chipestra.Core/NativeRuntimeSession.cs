@@ -385,6 +385,20 @@ namespace Chipestra.Core
             return NativeMethods.chipestra_set_analog_filter_mode(_handle, (uint)mode);
         }
 
+        /// <summary>
+        /// Switches level matching (the game's gain in dB plus a light limiter before the final clamp). Off, the output is
+        /// exactly the output without the feature. Applies immediately, also while playing.
+        /// </summary>
+        public ChipestraResult SetLevelMatching(bool enabled, float gainDb)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(NativeRuntimeSession));
+            }
+
+            return NativeMethods.chipestra_set_level_matching(_handle, enabled ? (byte)1 : (byte)0, gainDb);
+        }
+
         /// <summary>Sets the master MUTE flag.</summary>
         public ChipestraResult SetMasterMuted(bool muted)
         {

@@ -1,6 +1,6 @@
 <chipestra>
   <game id="smb3_japan" title="Super Mario Bros. 3" manufacturer="Nintendo"
-        machine="NINTENDO_NES" variant="NES_BASE" archive="Super Mario Bros. 3 (Japan)">
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Super Mario Bros. 3 (Japan)" level_gain_db="-2.7">
     <resources>
       <rom name="cart" file="Super Mario Bros. 3 (Japan).nes" size="393232" crc32="c2cad43d" crc_search="true"/>
     </resources>

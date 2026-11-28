@@ -1,6 +1,6 @@
 <chipestra>
   <game id="phantasystar4" title="ファンタシースター 千年紀の終りに" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="Phantasy Star The end of the millennium">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="Phantasy Star The end of the millennium" level_gain_db="5.6">
     <resources>
       <rom name="rom" file="Phantasy Star The end of the millennium.smd|Phantasy Star The end of the millennium.bin|Phantasy Star The end of the millennium.md" crc_search="true" search_crc32="f0bfad42" search_size="3146240"/>
     </resources>

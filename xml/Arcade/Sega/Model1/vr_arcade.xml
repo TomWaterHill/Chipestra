@@ -1,6 +1,6 @@
 <chipestra>
   <game id="vr_arcade" title="バーチャレーシング" manufacturer="Sega"
-        machine="SEGA_MODEL1" variant="MODEL1_BASE" archive="vr">
+        machine="SEGA_MODEL1" variant="MODEL1_BASE" archive="vr" level_gain_db="-4.7">
     <resources>
       <rom name="sndcpu0" file="epr-14870a.7"  size="131072"  crc32="919d9b75"/>
       <rom name="pcm1_0"  file="mpr-14873.32"  size="2097152" crc32="b1965190"/>

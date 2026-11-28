@@ -1,6 +1,6 @@
 <chipestra>
   <game id="gauntlet4" title="ガントレット" manufacturer="Tengen"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="GauntletIV">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="GauntletIV" level_gain_db="6.4">
     <resources>
       <rom name="rom" file="GauntletIV.smd|GauntletIV.bin|GauntletIV.md" crc_search="true" search_crc32="f9872055" search_size="1049088"/>
     </resources>

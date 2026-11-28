@@ -1,7 +1,7 @@
 <chipestra>
   <game id="metalb" title="Metal Black" manufacturer="Taito"
         machine="TAITO_F2SYSTEM" variant="METALBLACK_BASE"
-        archive="metalb">
+        archive="metalb" level_gain_db="2.3">
     <resources>
       <rom name="soundcpu" file="d12-13.5" size="131072"  crc32="bcca2649"/>
       <rom name="adpcma"   file="d12-02.10" size="1048576" crc32="79263e74"/>

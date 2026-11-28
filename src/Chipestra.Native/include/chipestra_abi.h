@@ -495,6 +495,20 @@ typedef enum ChipestraAnalogFilterMode {
 // Returns CHIPESTRA_E_INVALID_STATE if handle is not a live instance.
 CHIPESTRA_API ChipestraResult chipestra_set_analog_filter_mode(ChipestraHandle handle, uint32_t mode) CHIPESTRA_NOEXCEPT;
 
+// Range of the gain of chipestra_set_level_matching, in dB.
+#define CHIPESTRA_LEVEL_MATCHING_MIN_DB (-30.0f)
+#define CHIPESTRA_LEVEL_MATCHING_MAX_DB (30.0f)
+
+// Level matching: when `enabled` is not 0, every channel is multiplied by `gain_db` (the game's correction to the
+// common loudness, the level_gain_db of its XML; 0 for a game without one) and the mix goes through a soft limiter
+// before the final clamp. When `enabled` is 0 (the initial state) nothing is applied and the output is exactly the
+// output of an instance without this feature. Takes effect immediately, with a short ramp, also while playing.
+// Valid in every state of a live instance (remembered across Machine loads).
+//
+// Returns CHIPESTRA_E_INVALID_ARGUMENT if handle is null or gain_db is outside [-30, 30] (or NaN).
+// Returns CHIPESTRA_E_INVALID_STATE if handle is not a live instance.
+CHIPESTRA_API ChipestraResult chipestra_set_level_matching(ChipestraHandle handle, uint8_t enabled, float gain_db) CHIPESTRA_NOEXCEPT;
+
 // Metadata for one registered MachineDefinition. Fixed-size, null-terminated,
 // UTF-8 buffers; a name longer than its buffer is truncated (still
 // null-terminated) rather than overflowing.
@@ -585,6 +599,9 @@ typedef struct ChipestraGameInfo {
     // ChipestraRequiredResourceInfo::archive it builds before calling
     // chipestra_resolve_resources.
     char archive[64];
+    // <game level_gain_db="..."> in dB (appended); 0 if the XML omitted it. The gain that brings the
+    // loudness of the game's songs to the common target; see chipestra_set_level_matching.
+    float level_gain_db;
 } ChipestraGameInfo;
 
 // Writes `handle`'s GameDefinition-level metadata to *out_info.

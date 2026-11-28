@@ -1,6 +1,6 @@
 <chipestra>
   <game id="sharrier32x" title="スペースハリアー" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_Z80">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_Z80" level_gain_db="-1.9">
     <resources>
       <rom name="rom" file="Space Harrier (32X) (JU) [!].32x|SpaceHarrier(JU).32x|SpaceHarrier(JU).bin" crc_search="true" crc32="86e7f989" search_crc32="86e7f989" search_size="2097152"/>
     </resources>

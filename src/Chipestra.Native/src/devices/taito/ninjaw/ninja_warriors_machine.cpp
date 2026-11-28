@@ -50,8 +50,7 @@ public:
             case kPanControl1Offset:
             case kPanControl2Offset:
             case kPanControl3Offset:
-                // Stored only - not wired to any LogicalChannel.
-                owner_.pan_control_[offset - kPanControl0Offset] = value;
+                owner_.pan_percent_[offset - kPanControl0Offset] = PanPercentOf(value);
                 break;
             case kBankswitchOffset:
                 owner_.sound_memory_map_.SetBank(value & 0x07);
@@ -81,11 +80,17 @@ private:
 
 NinjaWarriorsMachine::NinjaWarriorsMachine(std::vector<std::uint8_t> audiocpu_rom,
                                            std::vector<std::uint8_t> adpcmARom,
-                                           std::vector<std::uint8_t> adpcmBRom)
+                                           std::vector<std::uint8_t> adpcmBRom, Mix mix)
     : audiocpu_rom_(std::move(audiocpu_rom)),
       adpcm_a_rom_(std::move(adpcmARom)),
       adpcm_b_rom_(std::move(adpcmBRom)),
-      clock_converter_(kNativeRuntimeTickRateHz, kZ80ClockRate) {}
+      clock_converter_(kNativeRuntimeTickRateHz, kZ80ClockRate),
+      mix_(mix) {}
+
+// The board stores int(float(value) * (100 / 255)) percent; the float arithmetic is kept as written.
+int NinjaWarriorsMachine::PanPercentOf(std::uint8_t value) {
+    return static_cast<int>(static_cast<float>(value) * (100.0f / 255.0f));
+}
 
 // Out-of-line: io_bus_ (unique_ptr to a forward-declared nested type) needs
 // its complete type, which only exists in this translation unit.
@@ -136,7 +141,7 @@ void NinjaWarriorsMachine::Initialize() {
         channel.DeviceName = "YM2610";
         channel.ChannelName = "FM " + std::to_string(ch + 1);
         channel.NativeSampleRate = Ym2610DeviceAdapter::kFmAdpcmOutputSampleRateHz;
-        channel.RoutingGain = kFmAdpcmRoutingGain;
+        channel.RoutingGain = 1.0f;
         channels_.push_back(std::move(channel));
     }
     for (std::uint32_t ch = 0; ch < Ym2610DeviceAdapter::kSsgChannelCount; ++ch) {
@@ -154,7 +159,7 @@ void NinjaWarriorsMachine::Initialize() {
         channel.DeviceName = "YM2610";
         channel.ChannelName = "ADPCM-A " + std::to_string(ch + 1);
         channel.NativeSampleRate = Ym2610DeviceAdapter::kFmAdpcmOutputSampleRateHz;
-        channel.RoutingGain = kFmAdpcmRoutingGain;
+        channel.RoutingGain = 1.0f;
         channels_.push_back(std::move(channel));
     }
     {
@@ -163,7 +168,7 @@ void NinjaWarriorsMachine::Initialize() {
         channel.DeviceName = "YM2610";
         channel.ChannelName = "ADPCM-B";
         channel.NativeSampleRate = Ym2610DeviceAdapter::kFmAdpcmOutputSampleRateHz;
-        channel.RoutingGain = kFmAdpcmRoutingGain;
+        channel.RoutingGain = 1.0f;
         channels_.push_back(std::move(channel));
     }
     channels_registered_ = false;
@@ -173,7 +178,8 @@ void NinjaWarriorsMachine::Initialize() {
     ym2610_->Reset();
     command_interface_->Reset();
     sound_memory_map_.SetBank(0);
-    pan_control_[0] = pan_control_[1] = pan_control_[2] = pan_control_[3] = 0;
+    pan_percent_[0] = pan_percent_[1] = pan_percent_[2] = pan_percent_[3] = 100;
+    for (DcBlocker& blocker : ssg_dc_) blocker = DcBlocker{};
     sound_sync_cursor_ = 0;
     cumulative_ticks_processed_ = 0;
     cumulative_cycles_executed_ = 0;
@@ -190,7 +196,8 @@ void NinjaWarriorsMachine::Reset() {
     ym2610_->Reset();
     command_interface_->Reset();
     sound_memory_map_.SetBank(0);
-    pan_control_[0] = pan_control_[1] = pan_control_[2] = pan_control_[3] = 0;
+    pan_percent_[0] = pan_percent_[1] = pan_percent_[2] = pan_percent_[3] = 100;
+    for (DcBlocker& blocker : ssg_dc_) blocker = DcBlocker{};
     channels_registered_ = false;
     song_active_ = false;
     sound_sync_cursor_ = 0;
@@ -236,6 +243,15 @@ void NinjaWarriorsMachine::Render(EmuDuration duration, LogicalChannelSink* sink
 
     UpdateChannelStereoRouting();
 
+    if (mix_ == Mix::TaitoF2) {
+        const float r = 1.0f - 2.0f * 3.14159265358979f * 30.0f /
+                                   static_cast<float>(Ym2610DeviceAdapter::kSsgOutputSampleRateHz);
+        for (std::uint32_t ch = 0; ch < Ym2610DeviceAdapter::kSsgChannelCount; ++ch) {
+            std::vector<float>& buffer = ym2610_channel_scratch_[kSsgBase + ch];
+            ssg_dc_[ch].Process(buffer.data(), buffer.size(), r);
+        }
+    }
+
     if (sink != nullptr) {
         for (std::uint32_t ch = 0; ch < Ym2610DeviceAdapter::kChannelCount; ++ch) {
             sink->WriteSamples(channels_[ch].Id, ym2610_channel_scratch_[ch].data(),
@@ -245,33 +261,43 @@ void NinjaWarriorsMachine::Render(EmuDuration duration, LogicalChannelSink* sink
 }
 
 void NinjaWarriorsMachine::UpdateChannelStereoRouting() {
-    // On this board the FM/ADPCM-A/ADPCM-B section is unconditionally mono. The
-    // YM2610's per-channel L/R output bits do not reach the speakers as stereo:
-    // the machine config sums the chip's two raw internal outputs onto BOTH
-    // physical channels equally (unlike a 1:1 YM2610 wiring that routes each raw
-    // output to one side). The only remaining divergence would be the four gains
-    // the Z80 writes via pancontrol_w (0xE400-0xE403), but the ROM always writes
-    // the same value to all four (a uniform fade, not a pan). So all channels are
-    // left centered unless the user has panned one (PanOverridden is honored).
+    // Each speaker gets the chip's left output through one gain and its right output
+    // through another. A channel outputs on the chip's left, right or both; the
+    // contribution of the channel's mono sample to each speaker is
+    //   left  = (outputs left ? gain(chip left -> left)  : 0) + (outputs right ? gain(chip right -> left)  : 0)
+    //   right = (outputs left ? gain(chip left -> right) : 0) + (outputs right ? gain(chip right -> right) : 0)
+    // which RoutingGain (left + right) and Pan ((right - left) / (right + left)) reproduce
+    // through the mixer's pan law.
+    // The F2 System board has fixed gains (left to left and right to right only); the Ninja Warriors
+    // board's gains are the four values the Z80 wrote.
+    const bool f2 = (mix_ == Mix::TaitoF2);
+    const float leftToLeft = f2 ? 1.0f : static_cast<float>(pan_percent_[1]) / 100.0f;
+    const float leftToRight = f2 ? 0.0f : static_cast<float>(pan_percent_[0]) / 100.0f;
+    const float rightToLeft = f2 ? 0.0f : static_cast<float>(pan_percent_[3]) / 100.0f;
+    const float rightToRight = f2 ? 1.0f : static_cast<float>(pan_percent_[2]) / 100.0f;
+
+    auto route = [&](LogicalChannel& channel, bool outLeft, bool outRight) {
+        const float toLeft = (outLeft ? leftToLeft : 0.0f) + (outRight ? rightToLeft : 0.0f);
+        const float toRight = (outLeft ? leftToRight : 0.0f) + (outRight ? rightToRight : 0.0f);
+        const float sum = toLeft + toRight;
+        channel.RoutingGain = sum;
+        if (!channel.PanOverridden) channel.Pan = sum > 0.0f ? (toRight - toLeft) / sum : 0.0f;
+    };
     for (std::uint32_t ch = 0; ch < Ym2610DeviceAdapter::kFmChannelCount; ++ch) {
-        LogicalChannel& channel = channels_[kFmBase + ch];
-        if (!channel.PanOverridden) {
-            channel.Pan = 0.0f;
-        }
+        route(channels_[kFmBase + ch], ym2610_->FmChannelOutputsLeft(ch), ym2610_->FmChannelOutputsRight(ch));
     }
     for (std::uint32_t ch = 0; ch < Ym2610DeviceAdapter::kAdpcmAChannelCount; ++ch) {
-        LogicalChannel& channel = channels_[kAdpcmABase + ch];
-        if (!channel.PanOverridden) {
-            channel.Pan = 0.0f;
-        }
+        route(channels_[kAdpcmABase + ch], ym2610_->AdpcmAChannelOutputsLeft(ch),
+              ym2610_->AdpcmAChannelOutputsRight(ch));
     }
-    {
-        LogicalChannel& channel = channels_[kAdpcmBBase];
-        if (!channel.PanOverridden) {
-            channel.Pan = 0.0f;
-        }
+    route(channels_[kAdpcmBBase], ym2610_->AdpcmBOutputsLeft(), ym2610_->AdpcmBOutputsRight());
+    // The Ninja Warriors board sends the SSG to a low-frequency speaker, not to these two: it stays silent
+    // and centred. The F2 System board sends it to both speakers with gain 0.75 each (1.5 in total, centred).
+    for (std::uint32_t ch = 0; ch < Ym2610DeviceAdapter::kSsgChannelCount; ++ch) {
+        LogicalChannel& channel = channels_[kSsgBase + ch];
+        channel.RoutingGain = f2 ? 1.5f : kSsgRoutingGain;
+        if (!channel.PanOverridden) channel.Pan = 0.0f;
     }
-    // SSG has no per-channel pan on real hardware either; left centered.
 }
 
 void NinjaWarriorsMachine::SyncSoundDevices(std::uint64_t audioCpuCycleMark) {

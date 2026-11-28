@@ -1,6 +1,6 @@
 <chipestra>
   <game id="vrdx" title="Virtua Racing Deluxe (JP)" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC" archive="VirtuaRacingDeluxe(J)">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC" archive="VirtuaRacingDeluxe(J)" level_gain_db="0.3">
     <resources>
       <rom name="rom" file="VirtuaRacingDeluxe(J).32x|VirtuaRacingDeluxe(J).bin|VirtuaRacingDeluxe(J).md" crc_search="true" crc32="0908e888" search_crc32="0908e888" search_size="3145728"/>
     </resources>

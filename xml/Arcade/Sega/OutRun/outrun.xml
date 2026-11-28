@@ -1,6 +1,6 @@
 <chipestra>
   <game id="outrun" title="Out Run" manufacturer="Sega" machine="SEGA_OUTRUN" variant="OUTRUN_BASE"
-        archive="outrun">
+        archive="outrun" level_gain_db="-1.8">
     <resources>
       <rom name="soundcpu" file="epr-10187.88" size="32768" crc32="a10abaa9"/>
       <rom name="pcm1"     file="opr-10193.66" size="32768" crc32="bcd10dde"/>

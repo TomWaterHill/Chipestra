@@ -11,6 +11,7 @@
 #include "test_support.h"
 #include "chipestra_abi.h"
 
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -76,6 +77,27 @@ std::vector<std::uint8_t> BuildAudiocpuCommandInjectionRom() {
     rom[nmi++] = 0x45;
 
     return rom;
+}
+
+// audiocpu code that writes the four pan-control ports 0xE400-0xE403 (0xCE, 0x80, 0x00, 0xFF) and then spins.
+std::vector<std::uint8_t> BuildAudiocpuPanPortRom() {
+    std::vector<std::uint8_t> rom(0x100, 0x00);
+    std::size_t i = 0;
+    rom[i++] = 0x31; rom[i++] = 0x00; rom[i++] = 0xDF;  // LD SP,DF00h
+    const std::uint8_t values[4] = {0xCE, 0x80, 0x00, 0xFF};
+    for (int port = 0; port < 4; ++port) {
+        rom[i++] = 0x3E; rom[i++] = values[port];                                          // LD A,value
+        rom[i++] = 0x32; rom[i++] = static_cast<std::uint8_t>(port); rom[i++] = 0xE4;      // LD (0xE400+port),A
+    }
+    const std::size_t jp = i;
+    rom[i++] = 0xC3; rom[i++] = static_cast<std::uint8_t>(jp); rom[i++] = 0x00;  // JP self
+    return rom;
+}
+
+// Sets the L/R output bits (bit 7 = left, bit 6 = right) of ADPCM-A channel `ch`.
+void SetAdpcmAOutputBits(NinjaWarriorsMachine& machine, std::uint8_t ch, bool left, bool right) {
+    machine.Ym2610ForTest().Write(2, static_cast<std::uint8_t>(0x08 + ch));
+    machine.Ym2610ForTest().Write(3, static_cast<std::uint8_t>((left ? 0x80 : 0) | (right ? 0x40 : 0) | 0x1F));
 }
 
 }  // namespace
@@ -179,4 +201,111 @@ void NinjaWarriorsMachineRegisteredInDefaultCatalog() {
         Check(def->Manufacturer == "Taito", "catalog: TAITO_NINJAWARRIORS Manufacturer == Taito");
         Check(!def->Variants.empty(), "catalog: TAITO_NINJAWARRIORS has at least one Variant");
     }
+}
+
+void NinjaWarriorsMachineRoutingCountsTheOutputBitsOfEachChannel() {
+    // With the pan-control gains at their power-on 1.0: a channel that outputs on both the chip's left and right
+    // counts twice (each speaker gets both), one that outputs on one side counts once, and one with neither is silent.
+    NinjaWarriorsMachine machine({}, {}, {});
+    machine.Initialize();
+    SetAdpcmAOutputBits(machine, 0, true, true);
+    SetAdpcmAOutputBits(machine, 1, true, false);
+    SetAdpcmAOutputBits(machine, 2, false, true);
+    SetAdpcmAOutputBits(machine, 3, false, false);
+    machine.Render(EmuDuration{256}, nullptr);
+    const std::vector<LogicalChannel>& channels = machine.LogicalChannels();
+    const std::uint32_t a = NinjaWarriorsMachine::kAdpcmABase;
+    Check(channels[a + 0].RoutingGain == 4.0f && channels[a + 0].Pan == 0.0f,
+          "routing: left+right bits count twice on each speaker (gain 2 x 2, centred)");
+    Check(channels[a + 1].RoutingGain == 2.0f && channels[a + 1].Pan == 0.0f,
+          "routing: a left-only channel counts once on each speaker (the board sums the chip's two outputs into both)");
+    Check(channels[a + 2].RoutingGain == 2.0f && channels[a + 2].Pan == 0.0f,
+          "routing: a right-only channel counts once on each speaker");
+    Check(channels[a + 3].RoutingGain == 0.0f, "routing: a channel with neither output bit is silent");
+    Check(channels[NinjaWarriorsMachine::kSsgBase].RoutingGain == NinjaWarriorsMachine::kSsgRoutingGain,
+          "routing: the SSG gain is left as it was");
+}
+
+void NinjaWarriorsMachineFollowsThePanControlPorts() {
+    // The ports hold int(value * 100 / 255) percent. Port 1 = chip left -> left speaker, port 0 = chip left -> right
+    // speaker, port 3 = chip right -> left speaker, port 2 = chip right -> right speaker.
+    NinjaWarriorsMachine machine(BuildAudiocpuPanPortRom(), {}, {});
+    machine.Initialize();
+    Check(machine.PanGainForTest(0) == 0.80f, "ports: 0xCE -> 80 percent");
+    Check(machine.PanGainForTest(1) == 0.50f, "ports: 0x80 -> 50 percent");
+    Check(machine.PanGainForTest(2) == 0.00f, "ports: 0x00 -> 0 percent");
+    Check(machine.PanGainForTest(3) == 1.00f, "ports: 0xFF -> 100 percent");
+
+    SetAdpcmAOutputBits(machine, 0, true, false);
+    SetAdpcmAOutputBits(machine, 1, false, true);
+    SetAdpcmAOutputBits(machine, 2, true, true);
+    machine.Render(EmuDuration{256}, nullptr);
+    const std::vector<LogicalChannel>& channels = machine.LogicalChannels();
+    const std::uint32_t a = NinjaWarriorsMachine::kAdpcmABase;
+    // left-only: left speaker 0.5, right speaker 0.8
+    Check(std::fabs(channels[a + 0].RoutingGain - 1.3f) < 1e-6f && std::fabs(channels[a + 0].Pan - (0.3f / 1.3f)) < 1e-6f,
+          "ports: a left-only channel reaches the left speaker through port 1 and the right speaker through port 0");
+    // right-only: left speaker 1.0 (port 3), right speaker 0.0 (port 2)
+    Check(std::fabs(channels[a + 1].RoutingGain - 1.0f) < 1e-6f && channels[a + 1].Pan == -1.0f,
+          "ports: a right-only channel reaches the left speaker through port 3 and the right speaker through port 2");
+    // both: sum of the two
+    Check(std::fabs(channels[a + 2].RoutingGain - 2.3f) < 1e-6f, "ports: a left+right channel adds the two paths");
+
+    // A UI-set pan is kept, while the gain still follows the ports.
+    machine.LogicalChannels()[a + 0].Pan = 0.25f;
+    machine.LogicalChannels()[a + 0].PanOverridden = true;
+    machine.Render(EmuDuration{256}, nullptr);
+    Check(machine.LogicalChannels()[a + 0].Pan == 0.25f, "ports: a pan set from the UI is kept");
+}
+
+void NinjaWarriorsMachineTaitoF2MixSendsEachChipOutputToItsOwnSpeaker() {
+    // The F2 System board (Metal Black): chip left -> left speaker, chip right -> right speaker, gain 1.0 each; the
+    // SSG goes to both speakers with 0.75 each; the Z80's writes to 0xE400-0xE403 change nothing.
+    NinjaWarriorsMachine machine(BuildAudiocpuPanPortRom(), {}, {}, NinjaWarriorsMachine::Mix::TaitoF2);
+    machine.Initialize();
+    SetAdpcmAOutputBits(machine, 0, true, false);
+    SetAdpcmAOutputBits(machine, 1, false, true);
+    SetAdpcmAOutputBits(machine, 2, true, true);
+    SetAdpcmAOutputBits(machine, 3, false, false);
+    machine.Render(EmuDuration{256}, nullptr);
+    const std::vector<LogicalChannel>& channels = machine.LogicalChannels();
+    const std::uint32_t a = NinjaWarriorsMachine::kAdpcmABase;
+    Check(channels[a + 0].RoutingGain == 1.0f && channels[a + 0].Pan == -1.0f,
+          "f2: a left-output channel is on the left speaker only, gain 1");
+    Check(channels[a + 1].RoutingGain == 1.0f && channels[a + 1].Pan == 1.0f,
+          "f2: a right-output channel is on the right speaker only, gain 1");
+    Check(channels[a + 2].RoutingGain == 2.0f && channels[a + 2].Pan == 0.0f,
+          "f2: a channel with both output bits is on both speakers, gain 1 each");
+    Check(channels[a + 3].RoutingGain == 0.0f, "f2: a channel with neither output bit is silent");
+    Check(channels[NinjaWarriorsMachine::kSsgBase].RoutingGain == 1.5f && channels[NinjaWarriorsMachine::kSsgBase].Pan == 0.0f,
+          "f2: the SSG is on both speakers, 0.75 each");
+}
+
+void NinjaWarriorsMachineTaitoF2MixRemovesTheSsgRestingDc() {
+    // At rest the chip's SSG outputs a constant level. The F2 mix removes it (the Ninja Warriors mix does not touch the
+    // SSG, which it silences by its gain).
+    NinjaWarriorsMachine f2({}, {}, {}, NinjaWarriorsMachine::Mix::TaitoF2);
+    f2.Initialize();
+    NinjaWarriorsMachine nj({}, {}, {});
+    nj.Initialize();
+    auto restingLevel = [](NinjaWarriorsMachine& machine) {
+        // Tone and noise off, channel A at full volume: the chip's output stays at a constant level.
+        machine.Ym2610ForTest().Write(0, 0x07);
+        machine.Ym2610ForTest().Write(1, 0x3F);
+        machine.Ym2610ForTest().Write(0, 0x08);
+        machine.Ym2610ForTest().Write(1, 0x0F);
+        LogicalChannelSink sink;
+        float worst = 0.0f;
+        for (int block = 0; block < 48; ++block) {  // the first 40 blocks let the blocker settle on the step
+            machine.Render(EmuDuration{256}, &sink);
+            const LogicalChannelBuffer& buffer = sink.ChannelBuffer(NinjaWarriorsMachine::kSsgBase);
+            for (std::size_t n = 0; block >= 40 && n < buffer.Size(); ++n) worst = std::max(worst, std::fabs(buffer[n]));
+            sink.ClearAll();
+        }
+        return worst;
+    };
+    const float f2Level = restingLevel(f2);
+    const float njLevel = restingLevel(nj);
+    Check(njLevel > 0.1f, "f2: (reference) the chip's SSG rests at a constant level");
+    Check(f2Level < 1e-3f, "f2: the SSG's resting DC is removed");
 }

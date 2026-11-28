@@ -5,6 +5,7 @@
 #include "default_machine_catalog.h"
 #include "game_definition.h"
 #include "machine_registry.h"
+#include "level_matching.h"
 #include "mixer.h"
 #include "null_audio_output.h"
 #include "playback_pump.h"
@@ -59,6 +60,11 @@ struct ChipestraInstanceOpaque {
     // to the final mixed StereoFrame block (after MixBlock), not to any LogicalChannel element.
     // Analog output-stage filter mode (ChipestraAnalogFilterMode), read by the PlaybackPump thread.
     std::atomic<std::uint32_t> analog_filter_mode{0};
+    // Level matching (chipestra_set_level_matching): the setting and the game's gain in dB, read by the
+    // PlaybackPump thread, which owns level_ramp.
+    std::atomic<bool> level_matching_enabled{false};
+    std::atomic<float> level_matching_gain_db{0.0f};
+    LevelMatchingRamp level_ramp;
     std::atomic<float> master_gain{1.0f};
     std::atomic<bool> master_muted{false};
     std::atomic<float> master_peak_left{0.0f};
@@ -463,6 +469,8 @@ extern "C" ChipestraResult chipestra_start_playback(ChipestraHandle handle) noex
         // because chipestra_destroy_instance always stops and joins the pump
         // before the instance it points to is torn down (see there).
         handle->resampler.Reset();
+        handle->level_ramp.Reset(handle->level_matching_enabled.load(std::memory_order_relaxed),
+                                 handle->level_matching_gain_db.load(std::memory_order_relaxed));
         handle->pump = std::make_unique<PlaybackPump>([handle]() {
             // One EmuTick == one canonical (192kHz) output frame, so a block is exactly
             // kBlockSizeFrames ticks. The Machine writes each channel at its own native rate;
@@ -479,7 +487,12 @@ extern "C" ChipestraResult chipestra_start_playback(ChipestraHandle handle) noex
                 // channels_mutex guards this block's Mute/Pan/Gain reads and Peak/RMS writes
                 // against a concurrent Channel Meter ABI call from the UI thread.
                 std::lock_guard<std::mutex> channelsLock(handle->channels_mutex);
-                handle->mixer.MixBlock(canonical, handle->machine->LogicalChannels(), Mixer::kBlockSizeFrames, out);
+                Mixer::LevelMatching levelMatching;
+                const bool matchLevel = handle->level_ramp.NextBlock(
+                    handle->level_matching_enabled.load(std::memory_order_relaxed),
+                    handle->level_matching_gain_db.load(std::memory_order_relaxed), levelMatching);
+                handle->mixer.MixBlock(canonical, handle->machine->LogicalChannels(), Mixer::kBlockSizeFrames, out,
+                                       matchLevel ? &levelMatching : nullptr);
             }
 
             // Master VOLUME/MUTE is a second stage applied to the already-mixed stereo signal
@@ -783,6 +796,18 @@ extern "C" ChipestraResult chipestra_set_analog_filter_mode(ChipestraHandle hand
     return CHIPESTRA_OK;
 }
 
+extern "C" ChipestraResult chipestra_set_level_matching(ChipestraHandle handle, uint8_t enabled, float gain_db) noexcept {
+    if (handle == nullptr || !(gain_db >= CHIPESTRA_LEVEL_MATCHING_MIN_DB && gain_db <= CHIPESTRA_LEVEL_MATCHING_MAX_DB)) {
+        return CHIPESTRA_E_INVALID_ARGUMENT;   // also a NaN
+    }
+    if (!IsLiveInstance(handle)) {
+        return CHIPESTRA_E_INVALID_STATE;
+    }
+    handle->level_matching_gain_db.store(gain_db, std::memory_order_relaxed);
+    handle->level_matching_enabled.store(enabled != 0, std::memory_order_relaxed);
+    return CHIPESTRA_OK;
+}
+
 extern "C" ChipestraResult chipestra_set_master_muted(ChipestraHandle handle, uint8_t muted) noexcept {
     if (handle == nullptr) {
         return CHIPESTRA_E_INVALID_ARGUMENT;
@@ -860,6 +885,7 @@ extern "C" ChipestraResult chipestra_game_definition_get_info(ChipestraGameDefin
     out_info->resource_count = static_cast<uint32_t>(definition.Resources.size());
     out_info->track_count = static_cast<uint32_t>(definition.Tracks.size());
     CopyTruncated(definition.Archive, out_info->archive, sizeof(out_info->archive));
+    out_info->level_gain_db = definition.LevelGainDb;
     return CHIPESTRA_OK;
 }
 

@@ -36,5 +36,8 @@ namespace Chipestra.Core
         /// <summary>&lt;game archive="..."&gt;; "" if the XML omitted it.</summary>
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
         public string Archive;
+
+        /// <summary>&lt;game level_gain_db="..."&gt; in dB; 0 if the XML omitted it.</summary>
+        public float LevelGainDb;
     }
 }

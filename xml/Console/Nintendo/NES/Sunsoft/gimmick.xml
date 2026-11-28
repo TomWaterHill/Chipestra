@@ -1,6 +1,6 @@
 <chipestra>
   <game id="gimmick_japan" title="Gimmick!" manufacturer="Sunsoft"
-        machine="NINTENDO_NES" variant="NES_BASE" archive="Gimmick! (Japan)">
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Gimmick! (Japan)" level_gain_db="-4.1">
     <resources>
       <rom name="cart" file="Gimmick! (Japan).nes" size="393232" crc32="eeb6b362" crc_search="true"/>
     </resources>

@@ -233,6 +233,7 @@ namespace Chipestra.App.ViewModels
 
             // The filter mode is per instance: set it before any sound is rendered.
             _player.SetAnalogFilterMode(AnalogFilterOptions.Normalize((int)_settings.MegaDriveAnalogFilter));
+            _player.SetLevelMatching(_settings.LevelMatching);
 
             OutputFormatText = "-";
             ChipestraResult outputResult = _player.SelectOutput(
@@ -281,6 +282,7 @@ namespace Chipestra.App.ViewModels
             _settings = settings;
             AppSettingsStore.Save(settings);
             _player?.SetAnalogFilterMode(AnalogFilterOptions.Normalize((int)settings.MegaDriveAnalogFilter));
+            _player?.SetLevelMatching(settings.LevelMatching);
         }
 
         // --- Status polling ---

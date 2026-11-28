@@ -31,6 +31,12 @@ namespace Chipestra.Core
         public string? Archive { get; init; }
 
         /// <summary>
+        /// &lt;game level_gain_db="..."&gt;: the correction in dB that brings the loudness of the game's songs to the common
+        /// target. It is applied only while level matching is switched on (<see cref="Player.SetLevelMatching"/>). 0 when omitted.
+        /// </summary>
+        public float LevelGainDb { get; init; }
+
+        /// <summary>
         /// The text of the game's <c>&lt;driver&gt;</c> element (the settings of a game whose sound driver is called
         /// as routines of the game program, e.g. a console cartridge), or null if the XML has none. It is handed to
         /// the Machine as an extra resource named <c>driver_xml</c>; Native never interprets it.

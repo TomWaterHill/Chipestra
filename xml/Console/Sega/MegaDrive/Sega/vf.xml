@@ -1,6 +1,6 @@
 <chipestra>
   <game id="vf" title="バーチャファイター" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC" level_gain_db="4.1">
     <resources>
       <rom name="rom" file="Virtua Fighter (32X) (JU) [!].32x|VirtuaFighter(JU).32x|VirtuaFighter(JU).bin" crc_search="true" crc32="b5de9626" search_crc32="b5de9626" search_size="4194304"/>
     </resources>

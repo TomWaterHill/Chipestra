@@ -64,33 +64,36 @@ public:
     static constexpr std::uint32_t kAdpcmBBase = Ym2610DeviceAdapter::kAdpcmBBase;
     static constexpr std::uint32_t kChannelCount = Ym2610DeviceAdapter::kChannelCount;
 
-    // Per-channel routing gain. MAME's own mixer levels for this board are tied
-    // to an asymmetric subwoofer/software-pan-filter graph that is not
-    // reproduced; routing is expressed through LogicalChannel Pan/RoutingGain.
+    // Per-channel routing gain of the legacy mix, which Metal Black still uses (the
+    // Ninja Warriors mix below does not use these). Routing is expressed through
+    // LogicalChannel Pan/RoutingGain.
     //
-    // FM, ADPCM-A and ADPCM-B share ONE gain: the chip sums the three generators
-    // onto one internal bus and clamps the result once (clamp16), and no driver
-    // separates them; their balance is set by each voice's hardware volume (plus
-    // FM's rshift=1 vs ADPCM's rshift=0, handled in Ym2610DeviceAdapter). The
-    // Mixer's master clamp to [-1, 1] mirrors the chip's clamp16, so hot content
-    // clamps as on hardware instead of being pre-attenuated. 5.94 was calibrated
-    // so command 0x51 (DADDY MULK) matches a MAME -wavwrite reference to within
-    // 0.1 dB (RMS 0.0558, peak 0.2788).
-    //
-    // SSG is a separate bus on real hardware and is deliberately silenced (0.0):
-    // in the commands checked, MAME's SSG route reads exactly zero, while the
-    // adapter reports the same command-independent raw level (~0.4999, most
-    // likely a resting DC bias in ymfm's SSG engine) that never reaches the real
-    // output. No SSG-driven track has been found to calibrate against.
-    static constexpr float kFmAdpcmRoutingGain = 5.94f;
+    // FM, ADPCM-A and ADPCM-B are summed by the chip onto one bus and clamped once (clamp16);
+    // the Mixer's master clamp to [-1, 1] mirrors that, so hot content clamps as on hardware.
+    // Their levels follow from the board's speaker routing (see Mix below), not from a
+    // calibrated constant. The SSG is a separate bus: the Ninja Warriors board sends it to a
+    // low-frequency speaker that this player does not have, so it stays silent (gain 0) there.
     static constexpr float kSsgRoutingGain = 0.0f;
 
     // `audiocpu_rom` is loaded into the Z80's ROM region; `adpcmARom`/`adpcmBRom`
     // into Ym2610DeviceAdapter's sample ROMs, during Initialize(). All default to
     // empty (a registered-but-not-yet-playable Machine).
+    // How the YM2610's outputs reach the speakers.
+    //  NinjaWarriors: as the board's machine configuration does. The chip's left and right
+    //    outputs are both sent to both speakers, through four gains that the Z80 writes to
+    //    0xE400-0xE403 (gain = int(value * 100 / 255) / 100, 1.0 until written). A channel
+    //    that outputs on both the left and the right bit counts twice, one that outputs on
+    //    one side counts once. Output stays centred while the four gains are equal.
+    //  TaitoF2: as the F2 System's machine configuration does (used by Metal Black). The chip's
+    //    left output goes to the left speaker and its right output to the right speaker, each
+    //    with gain 1.0, and the SSG goes to both speakers with gain 0.75. The Z80's writes to
+    //    0xE400-0xE403 are ignored by that board. The SSG has its resting DC removed.
+    enum class Mix { NinjaWarriors, TaitoF2 };
+
     explicit NinjaWarriorsMachine(std::vector<std::uint8_t> audiocpu_rom,
                                   std::vector<std::uint8_t> adpcmARom = {},
-                                  std::vector<std::uint8_t> adpcmBRom = {});
+                                  std::vector<std::uint8_t> adpcmBRom = {},
+                                  Mix mix = Mix::NinjaWarriors);
     ~NinjaWarriorsMachine() override;
 
     void Initialize() override;
@@ -102,6 +105,8 @@ public:
 
     // Test-only observation points.
     MameDerivedZ80Adapter::RegisterSnapshot AudioCpuSnapshot() const { return audiocpu_->Snapshot(); }
+    // The gain (0..1) of the pan-control port (0xE400 + port), as the machine uses it.
+    float PanGainForTest(std::uint32_t port) const { return static_cast<float>(pan_percent_[port & 3]) / 100.0f; }
     MameDerivedZ80Adapter& AudioCpuForTest() { return *audiocpu_; }
     Ym2610DeviceAdapter& Ym2610ForTest() { return *ym2610_; }
     std::uint8_t ReadAudioCpuMemory(std::uint16_t address) const { return sound_memory_map_.Read8(address); }
@@ -150,10 +155,12 @@ private:
     // audiocpu-cycle mark ym2610_ has been advanced to within the current Render().
     std::uint64_t sound_sync_cursor_ = 0;
 
-    // Software pan-control register bytes (0xE400-0xE403). The ROM always writes
-    // the same value to all four (0xFF at boot, settling to 0xCE), so they are a
-    // uniform fade, not a stereo pan; stored but not wired to any LogicalChannel.
-    std::uint8_t pan_control_[4] = {};
+    // Software pan-control gains (0xE400-0xE403) as whole percents (100 until written).
+    // Port p feeds one of the four gains of the board's filter chain:
+    //   port 1: chip left -> left speaker, port 0: chip left -> right speaker,
+    //   port 3: chip right -> left speaker, port 2: chip right -> right speaker.
+    int pan_percent_[4] = {100, 100, 100, 100};
+    Mix mix_;
 
     std::vector<LogicalChannel> channels_;
     // Gap between the STOP and the next command when switching songs.
@@ -164,7 +171,24 @@ private:
     bool channels_registered_ = false;  // registered with the sink on Render()'s first call
     std::vector<std::vector<float>> ym2610_channel_scratch_;
 
+    // A one-pole DC blocker (about 30 Hz at the SSG's stream rate), used by the TaitoF2 mix. The
+    // YM2610's SSG output rests at a constant level, which the board's analog stage does not pass.
+    struct DcBlocker {
+        float prevInput = 0.0f;
+        float prevOutput = 0.0f;
+        void Process(float* samples, std::size_t count, float r) {
+            for (std::size_t i = 0; i < count; ++i) {
+                const float out = samples[i] - prevInput + r * prevOutput;
+                prevInput = samples[i];
+                prevOutput = out;
+                samples[i] = out;
+            }
+        }
+    };
+    DcBlocker ssg_dc_[Ym2610DeviceAdapter::kSsgChannelCount];
+
     void UpdateChannelStereoRouting();
+    static int PanPercentOf(std::uint8_t value);
     void RunBootWarmup();
     // Substitutes for the real master's boot handshake (0xEF -> gap -> 0x5A -> gap
     // -> 0x3B -> gap -> STOP); called after RunBootWarmup() in Initialize()/Reset().

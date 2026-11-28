@@ -13,7 +13,7 @@ It also plays the music of some Famicom / NES, Famicom Disk System and Mega Driv
 Chipestra is not a music composition tool, and it does not play VGM or other
 pre-recorded music files. No ROMs are included.
 
-Version: Ver 1.007.00
+Version: Ver 1.008.00
 
 ### Support history
 
@@ -105,10 +105,17 @@ The 32X's two SH-2 processors, their on-chip peripherals and the PWM sound unit 
 
 The sound board of a Sega Model 1 game is a 68000 with two YMW258-F (MultiPCM) sound chips and a YM3438 that the game's sound driver uses as its timer; Chipestra runs the board's own program and gives it the MIDI messages that the game's main processor sends (one message per track), so the main processor is not needed. The ROM files of the board are the ones of the games' ROM sets (VF.zip and vr.zip in MAME's naming, found in the ROM Root by their file names and CRC-32); the program of the main processor, its video ROMs and the I/O board's ROM are not used. The track lists are made of the songs and sounds that the sound driver can start (many are short sound effects and voices); the names are numbers, as the games' sound drivers have no names for them.
 
+#### Ver 1.008.00
+
+A new setting, Settings > Loudness > Level matching, brings the songs of every game to about the same loudness. Each game's XML file carries a gain (the `level_gain_db` attribute of `<game>`, between -30 and +30 dB) that was worked out from the integrated loudness (ITU-R BS.1770-4) of the game's songs, with a target of -26 LUFS; with the setting on, the gain is applied to the channels and a light limiter (it only acts above -1 dBFS) guards against clipping. Off (the default) leaves the sound exactly as before. The change takes effect within about 40 ms, also during playback. Sound effects were not measured; the gain of a game is set from its songs.
+
+The volume of The Ninja Warriors was corrected to match MAME (the distortion of sound effects such as "SE MISS" is gone). The volume and the left/right placement of Metal Black were also corrected to match MAME.
+
 ### Features
 
 - Per-channel level meters, pan, mute and solo
 - Master volume and level meter
+- Optional level matching: every game's songs are brought to about the same loudness (Off by default)
 - Optional console analog-stage low-pass filter for Mega Drive sound (Off, Model 1, Model 2)
 - Selectable output sample rate (automatic by default; in shared mode the
   Windows sound settings take priority)
@@ -230,7 +237,7 @@ Chipestra（チップエストラ。「チップ」と「オーケストラ」�
 
 Chipestra は作曲用のソフトではなく、VGM などの録音済みの音楽ファイルを再生するソフトでもありません。ROM は含まれていません。
 
-バージョン: Ver 1.007.00
+バージョン: Ver 1.008.00
 
 ### 対応の履歴
 
@@ -315,10 +322,17 @@ NES とファミコン ディスクシステムでは、エミュレートした
 
 セガ Model 1 のサウンドボードは、68000 に YMW258-F（MultiPCM）音源2個と、ゲームのサウンドドライバーがタイマーとして使う YM3438 を載せたものです。Chipestra は、ボードのプログラムをそのまま動かし、ゲームのメインプロセッサーが送る MIDI メッセージ（1トラックにつき1メッセージ）を与えるので、メインプロセッサーは要りません。使う ROM は、ゲームの ROM セット（MAME の名前では VF.zip と vr.zip）のサウンドボードのファイルで、ROM Root の中から、ファイル名と CRC-32 で見つけます。メインプロセッサーのプログラム、映像の ROM、I/O ボードの ROM は使いません。トラックの一覧は、サウンドドライバーが鳴らせる曲と音（短い効果音や声が多数）で、ゲームのサウンドドライバーには名前が無いので、名前は番号です。
 
+#### Ver 1.008.00
+
+設定に「Loudness」の「Level matching」を追加しました。ゲームごとの音量の差をそろえる設定です。各ゲームの XML ファイルに、そのゲームの曲の統合ラウドネス（ITU-R BS.1770-4）から、目標 -26 LUFS として求めた補正値（`<game>` の `level_gain_db` 属性、-30〜+30 dB）が書かれていて、有効にすると、その値をチャンネルに掛け、割れを防ぐ軽いリミッター（-1 dBFS を超えるときだけ働きます）を通します。Off（既定）のときは、音は今までと完全に同じです。切り替えは約40ミリ秒で反映され、再生中でも使えます。効果音は測っておらず、補正値は曲から決めています。
+
+ニンジャウォリアーズの音量を MAME に合わせて直しました（効果音「SE MISS」などの音割れがなくなりました）。メタルブラックの音量と左右の出し方も MAME に合わせて直しました。
+
 ### 機能
 
 - チャンネルごとのレベルメーター、パン、ミュート、ソロ
 - マスター音量とレベルメーター
+- ゲームごとの音量をそろえる設定（Level matching。既定は Off）
 - メガドライブの音に、本体のアナログ出力段のローパスフィルタを掛ける設定（Off、Model 1、Model 2）
 - 出力サンプルレートの選択（既定は自動。共有モードでは、Windows のサウンド設定が優先されます）
 - WASAPI 共有モードでの出力

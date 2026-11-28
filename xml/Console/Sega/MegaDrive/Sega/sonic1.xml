@@ -1,6 +1,6 @@
 <chipestra>
   <game id="sonic1" title="Sonic the Hedgehog" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="SonicTheHedgehog">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="SonicTheHedgehog" level_gain_db="1.2">
     <resources>
       <rom name="rom" file="SonicTheHedgehog.smd|SonicTheHedgehog.bin|SonicTheHedgehog.md" crc_search="true" search_crc32="afe05eee" search_size="524800"/>
     </resources>

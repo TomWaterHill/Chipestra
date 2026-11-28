@@ -1,6 +1,6 @@
 <chipestra>
   <game id="battlemania" title="バトルマニア" manufacturer="Vic Tokai"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="BattleMania">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="BattleMania" level_gain_db="3.5">
     <resources>
       <rom name="rom" file="BattleMania.smd|BattleMania.bin|BattleMania.md" crc_search="true" search_crc32="1ab9a5de" search_size="524800"/>
     </resources>

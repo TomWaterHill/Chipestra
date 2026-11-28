@@ -1,6 +1,6 @@
 <chipestra>
   <game id="lagrange_point_japan" title="ラグランジュポイント" manufacturer="Konami"
-        machine="NINTENDO_NES" variant="NES_BASE" archive="Lagrange Point (Japan)">
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Lagrange Point (Japan)" level_gain_db="1.4">
     <resources>
       <rom name="cart" file="Lagrange Point (Japan).nes" size="524304" crc32="ead4dedc" crc_search="true"/>
       <!-- The VRC7's built-in instrument table, in the archive ds1001.zip (not part of the game's archive). -->

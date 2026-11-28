@@ -4,7 +4,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Chipestra - Settings"
-        Height="500" Width="500"
+        Height="600" Width="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -58,6 +58,12 @@
                  request, not a command. The per-session "actual vs requested" text is the
                  Output field in the main window's INFORMATION row. -->
             <TextBlock Text="{Binding OutputRateNote}" TextWrapping="Wrap" Margin="0,8,0,0" Opacity="0.7" />
+
+            <TextBlock Text="Loudness" FontWeight="Bold" Margin="0,16,0,8" />
+            <CheckBox x:Name="LevelMatchingCheckBox"
+                      Content="Level matching"
+                      IsChecked="{Binding LevelMatching, Mode=TwoWay}" />
+            <TextBlock Text="{Binding LevelMatchingNote}" TextWrapping="Wrap" Margin="0,8,0,0" Opacity="0.7" />
 
             <TextBlock Text="Mega Drive / Genesis" FontWeight="Bold" Margin="0,16,0,8" />
             <ComboBox x:Name="AnalogFilterComboBox"

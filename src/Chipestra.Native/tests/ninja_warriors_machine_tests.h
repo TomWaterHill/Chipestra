@@ -13,4 +13,8 @@ void NinjaWarriorsMachineConstructsAndRegistersFourteenChannels();
 void NinjaWarriorsMachineCommandInjectionDeliversViaTc0140sytToAudiocpuNmi();
 void NinjaWarriorsMachineRepeatedCommandsReAssertNmi();
 void NinjaWarriorsMachineRegisteredInDefaultCatalog();
+void NinjaWarriorsMachineRoutingCountsTheOutputBitsOfEachChannel();
+void NinjaWarriorsMachineFollowsThePanControlPorts();
+void NinjaWarriorsMachineTaitoF2MixSendsEachChipOutputToItsOwnSpeaker();
+void NinjaWarriorsMachineTaitoF2MixRemovesTheSsgRestingDc();
 void NinjaWarriorsMachineFmAdpcmChannelsStayCenteredUnlessOverridden();

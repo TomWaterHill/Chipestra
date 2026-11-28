@@ -1,7 +1,7 @@
 <chipestra>
   <game id="gradius" title="Gradius" manufacturer="Konami"
         machine="KONAMI_GRADIUS_BUBBLESYSTEM" variant="GRADIUS_BASE"
-        archive="gradius">
+        archive="gradius" level_gain_db="-8.8">
     <resources>
       <rom name="soundcpu"    file="400-e03.5l"  size="8192"  crc32="a5a8e57d"/>
       <rom name="wave0"       file="400-a01.fse" size="256"   crc32="5827b1e8"/>

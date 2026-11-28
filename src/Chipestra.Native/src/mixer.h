@@ -21,6 +21,20 @@ struct StereoFrame {
 // board's fixed per-device mix weight) and linearly summing the results.
 class Mixer {
 public:
+    // Level matching (an optional gain per game, plus a light limiter). It is applied to every channel's
+    // contribution in MixBlock, in the layer of the channel gain and before the master clamp, so the meters
+    // show what is heard. SourcePeak (the song-end judgement) does not include it.
+    struct LevelMatching {
+        float gainStart = 1.0f;   // linear gain at the first frame of the block
+        float gainEnd = 1.0f;     // linear gain at the end of the block (the gain is interpolated linearly per frame)
+        bool limiter = true;      // soft limiter on the summed signal, before the clamp
+    };
+
+    // Soft-knee limiter on one sample: unchanged up to kLimiterThreshold (-1 dBFS), above it a tanh knee
+    // that approaches 1.0 (and does not exceed it). Memoryless, so the same input gives the same output.
+    static constexpr float kLimiterThreshold = 0.8912509f;
+    static float Limit(float x);
+
     // The canonical mix rate is the Native Runtime's tick rate: one output frame
     // per tick.
     static constexpr std::uint32_t kCanonicalSampleRateHz =
@@ -46,12 +60,13 @@ public:
     // every channel has been summed. This mirrors real chips such as the YM2610,
     // which sum FM and ADPCM generators onto one internal bus and clamp once, so
     // channels sharing one RoutingGain can exceed 1.0 on loud content without
-    // any generator's calibration being wrong. The audio endpoint clamps again
+    // any generator's calibration being wrong. With `levelMatching` the sum goes through Limit() first. The audio endpoint clamps again
     // as a final safety net.
     void MixBlock(const LogicalChannelSink& sink,
                   std::vector<LogicalChannel>& channels,
                   std::size_t frameCount,
-                  std::vector<StereoFrame>& out) const;
+                  std::vector<StereoFrame>& out,
+                  const LevelMatching* levelMatching = nullptr) const;
 
 private:
     // Linear pan law: pan=-1 -> right gain 0, pan=+1 -> left gain 0, pan=0 ->

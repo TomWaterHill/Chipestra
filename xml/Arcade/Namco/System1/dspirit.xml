@@ -1,6 +1,6 @@
 <chipestra>
   <game id="dspirit" title="Dragon Spirit" manufacturer="Namco"
-        machine="NAMCO_SYSTEM1" variant="SYSTEM1_BASE" archive="dspirit">
+        machine="NAMCO_SYSTEM1" variant="SYSTEM1_BASE" archive="dspirit" level_gain_db="-10.5">
     <resources>
       <rom name="soundcpu0" file="ds1_s0.bin" size="65536" crc32="27100065"/>
       <rom name="soundcpu1" file="ds1_s1.bin" size="65536" crc32="b398645f"/>

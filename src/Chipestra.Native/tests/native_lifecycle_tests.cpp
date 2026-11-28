@@ -93,6 +93,7 @@
 #include "dragon_spirit_machine_tests.h"
 #include "sf_machine_tests.h"
 #include "model1_machine_tests.h"
+#include "level_matching_tests.h"
 #include "sf_memory_map_tests.h"
 
 #include <chrono>
@@ -1436,6 +1437,15 @@ int main() {
         std::printf(g_failures == 0 ? "native lifecycle tests (Star Cruiser only): all checks passed\n" : "native lifecycle tests (Star Cruiser only): %d check(s) FAILED\n", g_failures);
         return g_failures == 0 ? 0 : 1;
     }
+    // CHIPESTRA_TEST_GROUP=ninjaw runs only the machine tests of the Ninja Warriors mixes.
+    if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "ninjaw") {
+        NinjaWarriorsMachineRoutingCountsTheOutputBitsOfEachChannel();
+        NinjaWarriorsMachineFollowsThePanControlPorts();
+        NinjaWarriorsMachineTaitoF2MixSendsEachChipOutputToItsOwnSpeaker();
+        NinjaWarriorsMachineTaitoF2MixRemovesTheSsgRestingDc();
+        std::printf(g_failures == 0 ? "native lifecycle tests (Ninja Warriors only): all checks passed\n" : "native lifecycle tests (Ninja Warriors only): %d check(s) FAILED\n", g_failures);
+        return g_failures == 0 ? 0 : 1;
+    }
     if (const char* group = std::getenv("CHIPESTRA_TEST_GROUP"); group != nullptr && std::string_view(group) == "model1") {
         Model1MachineRegisteredInDefaultCatalog();
         Model1DriverConfigIsParsedAndChecked();
@@ -1447,6 +1457,12 @@ int main() {
         Model1MachineYmChannelsCarryNoDirectCurrent();
         Model1MachineIdleVoiceAloneIsJudgedAsTheEndOfTheSong();
         Model1MachineVoiceBelowTotalLevel127KeepsTheSongGoing();
+        LevelMatchingGainRaisesAndLowersTheMix();
+        LevelMatchingLimiterKeepsTheMixBelowFullScale();
+        LevelMatchingLimiterIsDeterministicAndLeavesQuietSignalsAlone();
+        LevelMatchingRampSwitchesWithoutAStepAndEndsInBypass();
+        LevelMatchingDoesNotChangeTheSongEndJudgement();
+        LevelMatchingGameDefinitionAttributeAndAbiFunction();
         Model1ViaDefinitionXmlRealRomMatchesTheOriginal();
         std::printf(g_failures == 0 ? "native lifecycle tests (Model 1 only): all checks passed\n" : "native lifecycle tests (Model 1 only): %d check(s) FAILED\n", g_failures);
         return g_failures == 0 ? 0 : 1;
@@ -1928,6 +1944,12 @@ int main() {
     Model1MachineYmChannelsCarryNoDirectCurrent();
     Model1MachineIdleVoiceAloneIsJudgedAsTheEndOfTheSong();
     Model1MachineVoiceBelowTotalLevel127KeepsTheSongGoing();
+    LevelMatchingGainRaisesAndLowersTheMix();
+    LevelMatchingLimiterKeepsTheMixBelowFullScale();
+    LevelMatchingLimiterIsDeterministicAndLeavesQuietSignalsAlone();
+    LevelMatchingRampSwitchesWithoutAStepAndEndsInBypass();
+    LevelMatchingDoesNotChangeTheSongEndJudgement();
+    LevelMatchingGameDefinitionAttributeAndAbiFunction();
     Model1ViaDefinitionXmlRealRomMatchesTheOriginal();
     SfMachineRegisteredInDefaultCatalog();
     SfRomLayoutAssemblesTheSampleImage();
@@ -2068,6 +2090,10 @@ int main() {
     NinjaWarriorsMachineRepeatedCommandsReAssertNmi();
     NinjaWarriorsMachineRegisteredInDefaultCatalog();
     NinjaWarriorsMachineFmAdpcmChannelsStayCenteredUnlessOverridden();
+    NinjaWarriorsMachineRoutingCountsTheOutputBitsOfEachChannel();
+    NinjaWarriorsMachineFollowsThePanControlPorts();
+    NinjaWarriorsMachineTaitoF2MixSendsEachChipOutputToItsOwnSpeaker();
+    NinjaWarriorsMachineTaitoF2MixRemovesTheSsgRestingDc();
 
     NinjaWarriorsDefinitionXmlIsValid();
     NinjaWarriorsViaDefinitionXmlRealRomBringUp();

@@ -3,7 +3,7 @@
        "Morning Music" tune that are stored in the BIOS sound ROMs. -->
   <game id="bubsys" title="Bubble System BIOS (Warming Up)" manufacturer="Konami"
         machine="KONAMI_BUBBLESYSTEM_GRADIUS" variant="BUBBLESYSTEM_BIOS_BASE"
-        archive="bubsys">
+        archive="bubsys" level_gain_db="2.7">
     <resources>
       <rom name="soundcpu" file="400b03.8g" size="8192" crc32="85c2afc5"/>
       <rom name="wave0"    file="400a1.2b"  size="256"  crc32="5827b1e8"/>

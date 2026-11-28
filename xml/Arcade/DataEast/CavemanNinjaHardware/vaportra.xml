@@ -1,6 +1,6 @@
 <chipestra>
   <game id="vaportra" title="Vapor Trail" manufacturer="Data East"
-        machine="DATAEAST_VAPORTRAIL" variant="VAPORTRAIL_BASE" archive="vaportra">
+        machine="DATAEAST_VAPORTRAIL" variant="VAPORTRAIL_BASE" archive="vaportra" level_gain_db="-3.5">
     <resources>
       <rom name="soundcpu" file="fj04" size="65536"  crc32="e9aedf9b"/>
       <rom name="oki1"     file="fj06" size="131072" crc32="6e98a235"/>

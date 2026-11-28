@@ -4,7 +4,7 @@
         manufacturer="Sega"
         machine="SEGA_XBOARD"
         variant="XBOARD_BASE"
-        archive="thndrbld">
+        archive="thndrbld" level_gain_db="4.8">
     <resources>
       <rom name="soundcpu" file="epr-11396.ic17"/>
       <rom name="pcm1"     file="epr-11317.ic11"/>

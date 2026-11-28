@@ -1,6 +1,6 @@
 <chipestra>
   <game id="aburner32x" title="アフターバーナー コンプリート" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_Z80">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_Z80" level_gain_db="-3.0">
     <resources>
       <rom name="rom" file="After Burner Complete (32X) (JU) [!].32x|AfterBurnerComplete(JU).32x|AfterBurnerComplete(JU).bin" crc_search="true" crc32="204044c4" search_crc32="204044c4" search_size="2097152"/>
     </resources>

@@ -1,6 +1,6 @@
 <chipestra>
   <game id="spaceharrier2_jp" title="Space Harrier II" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="SpaceHarrier2">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="SpaceHarrier2" level_gain_db="6.0">
     <resources>
       <rom name="rom" file="SpaceHarrier2.smd|SpaceHarrier2.bin|SpaceHarrier2.md" crc_search="true" search_crc32="edc0fb28" search_size="524800"/>
     </resources>

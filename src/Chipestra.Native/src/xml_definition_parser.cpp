@@ -112,6 +112,17 @@ XmlParseResult ParseGameDefinition(std::string_view xml, std::size_t maxXmlSizeB
     def.Manufacturer = gameNode.attribute("manufacturer").as_string("");
     // archive is optional - see GameDefinition::Archive's own comment.
     def.Archive = gameNode.attribute("archive").as_string("");
+    // level_gain_db is optional: a number of dB in [-30, 30].
+    if (pugi::xml_attribute gainAttr = gameNode.attribute("level_gain_db")) {
+        char* end = nullptr;
+        const float gain = std::strtof(gainAttr.value(), &end);
+        if (end == gainAttr.value() || *end != '\0' || !(gain >= -30.0f && gain <= 30.0f)) {
+            result.Status = XmlParseStatus::InvalidAttributeValue;
+            result.Detail = "<game>: level_gain_db \"" + std::string(gainAttr.value()) + "\" is not a number of dB between -30 and 30";
+            return result;
+        }
+        def.LevelGainDb = gain;
+    }
 
     for (pugi::xml_node romNode : gameNode.child("resources").children("rom")) {
         RomResourceDefinition rom;

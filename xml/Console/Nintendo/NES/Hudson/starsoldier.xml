@@ -1,6 +1,6 @@
 <chipestra>
   <game id="starsoldier" title="Star Soldier" manufacturer="Hudson"
-        machine="NINTENDO_NES" variant="NES_BASE" archive="Star Soldier (Japan)">
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Star Soldier (Japan)" level_gain_db="-6.6">
     <resources>
       <rom name="cart" file="Star Soldier (Japan).nes" size="65552" crc32="7abe32dd" crc_search="true"/>
     </resources>

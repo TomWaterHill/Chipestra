@@ -1,6 +1,6 @@
 <chipestra>
   <game id="vf_arcade" title="バーチャファイター" manufacturer="Sega"
-        machine="SEGA_MODEL1" variant="MODEL1_BASE" archive="vf">
+        machine="SEGA_MODEL1" variant="MODEL1_BASE" archive="vf" level_gain_db="-7.7">
     <resources>
       <rom name="sndcpu0" file="epr-16120.7"  size="131072"  crc32="2bff8378"/>
       <rom name="sndcpu1" file="epr-16121.8"  size="131072"  crc32="ff6723f9"/>

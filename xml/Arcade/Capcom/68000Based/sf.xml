@@ -1,6 +1,6 @@
 <chipestra>
   <game id="sf" title="Street Fighter" manufacturer="Capcom"
-        machine="CAPCOM_68000" variant="SF_BASE" archive="sf">
+        machine="CAPCOM_68000" variant="SF_BASE" archive="sf" level_gain_db="-1.5">
     <resources>
       <rom name="soundcpu" file="sf-02.7k"  size="32768"  crc32="4a9ac534"/>
       <rom name="samples0" file="sfu-00.1h" size="131072" crc32="a7cce903"/>

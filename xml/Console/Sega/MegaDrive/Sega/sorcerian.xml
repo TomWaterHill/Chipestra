@@ -1,6 +1,6 @@
 <chipestra>
   <game id="sorcerian_jp" title="Sorcerian" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="Sorcerian">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="Sorcerian" level_gain_db="4.0">
     <resources>
       <rom name="rom" file="Sorcerian.smd|Sorcerian.bin|Sorcerian.md" crc_search="true" search_crc32="a143a8c5" search_size="524800"/>
     </resources>

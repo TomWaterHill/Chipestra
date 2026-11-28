@@ -1,6 +1,6 @@
 <chipestra>
   <game id="gyruss" title="Gyruss" manufacturer="Konami"
-        machine="KONAMI_GYRUSS" variant="GYRUSS_BASE" archive="gyruss">
+        machine="KONAMI_GYRUSS" variant="GYRUSS_BASE" archive="gyruss" level_gain_db="-1.4">
     <resources>
       <rom name="soundcpu_lo" file="gyrussk.1a" size="8192" crc32="f4ae1c17"/>
       <rom name="soundcpu_hi" file="gyrussk.2a" size="8192" crc32="ba498115"/>

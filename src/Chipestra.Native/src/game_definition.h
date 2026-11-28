@@ -156,6 +156,10 @@ struct GameDefinition {
     // Root share filenames. Empty string means no archive scope.
     std::string Archive;
 
+    // <game level_gain_db="..."> - the correction in dB that brings the loudness of the game's songs to the common
+    // target (see chipestra_set_level_matching). 0 when the attribute is omitted.
+    float LevelGainDb = 0.0f;
+
     std::vector<RomResourceDefinition> Resources;
     std::vector<TrackDefinition> Tracks;
 

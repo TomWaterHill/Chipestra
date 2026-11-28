@@ -33,7 +33,9 @@ set(CHIPESTRA_CORE_SOURCES
     src/resampling_mixer_feed.h
     src/resampling_mixer_feed.cpp
     src/mixer.h
+    src/level_matching.h
     src/mixer.cpp
+    src/level_matching.cpp
     src/audio_output.h
     src/null_audio_output.h
     src/null_audio_output.cpp
@@ -463,6 +465,7 @@ add_executable(chipestra_native_tests
     tests/msm5205_adapter_tests.cpp
     tests/sf_machine_tests.cpp
     tests/model1_machine_tests.cpp
+    tests/level_matching_tests.cpp
     tests/sf_memory_map_tests.cpp
     tests/darius_command_interface_tests.cpp
     tests/darius_machine_tests.cpp

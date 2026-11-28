@@ -29,6 +29,12 @@ namespace Chipestra.App.Settings
         public uint OutputRateHz { get; set; }
 
         /// <summary>
+        /// Level matching: each game's songs are brought to a common loudness (the game's level_gain_db in its XML) and the
+        /// mix goes through a light limiter. Off (also what a settings.json without this field gets) leaves the sound unchanged.
+        /// </summary>
+        public bool LevelMatching { get; set; }
+
+        /// <summary>
         /// The console analog-stage filter for Mega Drive sound. Off (also what a settings.json without this field,
         /// or with an unusable value, gets) leaves the sound unchanged.
         /// </summary>

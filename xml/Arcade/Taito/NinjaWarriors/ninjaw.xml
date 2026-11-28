@@ -1,7 +1,7 @@
 <chipestra>
   <game id="ninjaw" title="The Ninja Warriors" manufacturer="Taito"
         machine="TAITO_NINJAWARRIORS" variant="NINJAWARRIORS_BASE"
-        archive="ninjaw">
+        archive="ninjaw" level_gain_db="0.9">
     <resources>
       <rom name="soundcpu" file="b31_37.11" size="131072" crc32="0ca5799d"/>
       <rom name="adpcma1"  file="b31-09.18" size="524288" crc32="60a73382"/>

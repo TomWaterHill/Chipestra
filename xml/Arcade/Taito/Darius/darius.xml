@@ -1,7 +1,7 @@
 <chipestra>
   <game id="darius" title="Darius" manufacturer="Taito"
         machine="TAITO_DARIUS" variant="DARIUS_BASE"
-        archive="darius">
+        archive="darius" level_gain_db="2.2">
     <resources>
       <rom name="soundcpu" file="a96_57.33" size="65536" crc32="33ceb730"/>
       <rom name="adpcm"    file="a96_56.18" size="65536" crc32="292ef55c"/>

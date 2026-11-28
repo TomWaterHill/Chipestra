@@ -1,6 +1,6 @@
 <chipestra>
   <game id="battlemania2" title="バトルマニア大吟醸" manufacturer="Vic Tokai"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="battleManiaDaiginjyo">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="battleManiaDaiginjyo" level_gain_db="0">
     <resources>
       <rom name="rom" file="battleManiaDaiginjyo.smd|battleManiaDaiginjyo.bin|battleManiaDaiginjyo.md" crc_search="true" search_crc32="cef82e30" search_size="1049088"/>
     </resources>

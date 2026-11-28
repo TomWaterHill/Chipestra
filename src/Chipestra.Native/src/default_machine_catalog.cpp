@@ -217,13 +217,14 @@ MachineRegistry BuildDefaultRegistry() {
     metalblack_def.Category = MachineCategory::Arcade;
     metalblack_def.Manufacturer = "Taito";
     metalblack_def.Variants.push_back(MachineVariant{VariantId("METALBLACK_BASE"), "Base"});
-    // Metal Black (Taito F2 System) is played through an unmodified NinjaWarriorsMachine:
-    // its sound board is wired identically. Only the ROM assembly differs (ADPCM-A is one
+    // Metal Black (Taito F2 System) is played through NinjaWarriorsMachine with the F2 System
+    // mix (chip left to the left speaker, chip right to the right speaker). The ROM assembly differs (ADPCM-A is one
     // 1MB file, not three 512KB files).
     metalblack_def.Factory = [](const VariantId&, const MachineResources& resources) -> std::unique_ptr<IMachine> {
         NinjaWarriorsSoundRoms roms = AssembleMetalBlackSoundRoms(resources);
         return std::make_unique<NinjaWarriorsMachine>(std::move(roms.AudioCpuProgram),
-                                                       std::move(roms.AdpcmASamples), std::move(roms.AdpcmBSamples));
+                                                       std::move(roms.AdpcmASamples), std::move(roms.AdpcmBSamples),
+                                                       NinjaWarriorsMachine::Mix::TaitoF2);
     };
     registry.Register(std::move(metalblack_def));
 

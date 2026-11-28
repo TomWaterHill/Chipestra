@@ -165,6 +165,20 @@ namespace Chipestra.Core
         /// <summary>Selects the console analog-stage low-pass filter; applies immediately, also while playing.</summary>
         public ChipestraResult SetAnalogFilterMode(AnalogFilterMode mode) => _session.SetAnalogFilterMode(mode);
 
+        /// <summary>
+        /// Switches level matching: the loaded game's <see cref="GameDefinition.LevelGainDb"/> and a light limiter are applied
+        /// to the mix. The choice is kept across <see cref="LoadGame"/>; applies immediately, also while playing.
+        /// </summary>
+        public ChipestraResult SetLevelMatching(bool enabled)
+        {
+            _levelMatching = enabled;
+            return ApplyLevelMatching();
+        }
+
+        private bool _levelMatching;
+
+        private ChipestraResult ApplyLevelMatching() => _session.SetLevelMatching(_levelMatching, _game?.LevelGainDb ?? 0.0f);
+
         /// <summary>Sets the master MUTE button.</summary>
         public ChipestraResult SetMasterMuted(bool muted) => _session.SetMasterMuted(muted);
 
@@ -213,6 +227,7 @@ namespace Chipestra.Core
             _game = game;
             _track = null;
             _state = PlaybackState.MachineLoaded;
+            ApplyLevelMatching();
             return ChipestraResult.Ok;
         }
 

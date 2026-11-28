@@ -63,11 +63,21 @@ Examples: `Arcade/Sega/XBoard/gprider.xml`, `Arcade/Taito/F2System/metalblk.xml`
 | `variant` | yes | The variant of that board. See the table below. |
 | `manufacturer` | no | Arcade: informational only (the manufacturer in the game list comes from the board). Console: the **publisher** of the game, shown as its own level in the game list (see below). |
 | `archive` | no | Name of the ROM set, used to find the ROM files (see section 4). At most 63 bytes. |
+| `level_gain_db` | no | The correction, in decibels, that brings the songs of this game to the common loudness (see below). A number between -30 and 30, for example `-7.5` or `+4.2`. Not written: 0. A value that is not a number, or outside that range, is an error in this file. |
 
 **Game list levels.** The list is `ARCADE` or `CONSOLE`, then the maker of the hardware, then the system, then the game. For a console game there is one more level between the system and the game, the publisher, taken from `manufacturer`: for example `CONSOLE > Nintendo > NES > Hudson > Star Soldier`. A console game without `manufacturer` (or with an empty one) is listed under a publisher named `Unknown`; it is not an error. Games of one publisher are listed together, publishers in alphabetical order. Arcade games are listed as before and ignore `manufacturer`.
 
 A required attribute that is missing or empty is an error. Values longer than the limits above are
 silently cut off.
+
+**Level matching (`level_gain_db`).** The games differ in loudness by more than 20 LU. The setting "Level matching"
+(Settings, off at first) multiplies the sound of the game by `level_gain_db` and sends the mix through a light
+limiter before the final clamp, so that every game is about as loud as the others. The gain is the target of
+-26 LUFS (ITU-R BS.1770-4, integrated) minus the loudness of the songs of the game, where the loudness is the median
+over its songs, each measured over its length (a looping song over its first loop) with the analog filter off. A boost is
+cut short so that the loudest measured sample of the game stays at or below -1 dBFS. The limiter leaves everything up to
+-1 dBFS as it is. With the setting off, nothing is applied, and the sound is exactly the sound without the setting. The
+values are written into the files by a measuring tool, not by hand.
 
 `machine` and `variant` must match one of the following pairs **exactly** (they are not checked when
 the file is read; an unknown value makes the game fail to load when you select a track, with the

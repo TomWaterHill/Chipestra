@@ -45,6 +45,17 @@ namespace Chipestra.App.ViewModels
 
         public string OutputRateNote => OutputRateOptions.SharedModeNote;
 
+        private bool _levelMatching;
+
+        /// <summary>The "Level matching" check box: each game is brought to a common loudness.</summary>
+        public bool LevelMatching
+        {
+            get => _levelMatching;
+            set => SetField(ref _levelMatching, value);
+        }
+
+        public string LevelMatchingNote => "Brings the songs of every game to about the same loudness (-26 LUFS), with a light limiter against clipping. Off leaves the sound as the original board makes it.";
+
         private AnalogFilterMode _megaDriveAnalogFilter;
 
         public AnalogFilterMode MegaDriveAnalogFilter
@@ -62,13 +73,14 @@ namespace Chipestra.App.ViewModels
         {
             _outputRateHz = OutputRateOptions.Normalize(current.OutputRateHz);
             _romRoot = current.RomRoot;
+            _levelMatching = current.LevelMatching;
             _megaDriveAnalogFilter = AnalogFilterOptions.Normalize((int)current.MegaDriveAnalogFilter);
             _outputKind = current.OutputKind == OutputKind.None ? OutputKind.WasapiShared : current.OutputKind;
         }
 
         public AppSettings ToAppSettings()
         {
-            return new AppSettings { RomRoot = RomRoot, OutputKind = OutputKind, OutputRateHz = OutputRateOptions.Normalize(OutputRateHz), MegaDriveAnalogFilter = MegaDriveAnalogFilter };
+            return new AppSettings { RomRoot = RomRoot, OutputKind = OutputKind, OutputRateHz = OutputRateOptions.Normalize(OutputRateHz), LevelMatching = LevelMatching, MegaDriveAnalogFilter = MegaDriveAnalogFilter };
         }
     }
 }

@@ -4,7 +4,7 @@
         manufacturer="Sega"
         machine="SEGA_XBOARD"
         variant="XBOARD_BASE"
-        archive="gprider">
+        archive="gprider" level_gain_db="5.0">
     <resources>
       <rom name="soundcpu" file="epr-13388.ic17" size="65536"  crc32="706581e4"/>
       <rom name="pcm1"     file="epr-13391.ic11" size="131072" crc32="8c30c867"/>

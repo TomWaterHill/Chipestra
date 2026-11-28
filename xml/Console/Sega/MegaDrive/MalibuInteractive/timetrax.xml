@@ -1,6 +1,6 @@
 <chipestra>
   <game id="timetrax_proto" title="Time Trax (prototype)" manufacturer="Malibu Interactive"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="TimeTrax">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_BASE" archive="TimeTrax" level_gain_db="-3.2">
     <resources>
       <rom name="rom" file="TimeTrax.bin|TimeTrax.md|TimeTrax.smd" crc_search="true" search_crc32="dff045eb" search_size="1048576|1049088"/>
     </resources>

@@ -1,6 +1,6 @@
 <chipestra>
   <game id="starcruiser" title="Star Cruiser" manufacturer="NCS"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="StarCruiser">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_68K" archive="StarCruiser" level_gain_db="6.3">
     <resources>
       <rom name="rom" file="StarCruiser.smd|StarCruiser.bin|StarCruiser.md" crc_search="true" search_crc32="2b75b52f" search_size="524800"/>
     </resources>

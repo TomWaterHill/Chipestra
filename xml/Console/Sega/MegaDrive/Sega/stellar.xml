@@ -1,6 +1,6 @@
 <chipestra>
   <game id="stellar" title="ステラアサルト" manufacturer="Sega"
-        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC">
+        machine="SEGA_MEGADRIVE" variant="MEGADRIVE_32X_MUSIC" level_gain_db="9.0">
     <resources>
       <rom name="rom" file="StellarAssault32X(J).32x|StellarAssault32X(J).bin" crc_search="true" crc32="fce4c8c7" search_crc32="fce4c8c7" search_size="2097152"/>
     </resources>

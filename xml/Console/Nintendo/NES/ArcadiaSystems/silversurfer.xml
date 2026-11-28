@@ -1,6 +1,6 @@
 <chipestra>
   <game id="silversurfer_us" title="Silver Surfer" manufacturer="Arcadia Systems"
-        machine="NINTENDO_NES" variant="NES_BASE" archive="Silver Surfer">
+        machine="NINTENDO_NES" variant="NES_BASE" archive="Silver Surfer" level_gain_db="-3.9">
     <resources>
       <rom name="cart" file="Silver Surfer (US) (1990) (Shoot Em Up) (NES).nes" size="393232" crc32="9a83817c" crc_search="true"/>
     </resources>

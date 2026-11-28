@@ -1,6 +1,6 @@
 <chipestra>
   <game id="AFTERBURNER2_3DS" title="After Burner II (3DS)" machine="SEGA_XBOARD" variant="XBOARD_BASE" manufacturer="Sega"
-        archive="aburner2_3ds">
+        archive="aburner2_3ds" level_gain_db="3.3">
     <resources>
       <rom name="soundcpu" file="epr-11112.17p"/>
       <rom name="pcm1"     file="mpr-10931.11"/>
